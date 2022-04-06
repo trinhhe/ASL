@@ -5,10 +5,15 @@
 using namespace std;
 using namespace dai;
 
+const double alpha = 0.001 // TODO: What value is suitable and small enough?
+
 // First build the library yourself as described in the README in the libdai folder
 // g++ main.c -o main -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp
 // flags needed are listed in e.g. MAKEFILE.LINUX in the libdai folder
 int main(int argc, char *argv[]) {
+
+    /* READ IN DATA */
+
     const char* fileLocation = argc > 1 ? argv[1] : "test_data/ratings_small.csv";
 
     FILE *fp = fopen(fileLocation, "r");
@@ -18,37 +23,84 @@ int main(int argc, char *argv[]) {
     }
 
     char c;
-    int lines = 0;
+    int numRatings = 0;
     while(!feof(fp)) // feof
     {
         c = fgetc(fp);
         if(c == '\n')
         {
-            lines++;
+            numRatings++;
         }
     }
 
     rewind(fp);
     
-    int users[lines];
-    int movies[lines];
-    float ratings[lines];
+    int users[numRatings];
+    int movies[numRatings];
+    float ratings[numRatings];
 
-    rewind(fp);
+    int numUsers = 0;
+    int numMovies = 0;
 
     fscanf(fp, "%*s,%*s,%*s,%*s"); // skip line
-    for (int i=0; i < lines; i++) {
-      fscanf(fp, "%i,%i,%f,%*lu", &(users[i]), &(movies[i]), &(ratings[i]));
+    for (int i=0; i < numRatings; i++) {
+      fscanf(fp, "%i,%i,%f,%*lu", &(users[i]), &(movies[i]), &(ratings[i])); 
+      numUsers = users[i] > numUsers ? users[i] : numUsers; // user ids start from 1
+      numMovies = movies[i] > numMovies ? movies[i] : numMovies; // movie ids start from 1
+      users[i]-=1; // -1 to use as index directly
+      movies[i]-=1; // -1 to use as index directly
     }
 
     fclose(fp);
 
-    //printf("lines %i\n", lines);
-    //printf("ratings: %f %f %f %f %f\n", ratings[0], ratings[1], ratings[2], ratings[3], ratings[4]);
+    /* DEFINE FACTOR GRAPH */
+    // States x_i ∈ {LIKE,DISLIKE}
+    // Factors psi_i*phi_ij (https://en.wikipedia.org/wiki/Belief_propagation#Description_of_the_sum-product_algorithm)
+
+    // Calculate edge threshold
+    int numRatingsPerUser[numUsers];
+    float averageRatingPerUser[numUsers];
+    for(int i=0; i<numRatings; i++){
+        numRatingsPerUser[users[i]]++;
+        averageRatingPerUser[users[i]]+=ratings[i];
+    }
+    for(int i=0; i<numUsers; i++){
+        averageRatingPerUser[i] /= numRatingsPerUser[i];
+    }
+
+    // Initialize state variables for all nodes
+    Var userVariables[numUsers];
+    Var movieVariables[numMovies];
+    for(int i=0; i<numMovies; i++){
+        movieVariables[i] = {i, 2}; // {label, cardinality (|{LIKE,DISLIKE}| = 2)}
+    }
+    for(int i=0; i<numUsers; i++){
+        userVariables[i] = {numMovies + i, 2};
+    }
+
+    // Initialize factor variables for term psi_i*phi_ij for all nodes
+    /*int numNodes = numUsers+numMovies; // TODO: correct?
+    Factor m[numNodes]; // indexed by label of Var
+    VarSet neighboursOfNode[numNodes]; // indexed by label of Var
+    for(int i=0; i<numRatings; i++) {
+        if(ratings[i]>averageRatingPerUser[users[i]]) {
+            neighboursOfNode[movies[i]].insert(userVariables[users[i]]); 
+            neighboursOfNode[users[i] + numMovies].insert(movieVariables[movies[i]]);
+        }
+    }
+    // TODO: Connect user for which we search the top-N recommendation to all items
+    //       i.e. add all variables into its set (assign node potential 0.5)
+    for(int i=0; i<numNodes; i++){
+        m[i] = { neighboursOfNode[i] };
+        double dislikePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater) and multiply z-score with edge potential 0.5+alpha if 
+        double likePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater)
+        m[i].set(0, dislikePotential);
+        m[i].set((2 << neighboursOfNode[i].size()), likePotential);
+    }*/
 
     // TODO: Define a factor graph
     // States x_i ∈ {LIKE,DISLIKE}
-    // Factors m_ij
+    // Factors psi_i*phi_ij
 
     // This example program illustrates how to construct a factorgraph
     // by means of the sprinkler network example discussed at
@@ -89,8 +141,8 @@ int main(int argc, char *argv[]) {
     SprinklerFactors.push_back( P_R_given_C );
     SprinklerFactors.push_back( P_S_given_C );
     SprinklerFactors.push_back( P_W_given_S_R );
-    FactorGraph SprinklerNetwork( SprinklerFactors );
-*/
+    FactorGraph SprinklerNetwork( SprinklerFactors );*/
+
     // TODO: Run believe propagation
 
     /*
@@ -98,7 +150,7 @@ int main(int argc, char *argv[]) {
     // using the parameters specified by opts and two additional properties,
     // specifying the type of updates the BP algorithm should perform and
     // whether they should be done in the real or in the logdomain
-    BP bp(fg, opts("updates",string("SEQRND"))("logdomain",false));
+    BP bp(fg, opts("updates",string("SEQRND"))("logdomain",false)("inference",string("SUMPROD")));
     // Initialize belief propagation algorithm
     bp.init();
     // Run belief propagation algorithm
