@@ -79,13 +79,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Initialize factor variables for term psi_i*phi_ij for all nodes
-    /*int numNodes = numUsers+numMovies; // TODO: correct?
+    int numNodes = numUsers+numMovies; // TODO: correct?
     Factor m[numNodes]; // indexed by label of Var
     VarSet neighboursOfNode[numNodes]; // indexed by label of Var
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>averageRatingPerUser[users[i]]) {
-            neighboursOfNode[movies[i]].insert(userVariables[users[i]]); 
-            neighboursOfNode[users[i] + numMovies].insert(movieVariables[movies[i]]);
+            neighboursOfNode[movies[i]] |= userVariables[users[i]]; // insert
+            neighboursOfNode[users[i] + numMovies] |= movieVariables[movies[i]]; // insert
         }
     }
     // TODO: Connect user for which we search the top-N recommendation to all items
@@ -94,9 +94,9 @@ int main(int argc, char *argv[]) {
         m[i] = { neighboursOfNode[i] };
         double dislikePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater) and multiply z-score with edge potential 0.5+alpha if 
         double likePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater)
-        m[i].set(0, dislikePotential);
+        m[i].set(0, dislikePotential); // TODO: Order of variables in table according to label
         m[i].set((2 << neighboursOfNode[i].size()), likePotential);
-    }*/
+    }
 
     // TODO: Define a factor graph
     // States x_i ∈ {LIKE,DISLIKE}
