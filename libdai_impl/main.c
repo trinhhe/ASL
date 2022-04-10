@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
         double diff = ratingsTargetUser[i] - avgMovieRatingTargetUser;
         sampleVariance += diff*diff;
     }
-    sampleVariance /= (numRatingsTargetUser-1); // No sure
+    sampleVariance /= (numRatingsTargetUser-1); // Not sure
 
     // Initialize factor variables for term psi_i*phi_ij for all nodes
     vector<Factor> factors;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
                 likePotential = likePotential > 0.9 ? 0.9 
                                 : (likePotential < 0.1 ? 0.1 : likePotential);
             }
-            // let's assume DISLIKE=0 and LIKE=1 
+            // let's assume DISLIKE=0 and LIKE=1 // TODO: also not sure
             m.set(0, dislikePotential*phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
             m.set(1, dislikePotential*phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
             m.set(2, likePotential*phi_diff); // movies[i]: DISLIKE, users[i]: LIKE
