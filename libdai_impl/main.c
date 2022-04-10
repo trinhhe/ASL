@@ -6,7 +6,7 @@
 using namespace std;
 using namespace dai;
 
-const double alpha = 0.001 // TODO: What value is suitable and small enough?
+const double alpha = 0.001; // TODO: What value is suitable and small enough?
 const double phi_same = 0.5+alpha; // edge potential between LIKE/LIKE & DISLIKE/DISLIKE
 const double phi_diff = 0.5-alpha; // edge potiential between LIKE/DISLIKE & DISLIKE/LIKE
 
@@ -107,15 +107,17 @@ int main(int argc, char *argv[]) {
     vector<Factor> factors;
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>averageRatingPerUser[users[i]]) {
-            Factor m(VarSet(users[i],movies[i])); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
+            Factor m(VarSet(userVariables[i],movieVariables[i])); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
             double dislikePotential = 0.5;
             double likePotential = 0.5;
             if(ratedByTargetUser[movies[i]]){
                 double zscore = (ratings[i] - avgMovieRatingTargetUser)/sampleVariance;
                 dislikePotential -= zscore;
                 likePotential += zscore;
-                dislikePotential = dislikePotential > 0.9 ? 0.9 : (dislikePotential < 0.1 : 0.1);
-                likePotential = likePotential > 0.9 ? 0.9 : (likePotential < 0.1 : 0.1);
+                dislikePotential = dislikePotential > 0.9 ? 0.9 
+                                : (dislikePotential < 0.1 ? 0.1 : dislikePotential);
+                likePotential = likePotential > 0.9 ? 0.9 
+                                : (likePotential < 0.1 ? 0.1 : likePotential);
             }
             // let's assume DISLIKE=0 and LIKE=1 
             m.set(0, dislikePotential*phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
