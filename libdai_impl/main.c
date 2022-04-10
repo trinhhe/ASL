@@ -6,6 +6,8 @@ using namespace std;
 using namespace dai;
 
 const double alpha = 0.001 // TODO: What value is suitable and small enough?
+const double phi_same = 0.5+alpha; // edge potential between LIKE/LIKE & DISLIKE/DISLIKE
+const double phi_diff = 0.5-alpha; // edge potiential between LIKE/DISLIKE & DISLIKE/LIKE
 
 // First build the library yourself as described in the README in the libdai folder
 // g++ main.c -o main -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp
@@ -72,7 +74,7 @@ int main(int argc, char *argv[]) {
     Var userVariables[numUsers];
     Var movieVariables[numMovies];
     for(int i=0; i<numMovies; i++){
-        movieVariables[i] = {i, 2}; // {label, cardinality (|{LIKE,DISLIKE}| = 2)}
+        movieVariables[i] = {i, 2}; // {label, cardinality (|{DISLIKE,LIKE}| = 2)}
     }
     for(int i=0; i<numUsers; i++){
         userVariables[i] = {numMovies + i, 2};
@@ -82,18 +84,19 @@ int main(int argc, char *argv[]) {
     vector<Factor> factors;
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>averageRatingPerUser[users[i]]) {
-            Factor m(VarSet(users[i],movies[i]));
+            Factor m(VarSet(users[i],movies[i])); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
             double dislikePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater) and multiply z-score with edge potential 0.5+/-alpha
             double likePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater) and multiply z-score with edge potential 0.5+/-alpha
-            m.set(0, 0);
-            m.set(1, 0);
-            m.set(2, 0);
-            m.set(3, 0);
+            // let's assume DISLIKE=0 and LIKE=1 
+            m.set(0, dislikePotential*phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
+            m.set(1, dislikePotential*phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
+            m.set(2, likePotential*phi_diff); // movies[i]: DISLIKE, users[i]: LIKE
+            m.set(3, likePotential*phi_same); // movies[i]: LIKE, users[i]: LIKE
             factors.push_back(m);
         }
     }
     // TODO: Connect user for which we search the top-N recommendation to all items
-    //       i.e. add all variables into its set (assign node potential 0.5)
+    //       i.e. add all variables its set (assign node potential 0.5)
 
     // TODO: Define a factor graph
     // States x_i ∈ {LIKE,DISLIKE}
