@@ -9,6 +9,7 @@ using namespace dai;
 const double alpha = 0.001; // TODO: What value is suitable and small enough?
 const double phi_same = 0.5+alpha; // edge potential between LIKE/LIKE & DISLIKE/DISLIKE
 const double phi_diff = 0.5-alpha; // edge potiential between LIKE/DISLIKE & DISLIKE/LIKE
+const int p = 3; // Normalizing factor
 
 // First build the library yourself as described in the README in the libdai folder
 // g++ main.c -o main -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp
@@ -112,8 +113,8 @@ int main(int argc, char *argv[]) {
             double likePotential = 0.5;
             if(ratedByTargetUser[movies[i]]){
                 double zscore = (ratings[i] - avgMovieRatingTargetUser)/sampleVariance;
-                dislikePotential -= zscore;
-                likePotential += zscore;
+                dislikePotential -= zscore/p;
+                likePotential += zscore/p;
                 dislikePotential = dislikePotential > 0.9 ? 0.9 
                                 : (dislikePotential < 0.1 ? 0.1 : dislikePotential);
                 likePotential = likePotential > 0.9 ? 0.9 
