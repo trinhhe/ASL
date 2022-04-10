@@ -85,8 +85,8 @@ int main(int argc, char *argv[]) {
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>averageRatingPerUser[users[i]]) {
             Factor m(VarSet(users[i],movies[i])); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
-            double dislikePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater) and multiply z-score with edge potential 0.5+/-alpha
-            double likePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater) and multiply z-score with edge potential 0.5+/-alpha
+            double dislikePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater)
+            double likePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater)
             // let's assume DISLIKE=0 and LIKE=1 
             m.set(0, dislikePotential*phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
             m.set(1, dislikePotential*phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
