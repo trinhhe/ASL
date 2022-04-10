@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dai/factorgraph.h>
+#include <stdbool.h>
 
 using namespace std;
 using namespace dai;
@@ -39,7 +40,10 @@ int main(int argc, char *argv[]) {
     
     int users[numRatings];
     int movies[numRatings];
-    float ratings[numRatings];
+    double ratings[numRatings];
+    int targetUser = 0; // TODO: Read in (id-1)
+    int numRatingsTargetUser = 0;
+    double avgMovieRatingTargetUser = 0; // the mean for calculating the z-score of node potentials
 
     int numUsers = 0;
     int numMovies = 0;
@@ -51,7 +55,12 @@ int main(int argc, char *argv[]) {
       numMovies = movies[i] > numMovies ? movies[i] : numMovies; // movie ids start from 1
       users[i]-=1; // -1 to use as index directly
       movies[i]-=1; // -1 to use as index directly
+      if(users[i]==targetUser){
+          numRatingsTargetUser++;
+          avgMovieRatingTargetUser += ratings[i];
+      }
     }
+    avgMovieRatingTargetUser /= numRatingsTargetUser;
 
     fclose(fp);
 
@@ -59,16 +68,30 @@ int main(int argc, char *argv[]) {
     // States x_i ∈ {LIKE,DISLIKE}
     // Factors psi_i*phi_ij (https://en.wikipedia.org/wiki/Belief_propagation#Description_of_the_sum-product_algorithm)
 
-    // Calculate edge threshold
+    // Calculate edge threshold & collect target user ratings
     int numRatingsPerUser[numUsers];
-    float averageRatingPerUser[numUsers];
+    double averageRatingPerUser[numUsers] = {0}; // for edge thresholding
+    double ratingsTargetUser[numRatingsTargetUser];
+    bool ratedByTargetUser[numMovies] = {false};
     for(int i=0; i<numRatings; i++){
         numRatingsPerUser[users[i]]++;
         averageRatingPerUser[users[i]]+=ratings[i];
+        if(users[i] == targetUser){
+            ratingsTargetUser[i] = ratings[i];
+            ratedByTargetUser[movies[i]] = true;
+        }
     }
     for(int i=0; i<numUsers; i++){
         averageRatingPerUser[i] /= numRatingsPerUser[i];
     }
+
+    // Preparation for calculating node potentials
+    double sampleVariance = 0; // Not sure
+    for(int i=0; i<numRatingsTargetUser; i++){
+        double diff = ratingsTargetUser[i] - avgMovieRatingTargetUser;
+        sampleVariance += diff*diff;
+    }
+    sampleVariance /= (numRatingsTargetUser-1); // No sure
 
     // Initialize state variables for all nodes
     Var userVariables[numUsers];
@@ -85,8 +108,15 @@ int main(int argc, char *argv[]) {
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>averageRatingPerUser[users[i]]) {
             Factor m(VarSet(users[i],movies[i])); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
-            double dislikePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater)
-            double likePotential = 0; // TODO: calculate z-score, clip it to 0.1 (0.9) if its smaller (greater)
+            double dislikePotential = 0.5;
+            double likePotential = 0.5;
+            if(ratedByTargetUser[movies[i]]){
+                double zscore = (ratings[i] - avgMovieRatingTargetUser)/sampleVariance;
+                dislikePotential -= zscore;
+                likePotential += zscore;
+                dislikePotential = dislikePotential > 0.9 ? 0.9 : (dislikePotential < 0.1 : 0.1);
+                likePotential = likePotential > 0.9 ? 0.9 : (likePotential < 0.1 : 0.1);
+            }
             // let's assume DISLIKE=0 and LIKE=1 
             m.set(0, dislikePotential*phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
             m.set(1, dislikePotential*phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
@@ -96,7 +126,7 @@ int main(int argc, char *argv[]) {
         }
     }
     // TODO: Connect user for which we search the top-N recommendation to all items
-    //       i.e. add all variables its set (assign node potential 0.5)
+    //       i.e. add all variables its set (assign node potential 0.5) - Not sure
 
     // TODO: Define a factor graph
     // States x_i ∈ {LIKE,DISLIKE}
