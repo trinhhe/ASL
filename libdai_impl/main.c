@@ -94,21 +94,13 @@ int main(int argc, char *argv[]) {
     }
     sampleVariance /= (numRatingsTargetUser-1); // No sure
 
-    // Initialize state variables for all nodes
-    Var userVariables[numUsers];
-    Var movieVariables[numMovies];
-    for(int i=0; i<numMovies; i++){
-        movieVariables[i] = {i, 2}; // {label, cardinality (|{DISLIKE,LIKE}| = 2)}
-    }
-    for(int i=0; i<numUsers; i++){
-        userVariables[i] = {numMovies + i, 2};
-    }
-
     // Initialize factor variables for term psi_i*phi_ij for all nodes
     vector<Factor> factors;
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>averageRatingPerUser[users[i]]) {
-            Factor m(VarSet(userVariables[i],movieVariables[i])); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
+            Var user(numMovies + users[i], 2);
+            Var movie(movies[i], 2);
+            Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
             double dislikePotential = 0.5;
             double likePotential = 0.5;
             if(ratedByTargetUser[movies[i]]){
@@ -130,6 +122,7 @@ int main(int argc, char *argv[]) {
     }
     // TODO: Connect user for which we search the top-N recommendation to all items
     //       i.e. add all variables its set (assign node potential 0.5) - Not sure
+    FactorGraph factorGraph(factors);
 
     // TODO: Define a factor graph
     // States x_i ∈ {LIKE,DISLIKE}
@@ -138,7 +131,7 @@ int main(int argc, char *argv[]) {
     // This example program illustrates how to construct a factorgraph
     // by means of the sprinkler network example discussed at
     // http://www.cs.ubc.ca/~murphyk/Bayes/bnintro.html
- /*    Var C(0, 2); // Define binary variable Cloudy (with label 0)
+    /*Var C(0, 2); // Define binary variable Cloudy (with label 0)
     Var S(1, 2); // Define binary variable Sprinkler (with label 1)
     Var R(2, 2); // Define binary variable Rain (with label 2)
     Var W(3, 2); // Define binary variable Wetgrass (with label 3)
@@ -174,7 +167,7 @@ int main(int argc, char *argv[]) {
     SprinklerFactors.push_back( P_R_given_C );
     SprinklerFactors.push_back( P_S_given_C );
     SprinklerFactors.push_back( P_W_given_S_R );
-    FactorGraph SprinklerNetwork( SprinklerFactors );*/
+    FactorGraph SprinklerNetwork( SprinklerFactors ); */
 
     // TODO: Run believe propagation
 
