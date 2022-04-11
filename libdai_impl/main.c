@@ -4,6 +4,7 @@
 #include <dai/alldai.h>
 #include <dai/factorgraph.h>
 #include <dai/bp.h>
+#include <iostream>
 
 using namespace std;
 using namespace dai;
@@ -133,11 +134,15 @@ int main(int argc, char *argv[]) {
     opts.set("maxiter", (size_t)10000); // Maximum number of iterations
     opts.set("tol",1e-9); // Tolerance for convergence
     opts.set("verbose",(size_t)1); // Verbosity (amount of output generated)
-    BP bp(factorGraph, opts("updates",string("SEQRND"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQRND?
+    BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
     // Initialize belief propagation algorithm
     bp.init();
     // Run belief propagation algorithm
     bp.run();
+
+    for(size_t i = 0;i < factorGraph.nrVars(); i++){ // TODO: running this multiple times the result changes? Is this the wrong algorithm?
+        std::cout << bp.belief(factorGraph.var(i)) << std::endl;
+    }
 
     return 0;
 }
