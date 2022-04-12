@@ -42,6 +42,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+	numRatings--; // Always assume the file is \n-terminated
+
     rewind(fp);
     
     int users[numRatings];
