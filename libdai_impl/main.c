@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
             double likePotential = 0.5;
             if(ratedByTargetUser[movies[i]]){
                 double zscore = (ratings[i] - avgMovieRatingTargetUser)/sampleVariance;
+				// RH: ^ should be sample standard mean, i.e., sqrt(sampleVariance), no?
                 dislikePotential -= zscore/p;
                 likePotential += zscore/p;
                 dislikePotential = dislikePotential > 0.9 ? 0.9 
