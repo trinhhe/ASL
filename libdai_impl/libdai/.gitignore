@@ -5,6 +5,7 @@ examples/example_bipgraph
 examples/example_permute
 examples/example_sprinkler_em
 examples/example_sprinkler_gibbs
+examples/example_sprinkler
 examples/example_varset
 utils/createfg
 utils/fg2dot
