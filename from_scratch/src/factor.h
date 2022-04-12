@@ -17,6 +17,13 @@ typedef statevector_t msg_t;
 typedef statevector_t potential_t;
 // Semantically these two things are different, but we can treat them the same
 
+void normalise_msg(msg_t *m) {
+	// TODO: numerical stability
+	float_t s = m->L + m->D;
+	m->L /= s;
+	m->D /= s;
+}
+
 struct translator {
 	size_t u_lo, u_hi;
 	size_t m_lo, m_hi;
@@ -33,10 +40,12 @@ typedef struct {
 	msg_t *in_old; // the same, but for the previous iteration, these two get swapped after every iteration
 	size_t *out; // out[off[v]] … out[off[v + 1] - 1] contain the indices in in where the messages from v should be delivered
 	potential_t *node_pot;
-	struct translator tr;
+	struct translator tr; // translates user and movie ids into graph vertex ids
+	statevector_t *belief; // the final belief of each node
 	// debug info:
 	size_t *eix; // the index of the edge in the input sequence
 	rating_t *E; // the original input sequence of edges
+	int target_uid; // the id of the target vertex
 } graph_t;
 
 // TODO: this works quite well for dense IDs, but is inefficient for sparse IDs
@@ -94,6 +103,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	translator_init(&G.tr, E);
 	G.n = G.tr.max_out_id;
 	G.off = (size_t *) calloc(G.n + 1, sizeof *G.off);
+	G.belief = (statevector_t *) calloc(G.n, sizeof *G.belief);
 
 	filter_below_mean(E);
 	// first pass to calculate degrees into G.off
@@ -114,18 +124,18 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 		tmp += tmp2;
 	}
 
-	/*
-	for (int i = 0; i <= G.n; i++) {
-		printf("%ld ", G.off[i]);
-	}
-	printf("\n"); */
-
 	G.m = G.off[G.n]; // G.off[n] serves as a terminator
 
 	G.out = (size_t *) malloc(G.m * sizeof *G.out);
 	G.eix = (size_t *) malloc(G.m * sizeof *G.eix);
-	G.in = (msg_t *) calloc(G.m, sizeof *G.in);
-	G.in_old = (msg_t *) calloc(G.m, sizeof *G.in_old);
+	G.in = (msg_t *) malloc(G.m * sizeof *G.in);
+	G.in_old = (msg_t *) malloc(G.m * sizeof *G.in_old);
+
+	// TODO: unsure about this
+	for (int i = 0; i < G.m; i++)
+		G.in_old[i] = (msg_t){.5, .5};
+	for (int i = 0; i < G.m; i++)
+		G.in[i] = (msg_t){.5, .5};
 
 	// second pass to actually work with the edges
 	for (rating_t *p = E; p->user > 0; p++) {
@@ -167,6 +177,12 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	*_G = G;
 }
 
+void dump_beliefs(graph_t *G) {
+	for (int v = G->tr.m_lo; v < G->tr.m_hi; v++)
+		printf("%.3f ", G->belief[v].L);
+	printf("\n");
+}
+
 void dump_graph(graph_t *G) {
 	printf("Graph, n = %zd (%zd user IDs + %zd movie IDs), m = %zd\n", G->n, G->tr.u_hi - G->tr.u_lo, G->tr.m_hi - G->tr.m_lo, G->m);
 	printf("offsets: ");
@@ -178,11 +194,22 @@ void dump_graph(graph_t *G) {
 		printf("[ %d:  ", v);
 		for (int i = G->off[v]; i < G->off[v + 1]; i++) {
 			size_t e = G->eix[i];
+#ifdef VERBOSE_DUMP
+			printf("%zd (u%d->m%d, r=%.0f, out=%zd) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating, G->out[i]);
+#else
 			printf("%zd (u%d->m%d, r=%.0f) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating);
+#endif
 		}
 		printf("]\n");
 	}
 	printf("\n");
+	printf("node potentials:\n");
+	for (int v = 0; v < G->n; v++) {
+		printf("[%.3f %.3f] ", G->node_pot[v].L, G->node_pot[v].D);
+	}
+	printf("\n");
+	printf("beliefs (= predicted film ratings):\n");
+	dump_beliefs(G);
 }
 
 #endif

@@ -1,5 +1,6 @@
-#include "load.h"
+#include "belief.h"
 #include "factor.h"
+#include "load.h"
 #include "util.h"
 
 int main(int argc, const char **argv)
@@ -12,4 +13,9 @@ int main(int argc, const char **argv)
 	graph_t G;
 	graph_from_edge_list(ratings, 1, &G);
 	dump_graph(&G);
+	for (int it = 0; it < 10; it++) {
+		propagate(&G);
+		get_beliefs(&G);
+		dump_beliefs(&G);
+	}
 }
