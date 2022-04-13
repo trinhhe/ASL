@@ -3,6 +3,9 @@
 #include <assert.h>
 #include <math.h>
 
+/* Functions for working with the rating list, as parsed from a MovieLens CSV.
+ * Throughout, we assume the ratings are grouped by user ID. */
+
 typedef float float_t;
 
 typedef struct {
@@ -11,6 +14,7 @@ typedef struct {
 	float rating;
 } rating_t;
 
+/* Finds the first entry with a different UID */
 rating_t *next_user(rating_t *E)
 {
 	int current_user = E->user;
@@ -21,6 +25,7 @@ rating_t *next_user(rating_t *E)
 	return E;
 }
 
+/* Finds the first entry with UID == given */
 rating_t *find_user(rating_t *E, int uid)
 {
 	while (E && E->user != uid)
@@ -28,6 +33,8 @@ rating_t *find_user(rating_t *E, int uid)
 	return E;
 }
 
+/* Calculates the mean rating of an user. Assumes the ratings are grouped by
+ * UID. */
 float_t get_user_mean(rating_t *E)
 {
 	assert(E->user > 0);
@@ -40,6 +47,8 @@ float_t get_user_mean(rating_t *E)
 	return sum / cnt;
 }
 
+/* Calculates the standard deviation of user's ratings. Assumes the ratings are
+ * grouped by UID. */
 float_t get_user_stddev(rating_t *E, float_t mean)
 {
 	assert(E->user > 0);

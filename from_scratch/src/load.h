@@ -8,13 +8,13 @@
 
 int from_file(const char *filename, rating_t **ratings)
 {
-	int capacity = 128;
+	int capacity = 128; // initial capacity to save some initial reallocs
 
     FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        die("File %s cannot be opened.", filename);
-    }
+    if (!fp)
+        die("File %s cannot be opened.\n", filename);
 
+	// skip first line
 	while (fgetc(fp) != '\n' && !feof(fp))
 		;
 	
@@ -31,7 +31,7 @@ int from_file(const char *filename, rating_t **ratings)
 	}
 
 	*ratings = (rating_t *) realloc(*ratings, (i + 1) * sizeof **ratings);
-	(*ratings)[i] = (rating_t){-1, -1, -1};
+	(*ratings)[i] = (rating_t){-1, -1, -1}; // terminator
 	return i;
 }
 #endif

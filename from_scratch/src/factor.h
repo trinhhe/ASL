@@ -6,7 +6,11 @@
 #include <unistd.h>
 #include "constants.h"
 #include "rating.h"
+#include "translator.h"
 #include "util.h"
+
+/* Contains the definition of a factor graph and functions for its construction
+ * from the list of ratings. */
 
 typedef struct {
 	float L;
@@ -24,64 +28,25 @@ void normalise_msg(msg_t *m) {
 	m->D /= s;
 }
 
-struct translator {
-	size_t u_lo, u_hi;
-	size_t m_lo, m_hi;
-	size_t max_out_id;
-	size_t _max_input_uid;
-	size_t _max_input_mid;
-};
 
 typedef struct {
-	size_t n; // Total number of vertices, size of off, node_pot
-	size_t m; // Total number of half-edges (i.e., 2|E|), size of in, in_old, out
-	size_t *off; // off[v] = the offset where the v-th vertex begins
-	msg_t *in; // buffer for incoming messages, the ones for vertex v are at in[off[v]] … in[off[v + 1] - 1]
-	msg_t *in_old; // the same, but for the previous iteration, these two get swapped after every iteration
-	size_t *out; // out[off[v]] … out[off[v + 1] - 1] contain the indices in in where the messages from v should be delivered
-	potential_t *node_pot;
+	size_t n; // Total number of vertices
+	size_t m; // Total number of half-edges (i.e., 2|E|)
+	size_t *off; // size = n; off[v] = the offset where the v-th vertex begins
+	msg_t *in; // size = m; buffer for incoming messages, the ones for vertex v are at in[off[v]] … in[off[v + 1] - 1]
+	msg_t *in_old; // size = m; the same, but for the previous iteration, these two get swapped after every iteration
+	size_t *out; // size = m; out[off[v]] … out[off[v + 1] - 1] contain the indices in in where the messages from v should be delivered
+	potential_t *node_pot; // size = n; the potential for each node
 	struct translator tr; // translates user and movie ids into graph vertex ids
 	statevector_t *belief; // the final belief of each node
 	// debug info:
-	size_t *eix; // the index of the edge in the input sequence
 	rating_t *E; // the original input sequence of edges
+	size_t *eix; // the index of the edge in the input sequence
 	int target_uid; // the id of the target vertex
 } graph_t;
 
-// TODO: this works quite well for dense IDs, but is inefficient for sparse IDs
-void translator_init(struct translator *trans, rating_t *E) {
-	*trans = (struct translator){0};
-	for (; E->user != -1; E++) {
-		trans->_max_input_uid = max(trans->_max_input_uid, E->user - 1);
-		trans->_max_input_mid = max(trans->_max_input_mid, E->movie - 1);
-	}
-	trans->_max_input_mid++;
-	trans->_max_input_uid++;
-	trans->max_out_id = trans->_max_input_uid + trans->_max_input_mid;
-	trans->u_lo = 0;
-	trans->u_hi = trans->m_lo = trans->_max_input_uid;
-	trans->m_hi = trans->m_lo + trans->_max_input_mid;
-}
 
-int translator_user_to_id(struct translator *trans, int user) {
-	return user - 1;
-}
-
-int translator_movie_to_id(struct translator *trans, int movie) {
-	return movie - 1 + trans->_max_input_uid;
-}
-
-int translator_id_to_usermovie(struct translator *trans, int id, bool *movie) {
-	if (id >= trans->m_lo) {
-		id -= trans->m_lo;
-		*movie = true;
-	} else {
-		*movie = false;
-	}
-
-	return id + 1;
-}
-
+/* For each user, mark the movies that are below the user's average, with a rating of -1. */
 void filter_below_mean(rating_t *E)
 {
 	int prev_user = -1;
@@ -93,10 +58,11 @@ void filter_below_mean(rating_t *E)
 		}
 
 		if (p->rating < threshold)
-			p->rating = -1; // marks a nonexistent edge
+			p->rating = -1;
 	}
 }
 
+/* Constructs a factor graph from a list of ratings, as per the BP paper. */
 void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 {
 	graph_t G = {0};
@@ -105,7 +71,9 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	G.off = (size_t *) calloc(G.n + 1, sizeof *G.off);
 	G.belief = (statevector_t *) calloc(G.n, sizeof *G.belief);
 
+	// make all ``disabled'' edges have rating = -1
 	filter_below_mean(E);
+
 	// first pass to calculate degrees into G.off
 	for (rating_t *p = E; p->user > 0; p++) {
 		if (p->rating < 0)
@@ -116,22 +84,22 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 		G.off[v]++;
 	}
 
-	// degrees => offsets
+	// degrees => offsets, using prefix sums
 	int tmp = 0;
-	for (int i = 0; i <= G.n; i++) {
+	for (int i = 0; i <= G.n; i++) { // yes, <= G.n, as G.off[n] serves as a terminator
 		int tmp2 = G.off[i];
 		G.off[i] = tmp;
 		tmp += tmp2;
 	}
 
-	G.m = G.off[G.n]; // G.off[n] serves as a terminator
+	G.m = G.off[G.n];
 
 	G.out = (size_t *) malloc(G.m * sizeof *G.out);
 	G.eix = (size_t *) malloc(G.m * sizeof *G.eix);
 	G.in = (msg_t *) malloc(G.m * sizeof *G.in);
 	G.in_old = (msg_t *) malloc(G.m * sizeof *G.in_old);
 
-	// TODO: unsure about this
+	// TODO: unsure about this; should the initialisation be random instead?
 	for (int i = 0; i < G.m; i++)
 		G.in_old[i] = (msg_t){.5, .5};
 	for (int i = 0; i < G.m; i++)
@@ -143,8 +111,11 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 			continue;
 		int u = translator_user_to_id(&G.tr, p->user);
 		int v = translator_movie_to_id(&G.tr, p->movie);
+
+		// construct the pointer to the ``other end'' of this edge
 		G.out[G.off[u]] = G.off[v];
 		G.out[G.off[v]] = G.off[u];
+
 		G.eix[G.off[u]] = G.eix[G.off[v]] = p - E;
 		G.off[u]++;
 		G.off[v]++;
@@ -164,7 +135,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	float_t target_stddev = get_user_stddev(target, target_mean);
 	G.node_pot = (potential_t *) calloc(G.n, sizeof *G.node_pot);
 	for (int i = 0; i < G.n; i++)
-		G.node_pot[i] = (potential_t){.5, .5};
+		G.node_pot[i] = (potential_t){.5, .5}; // defaults
 
 	for (rating_t *p = target; p->user == target_uid; p++) {
 		int v = translator_movie_to_id(&G.tr, p->movie);

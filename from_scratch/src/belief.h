@@ -3,18 +3,23 @@
 #include <string.h>
 #include "factor.h"
 
+/* Do one step of belief propagation. */
 void propagate(graph_t *G) {
+	// swap G->in and G->in_out
 	msg_t *tmp = G->in;
 	G->in = G->in_old;
 	G->in_old = tmp;
+	// zero G->in out so that we can write our messages to it.
 	memset(G->in, 0, G->m * sizeof *G->in);
 
+	// debug
 	for (int i = 0; i < G->m; i++)
 		printf("%f %f ", G->in_old->D, G->in_old->L);
 	printf("\n");
 
 	for (int i = 0; i < G->n; i++) {
 		for (int j = G->off[i]; j < G->off[i + 1]; j++) {
+			// calculate the address where we should write our message to
 			msg_t *out = G->in + G->out[j];
 			float_t *_out = (float_t *)out;
 			for (int c = 0; c < 2; c++) {
@@ -27,16 +32,19 @@ void propagate(graph_t *G) {
 							continue;
 						prod *= ((float_t *)&G->in_old[k])[d];
 					}
+					// debug
 					printf("%f*%f*%f=%f\n", pot_i, pot_ij, prod, pot_i * pot_ij * prod);
 					_out[c] += pot_i * pot_ij * prod;
 				}
 			}
+			// debug
 			printf("%f %f\n", out->D, out->L);
-			normalise_msg(out);
+			normalise_msg(out); // TODO: did I understand their normalisation correctly?
 		}
 	}
 }
 
+/* Calculates the current node beliefs given current messages. */
 void get_beliefs(graph_t *G) {
 	for (int i = 0; i < G->n; i++) {
 		for (int c = 0; c < 2; c++) {

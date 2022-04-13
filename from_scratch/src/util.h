@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Prints error message and exits
 static void die(const char fmt[], ...)
 {
 	va_list args;
