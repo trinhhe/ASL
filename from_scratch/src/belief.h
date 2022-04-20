@@ -12,11 +12,6 @@ void propagate(graph_t *G) {
 	// zero G->in out so that we can write our messages to it.
 	memset(G->in, 0, G->m * sizeof *G->in);
 
-	// debug
-	for (int i = 0; i < G->m; i++)
-		printf("%f %f ", G->in_old->D, G->in_old->L);
-	printf("\n");
-
 	for (int i = 0; i < G->n; i++) {
 		for (int j = G->off[i]; j < G->off[i + 1]; j++) {
 			// calculate the address where we should write our message to
@@ -32,13 +27,15 @@ void propagate(graph_t *G) {
 							continue;
 						prod *= ((float_t *)&G->in_old[k])[d];
 					}
-					// debug
+#ifdef DEBUG
 					printf("%f*%f*%f=%f\n", pot_i, pot_ij, prod, pot_i * pot_ij * prod);
+#endif
 					_out[c] += pot_i * pot_ij * prod;
 				}
 			}
-			// debug
-			printf("%f %f\n", out->D, out->L);
+#ifdef DEBUG
+			printf("unnorm: %f %f\n", out->D, out->L);
+#endif
 			normalise_msg(out); // TODO: did I understand their normalisation correctly?
 		}
 	}

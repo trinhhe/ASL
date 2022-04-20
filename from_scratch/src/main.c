@@ -12,10 +12,13 @@ int main(int argc, const char **argv)
 	int n = from_file(argv[1], &ratings);
 	graph_t G;
 	graph_from_edge_list(ratings, 1, &G);
-	dump_graph(&G);
 	for (int it = 0; it < 10; it++) {
+#ifdef DEBUG
+		printf("=== Iteration %3d ===", it);
+		dump_beliefs(&G);
+#endif
 		propagate(&G);
 		get_beliefs(&G);
-		dump_beliefs(&G);
 	}
+	dump_graph(&G);
 }

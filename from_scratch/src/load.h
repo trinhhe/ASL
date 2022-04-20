@@ -11,8 +11,8 @@ int from_file(const char *filename, rating_t **ratings)
 	int capacity = 128; // initial capacity to save some initial reallocs
 
     FILE *fp = fopen(filename, "r");
-    if (!fp)
-        die("File %s cannot be opened.\n", filename);
+	if (!fp)
+		die("File %s cannot be opened.\n", filename);
 
 	// skip first line
 	while (fgetc(fp) != '\n' && !feof(fp))
