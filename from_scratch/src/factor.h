@@ -104,10 +104,13 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	G.in_old = (msg_t *) malloc(G.m * sizeof *G.in_old);
 
 	// TODO: unsure about this; should the initialisation be random instead?
-	for (int i = 0; i < G.m; i++)
-		G.in_old[i] = (msg_t){.5, .5};
-	for (int i = 0; i < G.m; i++)
-		G.in[i] = (msg_t){.5, .5};
+	for (int i = 0; i < G.m; i++) {
+		float_t r = drand48();
+		G.in_old[i] = G.in[i] = (msg_t){r, 1 - r};
+#ifdef DEBUG
+		printf("%f %f\n", G.in[i].D, G.in[i].L);
+#endif
+	}
 
 	// second pass to actually work with the edges
 	for (rating_t *p = E; p->user > 0; p++) {
