@@ -24,8 +24,12 @@ typedef statevector_t potential_t;
 void normalise_msg(msg_t *m) {
 	// TODO: numerical stability
 	float_t s = m->L + m->D;
-	m->L /= s;
-	m->D /= s;
+	if (s < 1e-6) {
+		m->L = m->D = .5;
+	} else {
+		m->L /= s;
+		m->D /= s;
+	}
 }
 
 
