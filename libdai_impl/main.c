@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
     fscanf(fp, "%*s,%*s,%*s,%*s"); // skip line
     for (int i=0; i < numRatings; i++) {
-      fscanf(fp, "%i,%i,%f,%*lu", &(users[i]), &(movies[i]), &(ratings[i])); 
+      fscanf(fp, "%i,%i,%lf,%*lu", &(users[i]), &(movies[i]), &(ratings[i])); 
       numUsers = users[i] > numUsers ? users[i] : numUsers; // user ids start from 1
       numMovies = movies[i] > numMovies ? movies[i] : numMovies; // movie ids start from 1
       users[i]-=1; // -1 to use as index directly
