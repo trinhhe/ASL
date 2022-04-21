@@ -61,7 +61,7 @@ void filter_below_mean(rating_t *E)
 			prev_user = p->user;
 		}
 
-		if (p->rating < threshold)
+		if (p->rating <= threshold)
 			p->rating = -1;
 	}
 }
