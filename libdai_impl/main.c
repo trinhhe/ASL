@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
     // Initialize factor variables for term psi_i*phi_ij for all nodes
     vector<Factor> factors;
     for(int i=0; i<numRatings; i++) {
-        if(ratings[i]>averageRatingPerUser[users[i]]) {
+        if(ratings[i]>=averageRatingPerUser[users[i]]) {
             Var user(numMovies + users[i], 2);
             Var movie(movies[i], 2);
             Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
         factors2.push_back(m);
     }
     for(int i=0; i<numRatings; i++) {
-        if(ratings[i]>averageRatingPerUser[users[i]]) {
+        if(ratings[i]>=averageRatingPerUser[users[i]]) {
             Var user(numMovies + users[i], 2);
             Var movie(movies[i], 2);
             Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
