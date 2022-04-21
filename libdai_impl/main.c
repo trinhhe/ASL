@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <dai/alldai.h>
@@ -80,14 +79,14 @@ int main(int argc, char *argv[]) {
     int numRatingsPerUser[numUsers] = {0};
     double averageRatingPerUser[numUsers] = {0}; // for edge thresholding
     double ratingsTargetUser[numRatingsTargetUser] = {0};
-    bool ratedByTargetUser[numMovies] = {false};
+    double ratedByTargetUser[numMovies] = {-1};
     int idxRatingsTargetUser = 0;
     for(int i=0; i<numRatings; i++){
         numRatingsPerUser[users[i]]++;
         averageRatingPerUser[users[i]]+=ratings[i];
         if(users[i] == targetUser){
             ratingsTargetUser[idxRatingsTargetUser++] = ratings[i];
-            ratedByTargetUser[movies[i]] = true;
+            ratedByTargetUser[movies[i]] = ratings[i];
         }
     }
     for(int i=0; i<numUsers; i++){
@@ -111,10 +110,8 @@ int main(int argc, char *argv[]) {
             Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
             double dislikePotential = 0.5;
             double likePotential = 0.5;
-            if(ratedByTargetUser[movies[i]]){
+            if(ratedByTargetUser[movies[i]]!=-1){
                 double zscore = (ratings[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
-                // RH: ^ should be sample standard mean, i.e., sqrt(sampleVariance), no?
-                // HT: I agree
                 dislikePotential -= zscore/p;
                 likePotential += zscore/p;
                 dislikePotential = dislikePotential > 0.9 ? 0.9 
@@ -130,7 +127,6 @@ int main(int argc, char *argv[]) {
             factors.push_back(m);
         }
     }
-    // TODO: Does the user for which we search the top-N recommendation need to be connected to all items?
     FactorGraph factorGraph(factors);
 
     /* TODO: RUN BELIEVE PROPAGATION */
@@ -140,13 +136,64 @@ int main(int argc, char *argv[]) {
     opts.set("tol",1e-9); // Tolerance for convergence
     opts.set("verbose",(size_t)1); // Verbosity (amount of output generated)
     BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
-    // Initialize belief propagation algorithm
-    bp.init();
-    // Run belief propagation algorithm
-    bp.run();
+    bp.init(); // Initialize belief propagation algorithm
+    bp.run(); // Run belief propagation algorithm
 
-    for(size_t i = 0;i < factorGraph.nrVars(); i++){ // TODO: running this multiple times the result changes? Is this the wrong algorithm?
+    for(size_t i = 0;i < factorGraph.nrVars(); i++){
         std::cout << bp.belief(factorGraph.var(i)) << std::endl;
+    }
+
+    /* HENRY'S APPROACH FOR COMPARISON */
+
+     // Initialize factor variables for term psi_i, phi_ij for all nodes
+    vector<Factor> factors2;
+    for(int i=0; i<numUsers; i++){
+        Var user(numMovies + i, 2);
+        Factor m(user);
+        m.set(0, 0.5);
+        m.set(1, 0.5);
+        factors2.push_back(m);
+    }
+    for(int i=0; i<numMovies; i++){
+        Var movie(i, 2);
+        Factor m(movie);
+        double dislikePotential = 0.5;
+        double likePotential = 0.5;
+        if(ratedByTargetUser[i]!=-1){
+            double zscore = (ratingsTargetUser[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
+            dislikePotential -= zscore/p;
+            likePotential += zscore/p;
+            dislikePotential = dislikePotential > 0.9 ? 0.9 
+                            : (dislikePotential < 0.1 ? 0.1 : dislikePotential);
+            likePotential = likePotential > 0.9 ? 0.9 
+                            : (likePotential < 0.1 ? 0.1 : likePotential);
+        }
+        m.set(0, dislikePotential);
+        m.set(1, likePotential);
+        factors2.push_back(m);
+    }
+    for(int i=0; i<numRatings; i++) {
+        if(ratings[i]>averageRatingPerUser[users[i]]) {
+            Var user(numMovies + users[i], 2);
+            Var movie(movies[i], 2);
+            Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
+            // let's assume DISLIKE=0 and LIKE=1 // TODO: also not sure
+            m.set(0, phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
+            m.set(1, phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
+            m.set(2, phi_diff); // movies[i]: DISLIKE, users[i]: LIKE
+            m.set(3, phi_same); // movies[i]: LIKE, users[i]: LIKE
+            factors2.push_back(m);
+        }
+    }
+    FactorGraph factorGraph2(factors2);
+
+    // Run believe propagation
+    BP bp2(factorGraph2, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
+    bp2.init(); // Initialize belief propagation algorithm
+    bp2.run(); // Run belief propagation algorithm
+
+    for(size_t i = 0;i < factorGraph2.nrVars(); i++){ // The first three should correspond to movies, I think
+        std::cout << bp2.belief(factorGraph2.var(i)) << std::endl;
     }
 
     return 0;
