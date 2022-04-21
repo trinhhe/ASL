@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-	numRatings--; // Always assume the file is \n-terminated
+    numRatings--; // Always assume the file is \n-terminated
 
     rewind(fp);
     
@@ -77,9 +77,9 @@ int main(int argc, char *argv[]) {
     // Factors psi_i*phi_ij (https://en.wikipedia.org/wiki/Belief_propagation#Description_of_the_sum-product_algorithm)
 
     // Calculate edge threshold & collect target user ratings
-    int numRatingsPerUser[numUsers];
+    int numRatingsPerUser[numUsers] = {0};
     double averageRatingPerUser[numUsers] = {0}; // for edge thresholding
-    double ratingsTargetUser[numRatingsTargetUser];
+    double ratingsTargetUser[numRatingsTargetUser] = {0};
     bool ratedByTargetUser[numMovies] = {false};
     for(int i=0; i<numRatings; i++){
         numRatingsPerUser[users[i]]++;
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
             double likePotential = 0.5;
             if(ratedByTargetUser[movies[i]]){
                 double zscore = (ratings[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
-				// RH: ^ should be sample standard mean, i.e., sqrt(sampleVariance), no?
+                // RH: ^ should be sample standard mean, i.e., sqrt(sampleVariance), no?
                 // HT: I agree
                 dislikePotential -= zscore/p;
                 likePotential += zscore/p;
