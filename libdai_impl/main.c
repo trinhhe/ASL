@@ -81,11 +81,12 @@ int main(int argc, char *argv[]) {
     double averageRatingPerUser[numUsers] = {0}; // for edge thresholding
     double ratingsTargetUser[numRatingsTargetUser] = {0};
     bool ratedByTargetUser[numMovies] = {false};
+    int idxRatingsTargetUser = 0;
     for(int i=0; i<numRatings; i++){
         numRatingsPerUser[users[i]]++;
         averageRatingPerUser[users[i]]+=ratings[i];
         if(users[i] == targetUser){
-            ratingsTargetUser[i] = ratings[i];
+            ratingsTargetUser[idxRatingsTargetUser++] = ratings[i];
             ratedByTargetUser[movies[i]] = true;
         }
     }
