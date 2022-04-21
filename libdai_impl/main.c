@@ -126,6 +126,7 @@ int main(int argc, char *argv[]) {
             m.set(1, dislikePotential*phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
             m.set(2, likePotential*phi_diff); // movies[i]: DISLIKE, users[i]: LIKE
             m.set(3, likePotential*phi_same); // movies[i]: LIKE, users[i]: LIKE
+            std::cout << m << std::endl;
             factors.push_back(m);
         }
     }
@@ -137,8 +138,9 @@ int main(int argc, char *argv[]) {
     PropertySet opts;
     opts.set("maxiter", (size_t)10000); // Maximum number of iterations
     opts.set("tol",1e-9); // Tolerance for convergence
-    opts.set("verbose",(size_t)1); // Verbosity (amount of output generated)
-    BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
+    opts.set("verbose",(size_t)10); // Verbosity (amount of output generated)
+    BP bp(factorGraph, opts("updates",string("PARALL"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
+    // RH: PARALL seems more like what we should do (but seems to give the same results anyway)
     // Initialize belief propagation algorithm
     bp.init();
     // Run belief propagation algorithm

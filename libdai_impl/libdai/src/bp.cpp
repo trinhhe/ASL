@@ -212,11 +212,13 @@ void BP::calcNewMessage( size_t i, size_t _I ) {
     // calculate updated message I->i
     size_t I = nbV(i,_I);
 
+    cout << i << "->" << I << '\n';
     Prob marg;
     if( factor(I).vars().size() == 1 ) // optimization
         marg = factor(I).p();
     else {
         Factor Fprod( factor(I) );
+        cout << "Fpro " << Fprod << "\n";
         Prob &prod = Fprod.p();
         prod = calcIncomingMessageProduct( I, true, i );
 
@@ -244,6 +246,8 @@ void BP::calcNewMessage( size_t i, size_t _I ) {
                 for( size_t r = 0; r < prod.size(); ++r )
                     if( prod[r] > marg[ind[r]] )
                         marg.set( ind[r], prod[r] );
+            cout << "prod " << prod << "\n";
+            cout << "marg " << marg << "\n";
             marg.normalize();
         }
     }
