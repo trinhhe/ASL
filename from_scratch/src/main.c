@@ -17,7 +17,7 @@ int main(int argc, const char **argv)
 	graph_from_edge_list(ratings, 1, &G);
 	for (int it = 0; it < 10; it++) {
 #ifdef DEBUG
-		printf("=== Iteration %3d ===", it);
+		printf("=== Iteration %3d ===\n", it);
 		dump_beliefs(&G);
 #endif
 		propagate(&G);

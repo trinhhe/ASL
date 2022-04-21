@@ -105,7 +105,8 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 
 	// TODO: unsure about this; should the initialisation be random instead?
 	for (int i = 0; i < G.m; i++) {
-		float_t r = drand48();
+//		float_t r = drand48();
+		float_t r = .5;
 		G.in_old[i] = G.in[i] = (msg_t){r, 1 - r};
 #ifdef DEBUG
 		printf("%f %f\n", G.in[i].D, G.in[i].L);
