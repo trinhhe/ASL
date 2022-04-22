@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
         double dislikePotential = 0.5;
         double likePotential = 0.5;
         if(ratedByTargetUser[i]!=-1){
-            double zscore = (ratedByTargetUser[movies[i]] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
+            double zscore = (ratedByTargetUser[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
             dislikePotential -= zscore/p;
             likePotential += zscore/p;
             dislikePotential = dislikePotential > 0.9 ? 0.9 
