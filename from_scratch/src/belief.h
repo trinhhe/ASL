@@ -17,9 +17,13 @@ void propagate(graph_t *G) {
 			// calculate the address where we should write our message to
 			msg_t *out = G->in + G->out[j];
 			float_t *_out = (float_t *)out;
+			// TODO: potentially slow
+			size_t m_vertex = translator_movie_to_id(&G->tr, G->E[G->eix[j]].movie);
 			for (int c = 0; c < 2; c++) {
 				for (int d = 0; d < 2; d++) {
-					float_t pot_i = ((float_t *)&G->node_pot[i])[d];
+					// TODO: how should pot_i be calculated?
+					//float_t pot_i = ((float_t *)&G->node_pot[i])[d];
+					float_t pot_i = ((float_t *)&G->node_pot[m_vertex])[d];
 					float_t pot_ij = PROP_MATRIX[d][c];
 					float_t prod = 1;
 					for (int k = G->off[i]; k < G->off[i + 1]; k++) {
