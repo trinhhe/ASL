@@ -101,58 +101,14 @@ int main(int argc, char *argv[]) {
     }
     sampleVariance /= (numRatingsTargetUser-1); // Not sure
 
-    // Initialize factor variables for term psi_i*phi_ij for all nodes
-    vector<Factor> factors;
-    for(int i=0; i<numRatings; i++) {
-        if(ratings[i]>=averageRatingPerUser[users[i]]) {
-            Var user(numMovies + users[i], 2);
-            Var movie(movies[i], 2);
-            Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
-            double dislikePotential = 0.5;
-            double likePotential = 0.5;
-            if(ratedByTargetUser[movies[i]]!=-1){
-                double zscore = (ratings[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
-                dislikePotential -= zscore/p;
-                likePotential += zscore/p;
-                dislikePotential = dislikePotential > 0.9 ? 0.9 
-                                : (dislikePotential < 0.1 ? 0.1 : dislikePotential);
-                likePotential = likePotential > 0.9 ? 0.9 
-                                : (likePotential < 0.1 ? 0.1 : likePotential);
-            }
-            // let's assume DISLIKE=0 and LIKE=1 // TODO: also not sure
-            m.set(0, dislikePotential*phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
-            m.set(1, dislikePotential*phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
-            m.set(2, likePotential*phi_diff); // movies[i]: DISLIKE, users[i]: LIKE
-            m.set(3, likePotential*phi_same); // movies[i]: LIKE, users[i]: LIKE
-            factors.push_back(m);
-        }
-    }
-    FactorGraph factorGraph(factors);
-
-    /* TODO: RUN BELIEVE PROPAGATION */
-
-    PropertySet opts;
-    opts.set("maxiter", (size_t)10000); // Maximum number of iterations
-    opts.set("tol",1e-9); // Tolerance for convergence
-    opts.set("verbose",(size_t)1); // Verbosity (amount of output generated)
-    BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
-    bp.init(); // Initialize belief propagation algorithm
-    bp.run(); // Run belief propagation algorithm
-
-    for(size_t i = 0;i < factorGraph.nrVars(); i++){
-        std::cout << bp.belief(factorGraph.var(i)) << std::endl;
-    }
-
-    /* HENRY'S APPROACH FOR COMPARISON */
-
      // Initialize factor variables for term psi_i, phi_ij for all nodes
-    vector<Factor> factors2;
+    vector<Factor> factors;
     for(int i=0; i<numUsers; i++){
         Var user(numMovies + i, 2);
         Factor m(user);
         m.set(0, 0.5);
         m.set(1, 0.5);
-        factors2.push_back(m);
+        factors.push_back(m);
     }
     for(int i=0; i<numMovies; i++){
         Var movie(i, 2);
@@ -170,7 +126,7 @@ int main(int argc, char *argv[]) {
         }
         m.set(0, dislikePotential);
         m.set(1, likePotential);
-        factors2.push_back(m);
+        factors.push_back(m);
     }
     for(int i=0; i<numRatings; i++) {
         if(ratings[i]>=averageRatingPerUser[users[i]]) {
@@ -182,18 +138,22 @@ int main(int argc, char *argv[]) {
             m.set(1, phi_diff); // movies[i]: LIKE, users[i]: DISLIKE
             m.set(2, phi_diff); // movies[i]: DISLIKE, users[i]: LIKE
             m.set(3, phi_same); // movies[i]: LIKE, users[i]: LIKE
-            factors2.push_back(m);
+            factors.push_back(m);
         }
     }
-    FactorGraph factorGraph2(factors2);
+    FactorGraph factorGraph(factors);
 
     // Run believe propagation
-    BP bp2(factorGraph2, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
-    bp2.init(); // Initialize belief propagation algorithm
-    bp2.run(); // Run belief propagation algorithm
+    PropertySet opts;
+    opts.set("maxiter", (size_t)10000); // Maximum number of iterations
+    opts.set("tol",1e-9); // Tolerance for convergence
+    opts.set("verbose",(size_t)1); // Verbosity (amount of output generated)
+    BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
+    bp.init(); // Initialize belief propagation algorithm
+    bp.run(); // Run belief propagation algorithm
 
-    for(size_t i = 0;i < factorGraph2.nrVars(); i++){ // The first three should correspond to movies, I think
-        std::cout << bp2.belief(factorGraph2.var(i)) << std::endl;
+    for(size_t i = 0;i < factorGraph.nrVars(); i++){ // The first three should correspond to movies, I think
+        std::cout << bp.belief(factorGraph.var(i)) << std::endl;
     }
 
     return 0;
