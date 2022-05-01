@@ -1,4 +1,5 @@
 #!/bin/sh
+## Usage e.g. ' ./measure_runtime.sh "-Ofast" "scratch__Ofast.csv" '
 # $1: first argument, additional compiler flags e.g. '-O3 -ffast-math'
 # $2: second argument, output file name
 gcc ../from_scratch/src/main_timer.c -o main_timer -g -Wall -lm "$1"
