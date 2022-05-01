@@ -156,6 +156,15 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	*_G = G;
 }
 
+void graph_destroy(graph_t *G) {
+		free(G->in_old);
+		free(G->in);
+		free(G->eix);
+		free(G->out);
+		free(G->belief);
+		free(G->off);
+}
+
 void dump_beliefs(graph_t *G) {
 	for (int v = G->tr.m_lo; v < G->tr.m_hi; v++)
 		printf("%.3f ", G->belief[v].L);
