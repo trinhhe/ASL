@@ -53,6 +53,15 @@ int main(int argc, const char **argv)
 
         // end = stop_tsc(start);
         // total += (double) end;
+        if (i != REP-1) {
+            free(G.in_old);
+            free(G.in);
+            free(G.eix);
+            free(G.out);
+            free(G.belief);
+            free(G.off);
+        }
+        
     }
     total_bel /= REP;
     total_gbuild /= REP;
@@ -106,6 +115,12 @@ int main(int argc, const char **argv)
 
     total_flops = flops_belief + flops_gbuild + flops_prop;
     
+    free(G.in_old);
+    free(G.in);
+    free(G.eix);
+    free(G.out);
+    free(G.belief);
+    free(G.off);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, bel_cycle, gbuild_flops, prop_flops, bel_flops\n
     printf("%zu, %f, %u, %f, %f, %f, %u, %u, %u\n", G.n, total, total_flops, total_gbuild, total_prop, total_bel, flops_gbuild, flops_prop, flops_belief);
