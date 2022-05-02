@@ -10,6 +10,7 @@ combinations = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),
 all: $(combinations)
 
 measurements/%.csv: build/%
+	@mkdir -p measurements
 	measurement_utils/measure_runtime.sh $< $@
 
 build/from_scratch%:

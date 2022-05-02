@@ -6,7 +6,7 @@
 prog="$1"
 out="$2"
 echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops" > "$out".tmp
-for testfile in "$(dirname "$0")"/data/*_1*norm.csv; do
+for testfile in "$(dirname "$0")"/data/*norm.csv; do
 	echo $testfile > /dev/stderr
     "$prog" "$testfile" >> "$out".tmp
 done
