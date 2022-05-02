@@ -6,6 +6,7 @@
 #include <dai/factorgraph.h>
 #include <dai/bp.h>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 using namespace dai;
