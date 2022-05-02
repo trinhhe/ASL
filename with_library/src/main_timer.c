@@ -156,8 +156,8 @@ int main(int argc, char *argv[]) {
                 factors.push_back(m);
             }
         }
-        FactorGraph factorGraph2(factors2);
-        // number_vars = factorGraph2.nrVars();
+        FactorGraph factorGraph(factors);
+        // number_vars = factorGraph.nrVars();
         // Run believe propagation
         PropertySet opts;
         opts.set("maxiter", (size_t)max_iter); // Maximum number of iterations
@@ -173,8 +173,8 @@ int main(int argc, char *argv[]) {
         stop = stop_tsc(start);
         total += (double) stop;
         if (j == REP-1) {
-            fgraphclone = factorGraph2;
-            bpclone = bp2;
+            fgraphclone = factorGraph;
+            bpclone = bp;
         }
     }
 
