@@ -1,10 +1,13 @@
 #!/bin/sh
-## Usage e.g. ' ./measure_runtime.sh "-Ofast" "scratch__Ofast.csv" '
-# $1: first argument, additional compiler flags e.g. '-O3 -ffast-math'
+## Usage e.g. ' measurement_utils/measure_runtime.sh build/from_scratch@-O3 measurements/from_scratch@-O3.csv '
+## … or run make measurements/from_scratch@-O3.csv, which calls this script under the hood
+# $1: first argument: the executable to run
 # $2: second argument, output file name
-gcc ../from_scratch/src/main_timer.c -o main_timer -g -Wall -lm "$1"
-echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops" > "$2"
-for testfile in data/*norm.csv; do
-    ./main_timer "$testfile" >> "$2" 
+prog="$1"
+out="$2"
+echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops" > "$out".tmp
+for testfile in "$(dirname "$0")"/data/*_1*norm.csv; do
+	echo $testfile > /dev/stderr
+    "$prog" "$testfile" >> "$out".tmp
 done
-rm main_timer
+mv "$out".tmp "$out"

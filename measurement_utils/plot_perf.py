@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
     plot performance
 """
@@ -20,14 +21,14 @@ def cycle_markers(iterable,n):
 sns.set_theme()
 markers = cycle_markers(('^','o','s'),1)
 
-PATH = './'
+PATH = os.path.join(os.path.dirname(__file__), '../measurements/')
 
 fileNames = os.listdir(PATH)
 
 fileNames = [file for file in fileNames if '.csv' in file]
 
 for file in fileNames:
-    df = pd.read_csv(PATH + file, usecols= [0,1,2])
+    df = pd.read_csv(PATH + file, usecols= [0,1,2], index_col=False)
     x = df.iloc[:,0].to_numpy()
     y = df.iloc[:,2].to_numpy()/df.iloc[:,1].to_numpy()
     #sort array after n
@@ -35,7 +36,8 @@ for file in fileNames:
     y = y[perm]
     x = x[perm]
     marker = next(markers)
-    plt.plot(x, y, label = f"{Path(file).stem}", marker=marker)
+    pretty_name = Path(file).stem.replace("@", " ").replace("__", "=")
+    plt.plot(x, y, label = pretty_name, marker=marker)
 
 plt.title("Belief Propagation [Processor, Flags ...]")
 plt.xlabel('n')
