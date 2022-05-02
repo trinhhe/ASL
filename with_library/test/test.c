@@ -6,28 +6,47 @@
 
 int exitCode = EXIT_SUCCESS;
 
+char* asString(const int * arr){
+    size_t arrLength = sizeof(arr)/sizeof(int);
+
+    char* c_arr = (char*)malloc((arrLength*(sizeof(int)+1))+4*sizeof(char));
+    c_arr[0] = '[';
+    c_arr[1] = ' ';
+    c_arr[2*(arrLength+1)] = ']';
+    c_arr[2*(arrLength+1)+1] = '\0';
+    if(arrLength < 1){
+        return c_arr;
+    }
+
+    for (int i=0; i < arrLength; i++)
+    {   
+        snprintf(&c_arr[2*(i+1)], sizeof(int), "%i", arr[i]);
+        c_arr[2*(i+1)+1] = ' ';
+    }
+    return c_arr;  
+}
+
 #define ASSERT_EQUAL( expected, actual, length )                                             \
 {                                                                                            \
   for(size_t i=0; i<length; i++)                                                             \
   {                                                                                          \
     if(expected[i] != actual[i])                                                             \
     {                                                                                        \
-        fprintf(stderr, "expected: %s, actual: %s\n", "x", "y");                             \
+        fprintf(stderr, "expected: %s, actual: %s\n", asString(expected), asString(actual)); \
         fprintf(stderr, "Error occurred at %s/%s:%i\n", __func__, __FILE__, __LINE__);       \
         exitCode = EXIT_FAILURE;                                                             \
     }                                                                                        \
   }                                                                                          \
 }
-// TODO: replace x and y with stringified array
 
 typedef struct {
     const int targetUser;
     const char* dataFile;
-    const int expectedRecommendations[3];
+    const int *expectedRecommendations;
 } test_case_t;
 
 test_case_t testCases[] = {
-    {1, "../test/data/ratings_small.csv", {2,2,1}}
+    {1, "../test/data/ratings_small.csv", (const int []){3,2,1}}
 };
 
 void test(test_case_t *tcase){
