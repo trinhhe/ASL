@@ -2,11 +2,10 @@
 #include "recommender.h"
 
 // First build the library yourself as described in the README in the libdai folder
-// Switch to folder: cd libdai_impl
-// Compile with: make
+// Compile with: g++ src/main.c -o build/main -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp
 int main(int argc, char *argv[]) {
 
-    const char* fileLocation = argc > 1 ? argv[1] : "test/data/ratings_small.csv";
+    const char* fileLocation = argc > 1 ? argv[1] : "../test/data/ratings_small.csv";
     const int targetUser = argc > 2 ? atoi(argv[2]) : 1; // TODO: check inputs
     const size_t k = argc > 3 ? atoi(argv[3]) : 0;
 

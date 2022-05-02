@@ -17,7 +17,6 @@ const double phi_diff = 0.5-alpha; // edge potiential between LIKE/DISLIKE & DIS
 const int p = 3; // Normalizing factor
 const int max_iter = 10;
 // First build the library yourself as described in the README in the libdai folder
-// Switch to folder: cd libdai_impl
 // Compile with: make
 // Examples used: example_sprinkler.cpp and example.cpp
 int main(int argc, char *argv[]) {
@@ -28,7 +27,7 @@ int main(int argc, char *argv[]) {
     initialize(&ri, fileLocation,1);
     */
 
-    const char* fileLocation = argc > 1 ? argv[1] : "test_data/ratings_small.csv";
+    const char* fileLocation = argc > 1 ? argv[1] : "../test/data/ratings_small.csv";
 
     FILE *fp = fopen(fileLocation, "r");
 
