@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "recommender.h"
+#include "recommend.h"
 
 // First build the library yourself as described in the README in the libdai folder
 // Compile with: g++ src/main.c -o build/main -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp
@@ -13,7 +13,9 @@ int main(int argc, char *argv[]) {
     initialize(&ri, fileLocation,targetUser);
     int* recommendedK = recommendK(&ri, k);
 
-    printf("Recommended movies: \n");
+    if(k>0){
+        printf("Recommended movies: \n");
+    }
     for(size_t i; i<k; i++){
         printf("%i ", recommendedK[i]);
     }
