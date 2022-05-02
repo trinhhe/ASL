@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <dirent.h> 
 
+// Compile with: g++ test/test.c -o build/test -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp
+// For executing: cd to /build and run ./test
+
 int exitCode = EXIT_SUCCESS;
 
 char* asString(const int * arr){
@@ -26,6 +29,9 @@ char* asString(const int * arr){
     return c_arr;  
 }
 
+#define TESTFILEDIR "../test/data/"
+#define LOCATION(file) TESTFILEDIR file
+
 #define ASSERT_EQUAL( expected, actual, length )                                             \
 {                                                                                            \
   for(size_t i=0; i<length; i++)                                                             \
@@ -46,7 +52,8 @@ typedef struct {
 } test_case_t;
 
 test_case_t testCases[] = {
-    {1, "../test/data/ratings_small.csv", (const int []){3,2,1}}
+    {1, LOCATION("ratings_small.csv"), (const int []){3,2,1}},
+    {2, LOCATION("input1.csv"), (const int []){3,2}} // TODO: Find more test cases
 };
 
 void test(test_case_t *tcase){
