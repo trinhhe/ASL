@@ -1,7 +1,7 @@
 DEBUG_FLAGS := -g
 CFLAGS := -Wall -lm
 #TEST_INPUT := test/ratings1.csv
-TEST_INPUT := ../libdai_impl/test/data/ratings_small.csv  
+TEST_INPUT := ../with_library/test/data/ratings_small.csv  
 #TEST_INPUT := ../Data/ml-latest-small/ratings.csv
 EXEC := build/main
 SRC := src/main_timer.c
