@@ -30,6 +30,10 @@ for file in fileNames:
     df = pd.read_csv(PATH + file, usecols= [0,1,2])
     x = df.iloc[:,0].to_numpy()
     y = df.iloc[:,2].to_numpy()/df.iloc[:,1].to_numpy()
+    #sort array after n
+    perm = x.argsort()
+    y = y[perm]
+    x = x[perm]
     marker = next(markers)
     plt.plot(x, y, label = f"{Path(file).stem}", marker=marker)
 
@@ -37,7 +41,7 @@ plt.title("Belief Propagation [Processor, Flags ...]")
 plt.xlabel('n')
 plt.ylabel('Performance [F/C]')
 #plt.legend()
-plt.ylim(ymin=0,ymax=2)
+plt.ylim(ymin=0,ymax=1)
 plt.ylabel('flops/cycle')
 #plt.grid()
 ax = plt.gca()
