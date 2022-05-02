@@ -21,7 +21,7 @@ int main(int argc, const char **argv)
 		dump_beliefs(&G);
 #endif
 		propagate(&G);
+        get_beliefs(&G);
 	}
-    get_beliefs(&G);
 	dump_graph(&G);
 }

@@ -14,11 +14,10 @@ int main(int argc, const char **argv)
     int target_uid = 1;
     int iterations = 10;
 
-    myInt64 start_gbuild, end_gbuild, start_prop, end_prop, start, end, start_bel, end_bel;
+    myInt64 start_gbuild, end_gbuild, start_prop, end_prop;
     double total = 0;
     double total_gbuild = 0;
     double total_prop = 0;
-    double total_bel = 0;
 	for (int it = 0; it < 3000; it++) // warm up the CPU
 		drand48();
 
@@ -27,9 +26,7 @@ int main(int argc, const char **argv)
     graph_t G;
 
     for (int i = 0; i < REP; i++) {
-        // start = start_tsc();
         start_gbuild = start_tsc();
-        // graph_t G;
         graph_from_edge_list(ratings, target_uid, &G);
         end_gbuild = stop_tsc(start_gbuild);
         total_gbuild += (double) end_gbuild;
@@ -41,27 +38,18 @@ int main(int argc, const char **argv)
             dump_beliefs(&G);
 #endif
 		    propagate(&G);
-
+            get_beliefs(&G);
 	    }
         end_prop = stop_tsc(start_prop);
         total_prop += (double) end_prop;
 
-        start_bel = start_tsc();
-        get_beliefs(&G);
-        end_bel = stop_tsc(start_bel);
-        total_bel += (double) end_bel;
-
-        // end = stop_tsc(start);
-        // total += (double) end;
         if (i != REP-1) {
 			graph_destroy(&G);
         }
     }
-
-    total_bel /= REP;
     total_gbuild /= REP;
     total_prop /= REP;
-    total = total_bel + total_gbuild + total_prop;
+    total = total_gbuild + total_prop;
 
 
     unsigned int flops_gbuild = 0;
@@ -95,7 +83,6 @@ int main(int argc, const char **argv)
         }
     }
     flops_prop *= iterations;
-    // printf("flops_prop: %d\n", flops_prop);
 
     // number of flops in get_beliefs
     for (int i = 0; i < G.n; i++) {
@@ -106,14 +93,15 @@ int main(int argc, const char **argv)
 
 		flops_belief++; //normalise_msg(&G->belief[i])
 	}
+    flops_belief *= iterations;
     // printf("flops_belief: %d\n", flops_belief);
 
     total_flops = flops_belief + flops_gbuild + flops_prop;
     
 	graph_destroy(&G);
 	// dump_graph(&G);
-    // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, bel_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%zu, %f, %u, %f, %f, %f, %u, %u, %u\n", G.n, total, total_flops, total_gbuild, total_prop, total_bel, flops_gbuild, flops_prop, flops_belief);
+    // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
+    printf("%zu, %f, %u, %f, %f, %u, %u, %u\n", G.n, total, total_flops, total_gbuild, total_prop, flops_gbuild, flops_prop, flops_belief);
 
     free(ratings);
 }
