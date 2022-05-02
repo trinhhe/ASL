@@ -23,6 +23,10 @@ const int max_iter = 10;
 int main(int argc, char *argv[]) {
 
     /* READ IN DATA */
+    /* Replace the reading-in part later by:
+    rinput_t ri;
+    initialize(&ri, fileLocation,1);
+    */
 
     const char* fileLocation = argc > 1 ? argv[1] : "test_data/ratings_small.csv";
 
