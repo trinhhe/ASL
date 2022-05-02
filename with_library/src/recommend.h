@@ -113,6 +113,7 @@ int* recommendK(rinput_t *input, const size_t k){
         float diff = ratingsTargetUser[i] - input->avgMovieRatingTargetUser;
         sampleVariance += diff*diff;
     }
+    assert(input->numRatingsTargetUser > 1);
     sampleVariance /= (input->numRatingsTargetUser-1); // Not sure
 
      // Initialize factor variables for term psi_i, phi_ij for all nodes
@@ -175,8 +176,27 @@ int* recommendK(rinput_t *input, const size_t k){
     }
 #endif
 
-    // TODO: RECOMMEND
+    /* MAKE RECOMMENDATION */
+    float beliefs[input->numMovies];
+    int orderedMovies[input->numMovies];
+    for(int i=0; i<input->numMovies; i++){
+        beliefs[i] = bp.belief(factorGraph.var(i))[1];
+        orderedMovies[i] = i;
+    }
+    // Bubble sort
+    for (size_t i=0; i<input->numMovies-1; i++){
+        for (size_t j=0; j<input->numMovies-i-1; j++){
+            if (beliefs[j] < beliefs[j + 1]){
+                int temp = orderedMovies[j];
+                orderedMovies[j] = orderedMovies[j+1];
+                orderedMovies[j+1] = temp;
+            }
+        }
+    }
     int* recommendations = (int*)malloc(k * sizeof(int));
+    for(size_t i=0; i<input->numMovies; i++){
+        recommendations[i] = orderedMovies[i]+1;
+    }
     return recommendations;
 }
 
