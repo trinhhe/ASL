@@ -47,7 +47,6 @@ int main(int argc, char *argv[]) {
     }
 
     numRatings--; // Always assume the file is \n-terminated
-    int cnt = 0;
     rewind(fp);
     
     int users[numRatings];
@@ -79,10 +78,12 @@ int main(int argc, char *argv[]) {
 
     myInt64 start, stop;
     double total = 0;
-    int number_vars;
+    // int cnt = 0;
     FactorGraph fgraphclone;
     BP bpclone;
+    vector<size_t> var_states; //needed to temporarly save states of variables in factorgraph needed for flop counting, for some reason after when factorgraph gets deconstructed, the fclonegraph variable states memory get freed
     double ratedByTargetUser[numMovies] = {-1};
+    vector<Factor> factors;
     for (int j = 0; j < REP; j++) {
         start = start_tsc();
         /* DEFINE FACTOR GRAPH */
@@ -116,7 +117,8 @@ int main(int argc, char *argv[]) {
         sampleVariance /= (numRatingsTargetUser-1); // Not sure
 
         // Initialize factor variables for term psi_i, phi_ij for all nodes
-        vector<Factor> factors;
+        // vector<Factor> factors;
+        factors.clear();
         for(int i=0; i<numUsers; i++){
             Var user(numMovies + i, 2);
             Factor m(user);
@@ -144,7 +146,6 @@ int main(int argc, char *argv[]) {
         }
         for(int i=0; i<numRatings; i++) {
             if(ratings[i]>=averageRatingPerUser[users[i]]) {
-                // cnt++;
                 Var user(numMovies + users[i], 2);
                 Var movie(movies[i], 2);
                 Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
@@ -157,7 +158,7 @@ int main(int argc, char *argv[]) {
             }
         }
         FactorGraph factorGraph(factors);
-        // number_vars = factorGraph.nrVars();
+        
         // Run believe propagation
         PropertySet opts;
         opts.set("maxiter", (size_t)max_iter); // Maximum number of iterations
@@ -166,6 +167,9 @@ int main(int argc, char *argv[]) {
         BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
         bp.init(); // Initialize belief propagation algorithm
         bp.run(); // Run belief propagation algorithm
+        // size_t xd = factorGraph.nrFactors();
+        // for( size_t k = 0; k < xd; ++k) //DELETE
+        //     cout << "factorGraph - var(" << k << ") states " << factorGraph.var(k).states() << endl;
 
         for(size_t i = 0;i < factorGraph.nrVars(); i++){ // The first three should correspond to movies, I think
             bp.belief(factorGraph.var(i));
@@ -175,88 +179,88 @@ int main(int argc, char *argv[]) {
         if (j == REP-1) {
             fgraphclone = factorGraph;
             bpclone = bp;
+            size_t n = factorGraph.nrFactors();
+            var_states.reserve(n);
+            for( size_t k = 0; k < n; ++k) //DELETE
+                var_states[k] = factorGraph.var(k).states();
         }
     }
-
     total /= REP;
-    // count flops
-    unsigned int flops = 0;
-    for(int i=0; i<numRatings; i++)
-        flops++;
-    
-    for(int i=0; i<numUsers; i++)
-        flops++;
-    
-    for(int i=0; i<numRatingsTargetUser; i++){
-        flops +=3;
-    }
-    flops++;
 
-    for(int i=0; i<numMovies; i++){
+    // count flops
+    unsigned long int flops = 0;
+    flops += numRatings; //for loop line 98
+    flops += numUsers; //for loop line 106
+    flops += 3*numRatingsTargetUser; //for loop line 112
+    flops++; //line 116
+
+    for(int i=0; i<numMovies; i++){ //for loop line 129
         if(ratedByTargetUser[i]!=-1){
             flops +=7;
         }
     }
-    //bp2.run flops
-    int nrEdges = fgraphclone.nrEdges();
+    //bp2.run flops    
+    size_t nrEdges = fgraphclone.nrEdges();
+    size_t nrVars = fgraphclone.nrVars();
+    size_t nrFactors = fgraphclone.nrFactors();
+
     std::vector<Edge> _updateSeq;
     _updateSeq.reserve( nrEdges );
-    for( size_t I = 0; I < fgraphclone.nrFactors(); I++ )
-        bforeach( const Neighbor &i, fgraphclone.nbF(I) )
+    for( size_t I = 0; I < nrFactors; I++)
+        bforeach( const Neighbor &i, fgraphclone.nbF(I) ) {
             _updateSeq.push_back( Edge( i, i.dual ) );
-
-    for(int i = 0; i <  max_iter; i++) { //max_iter
-        bforeach( const Edge &e, _updateSeq ) {
-            //calcNewMessage
-            size_t I = fgraphclone.nbV(e.first,e.second);
-            if (fgraphclone.factor(I).vars().size() != 1) {
-                // calcIncomingMessageProduct
-                Factor Fprod( fgraphclone.factor(I) );
-                Prob &prod = Fprod.p();
-                bforeach( const Neighbor &j, fgraphclone.nbF(I) )
-                    if (j != e.first) {
-                    bforeach( const Neighbor &J, fgraphclone.nbV(j) )
-                        if( J != I )
-                            flops++;
-
-                    for( size_t r = 0; r < prod.size(); ++r )
-                        flops++;      
-                    }    
-                //marginalize in calcNewMessage
-                for( size_t r = 0; r < prod.size(); ++r )
-                    flops++;    
-                flops += fgraphclone.var(e.first).states();//normalize
-            }
         }
 
-        //calculate beliefs (note: they calculate after every message passing iteration the belief states to look
-        //up difference between old_belief state and new belief state. If difference < tolerance, algorithm converges)
-        
-        //believe for Variables
-        for( size_t k = 0; k < fgraphclone.nrVars(); ++k) {
-            bforeach( const Neighbor &I, fgraphclone.nbV(k) )
-                flops++;
-            flops += 3*fgraphclone.var(k).states(); //normalize + dist that contains dot product between probability vectors
-        }
-        //believe for Factors (contains calcIncomingMessageProduct)
-        for( size_t k = 0; k < fgraphclone.nrFactors(); ++k) {
-            flops += 3*fgraphclone.var(k).states(); //normalize + dist that contains innerproduct between probability vectors
-            
-            Factor Fprod( fgraphclone.factor(k) );
+    bforeach( const Edge &e, _updateSeq ) {
+        //calcNewMessage (bp.cpp:211)
+        size_t i = e.first;
+        size_t I = fgraphclone.nbV(i,e.second);
+        if (fgraphclone.factor(I).vars().size() != 1) {
+            // calcIncomingMessageProduct (bp:cpp:168)
+            Factor Fprod( fgraphclone.factor(I) );
             Prob &prod = Fprod.p();
-            bforeach( const Neighbor &j, fgraphclone.nbF(k) ) {
+            bforeach( const Neighbor &j, fgraphclone.nbF(I) )
+                if (j != i) {
                 bforeach( const Neighbor &J, fgraphclone.nbV(j) )
-                    if( J != k )
+                    if( J != I )
                         flops++;
-
-                for( size_t r = 0; r < prod.size(); ++r )
-                    flops++;      
-            }  
+                // multiply prod with prod_j (bp.cpp:200)
+                flops += prod.size();      
+                }    
+            //marginalize in calcNewMessage (bp.cpp:228)
+            flops += prod.size(); 
+            flops += fgraphclone.var(i).states();//normalize (bp.cpp:247)
         }
     }
-    
+    cout << " bp2.run temp: " << flops << endl;
 
-    // cout << number_vars << endl;
-    cout << total << ", " << flops << endl;
+    //calculate beliefs (note: they calculate after every message passing iteration the belief states to look
+    //up difference between old_belief state and new belief state. If difference < tolerance, algorithm converges)
+    
+    //believe for Variables (bp.cpp:325)
+    for( size_t i = 0; i < nrVars; ++i) {
+        bforeach( const Neighbor &I, fgraphclone.nbV(i) )
+            flops++;
+        flops += 3*fgraphclone.var(i).states(); //normalize + dist that contains dot product between probability vectors
+    }
+    //believe for Factors (bp.cpp:330) (contains calcIncomingMessageProduct)
+    for( size_t k = 0; k < nrFactors; ++k) {        
+        //calcIncomingMessageProduct (bp:cpp:168)
+        Factor Fprod( fgraphclone.factor(k) );
+        Prob &prod = Fprod.p();
+        bforeach( const Neighbor &j, fgraphclone.nbF(k) ) {
+            bforeach( const Neighbor &J, fgraphclone.nbV(j) )
+                if( J != k )
+                    flops++;
+            // multiply prod with prod_j (bp.cpp:200)
+            flops += prod.size();      
+        }
+        //normalize (bp.cpp:391)
+        flops += prod.size();
+        flops += 2*prod.size(); //dist (bp.cpp:332)
+    }
+    flops *= bpclone.Iterations();
+    cout << bpclone.Iterations() << endl;
+    cout << total << ", " << flops << ", "<< ((double)flops)/total<< endl;
     return 0;
 }
