@@ -114,7 +114,8 @@ int main(int argc, char *argv[]) {
             double diff = ratingsTargetUser[i] - avgMovieRatingTargetUser;
             sampleVariance += diff*diff;
         }
-        sampleVariance /= (numRatingsTargetUser-1); // Not sure
+        sampleVariance /= (numRatingsTargetUser); // Not sure   ST: removed -1
+        double standardDerivation = sqrt(sampleVariance);
 
         // Initialize factor variables for term psi_i, phi_ij for all nodes
         // vector<Factor> factors;
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
             double dislikePotential = 0.5;
             double likePotential = 0.5;
             if(ratedByTargetUser[i]!=-1){
-                double zscore = (ratedByTargetUser[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
+                double zscore = (ratedByTargetUser[i] - avgMovieRatingTargetUser)/standardDerivation;
                 dislikePotential -= zscore/p;
                 likePotential += zscore/p;
                 dislikePotential = dislikePotential > 0.9 ? 0.9 
@@ -188,22 +189,18 @@ int main(int argc, char *argv[]) {
     total /= REP;
 
     // count flops
-    unsigned long int flops = 0;
-    flops += numRatings; //for loop line 98
-    flops += numUsers; //for loop line 106
-    flops += 3*numRatingsTargetUser; //for loop line 112
-    flops++; //line 116
+    unsigned int flops = 0;
+    unsigned int iterations = bpclone.Iterations();
 
-    for(int i=0; i<numMovies; i++){ //for loop line 129
-        if(ratedByTargetUser[i]!=-1){
-            flops +=7;
-        }
-    }
-    //bp2.run flops    
+    flops += 10 * numRatingsTargetUser + 3; //node potentials
+    flops += numRatings + numUsers; //edge threshold
+    flops += 2; //propagation matrix
+
+
+    //bp2.run flops
     size_t nrEdges = fgraphclone.nrEdges();
     size_t nrVars = fgraphclone.nrVars();
     size_t nrFactors = fgraphclone.nrFactors();
-
     std::vector<Edge> _updateSeq;
     _updateSeq.reserve( nrEdges );
     for( size_t I = 0; I < nrFactors; I++)
@@ -232,7 +229,6 @@ int main(int argc, char *argv[]) {
             flops += fgraphclone.var(i).states();//normalize (bp.cpp:247)
         }
     }
-    cout << " bp2.run temp: " << flops << endl;
 
     //calculate beliefs (note: they calculate after every message passing iteration the belief states to look
     //up difference between old_belief state and new belief state. If difference < tolerance, algorithm converges)
@@ -259,8 +255,7 @@ int main(int argc, char *argv[]) {
         flops += prod.size();
         flops += 2*prod.size(); //dist (bp.cpp:332)
     }
-    flops *= bpclone.Iterations();
-    cout << bpclone.Iterations() << endl;
+    flops *= iterations;
     cout << total << ", " << flops << ", "<< ((double)flops)/total<< endl;
     return 0;
 }
