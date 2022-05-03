@@ -168,9 +168,6 @@ int main(int argc, char *argv[]) {
         BP bp(factorGraph, opts("updates",string("SEQFIX"))("logdomain",false)("inference",string("SUMPROD"))); // TODO: SEQFIX?
         bp.init(); // Initialize belief propagation algorithm
         bp.run(); // Run belief propagation algorithm
-        // size_t xd = factorGraph.nrFactors();
-        // for( size_t k = 0; k < xd; ++k) //DELETE
-        //     cout << "factorGraph - var(" << k << ") states " << factorGraph.var(k).states() << endl;
 
         for(size_t i = 0;i < factorGraph.nrVars(); i++){ // The first three should correspond to movies, I think
             bp.belief(factorGraph.var(i));
@@ -256,6 +253,7 @@ int main(int argc, char *argv[]) {
         flops += 2*prod.size(); //dist (bp.cpp:332)
     }
     flops *= iterations;
-    cout << total << ", " << flops << ", "<< ((double)flops)/total<< endl;
+    printf("%zu, %f, %u\n", nrVars, total, flops);
+
     return 0;
 }
