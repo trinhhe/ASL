@@ -115,7 +115,7 @@ int* recommendK(rinput_t *input, const size_t k){
         sampleVariance += diff*diff;
     }
     assert(input->numRatingsTargetUser > 1);
-    sampleVariance /= (input->numRatingsTargetUser-1); // Not sure
+    sampleVariance /= (input->numRatingsTargetUser); // Not sure   ST: removed -1
 
      // Initialize factor variables for term psi_i, phi_ij for all nodes
     vector<Factor> factors;

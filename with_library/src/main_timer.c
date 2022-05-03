@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
             double diff = ratingsTargetUser[i] - avgMovieRatingTargetUser;
             sampleVariance += diff*diff;
         }
-        sampleVariance /= (numRatingsTargetUser-1); // Not sure
+        sampleVariance /= (numRatingsTargetUser); // Not sure   ST: removed -1
 
         // Initialize factor variables for term psi_i, phi_ij for all nodes
         vector<Factor> factors;
