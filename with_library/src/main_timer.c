@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
             sampleVariance += diff*diff;
         }
         sampleVariance /= (numRatingsTargetUser); // Not sure   ST: removed -1
+        double standardDerivation = sqrt(sampleVariance);
 
         // Initialize factor variables for term psi_i, phi_ij for all nodes
         vector<Factor> factors;
@@ -130,7 +131,7 @@ int main(int argc, char *argv[]) {
             double dislikePotential = 0.5;
             double likePotential = 0.5;
             if(ratedByTargetUser[i]!=-1){
-                double zscore = (ratedByTargetUser[i] - avgMovieRatingTargetUser)/sqrt(sampleVariance);
+                double zscore = (ratedByTargetUser[i] - avgMovieRatingTargetUser)/standardDerivation;
                 dislikePotential -= zscore/p;
                 likePotential += zscore/p;
                 dislikePotential = dislikePotential > 0.9 ? 0.9 
@@ -181,22 +182,13 @@ int main(int argc, char *argv[]) {
     total /= REP;
     // count flops
     unsigned int flops = 0;
-    for(int i=0; i<numRatings; i++)
-        flops++;
-    
-    for(int i=0; i<numUsers; i++)
-        flops++;
-    
-    for(int i=0; i<numRatingsTargetUser; i++){
-        flops +=3;
-    }
-    flops++;
+    unsigned int iterations = bpclone.Iterations();
 
-    for(int i=0; i<numMovies; i++){
-        if(ratedByTargetUser[i]!=-1){
-            flops +=7;
-        }
-    }
+    flops += 10 * numRatingsTargetUser + 3; //node potentials
+    flops += numRatings + numUsers; //edge threshold
+    flops += 2; //propagation matrix
+
+
     //bp2.run flops
     int nrEdges = fgraphclone.nrEdges();
     std::vector<Edge> _updateSeq;
@@ -205,7 +197,7 @@ int main(int argc, char *argv[]) {
         bforeach( const Neighbor &i, fgraphclone.nbF(I) )
             _updateSeq.push_back( Edge( i, i.dual ) );
 
-    for(int i = 0; i <  max_iter; i++) { //max_iter
+    for(int i = 0; i <  iterations; i++) { //replaced max_iter with iterations
         bforeach( const Edge &e, _updateSeq ) {
             //calcNewMessage
             size_t I = fgraphclone.nbV(e.first,e.second);
