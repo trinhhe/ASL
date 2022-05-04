@@ -1,4 +1,8 @@
+#if OPTVARIANT == 2
+#include "belief2.h"
+#else
 #include "belief.h"
+#endif
 #include "factor.h"
 #include "load.h"
 #include "util.h"

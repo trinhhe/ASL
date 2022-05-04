@@ -32,6 +32,9 @@ void normalise_msg(msg_t *m) {
 	}
 }
 
+#define NORMALISE_UNSAFE_0(a, b) (a) / ((a) + (b))
+#define NORMALISE_UNSAFE_1(a, b) (b) / ((a) + (b))
+
 
 typedef struct {
 	size_t n; // Total number of vertices
