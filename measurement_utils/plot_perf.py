@@ -27,6 +27,7 @@ sns.set_theme()
 markers = cycle_markers(('^','o','s'),1)
 
 PATH = os.path.join(os.path.dirname(__file__), '../measurements/')
+OUT = os.path.join(os.path.dirname(__file__), "plots/")
 
 fileNames = os.listdir(PATH)
 
@@ -48,7 +49,7 @@ plt.title("Belief Propagation [Processor, Flags ...]")
 plt.xlabel('n')
 plt.ylabel('Performance [F/C]')
 #plt.legend()
-plt.ylim(ymin=0,ymax=0.6)
+plt.ylim(ymin=0)
 plt.ylabel('flops/cycle')
 #plt.grid()
 ax = plt.gca()
@@ -62,8 +63,8 @@ labelLines(ax.get_lines(),
             outline_color=None, 
             outline_width=0)
 ### Generate the plot
-plt.savefig('./plots/performance_plot.png')
-plt.savefig('./plots/performance_plot.pdf')
+plt.savefig(OUT + 'performance_plot.png')
+plt.savefig(OUT + 'performance_plot.pdf')
 if show:
     plt.show()
 plt.close()
