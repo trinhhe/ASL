@@ -43,14 +43,19 @@ plt.title("Belief Propagation [Processor, Flags ...]")
 plt.xlabel('n')
 plt.ylabel('Performance [F/C]')
 #plt.legend()
-plt.ylim(ymin=0,ymax=1)
+plt.ylim(ymin=0,ymax=0.6)
 plt.ylabel('flops/cycle')
 #plt.grid()
 ax = plt.gca()
 ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 ax.grid(b=True, which='major', color='w', linewidth=1.0)
 ax.grid(b=True, which='minor', color='w', linewidth=0.5)
-labelLines(ax.get_lines(), yoffsets=0.1)
+labelLines(ax.get_lines(), 
+            yoffsets=0.022, 
+            fontsize=10, 
+            align=False, 
+            outline_color=None, 
+            outline_width=0)
 ### Generate the plot
 plt.savefig('./plots/performance_plot.png')  
 plt.show() 
