@@ -13,6 +13,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 from labellines import labelLines
 import itertools
+import sys
+
+show = True
+if len(sys.argv) > 1 and sys.argv[1] == "-n":
+    show = False
 
 def cycle_markers(iterable,n):
   for item in itertools.cycle(iterable):
@@ -57,6 +62,8 @@ labelLines(ax.get_lines(),
             outline_color=None, 
             outline_width=0)
 ### Generate the plot
-plt.savefig('./plots/performance_plot.png')  
-plt.show() 
+plt.savefig('./plots/performance_plot.png')
+plt.savefig('./plots/performance_plot.pdf')
+if show:
+    plt.show()
 plt.close()
