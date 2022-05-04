@@ -60,7 +60,7 @@ float_t get_user_stddev(rating_t *E, float_t mean)
 		cnt++;
 	}
 	assert(cnt > 1);
-	return sqrt(sum / (cnt - 1));
+	return sqrt(sum / cnt);
 }
 
 static float_t get_z_score(float_t x, float_t mean, float_t stddev)
