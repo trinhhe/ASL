@@ -5,76 +5,24 @@
 #include <dai/bp.h>
 #include <iostream>
 #include "../../measurement_utils/tsc_x86.h"
+#include "recommend.h"
 
 #define REP 10
 
 using namespace std;
 using namespace dai;
 
-const double alpha = 0.001; // TODO: What value is suitable and small enough?
-const double phi_same = 0.5+alpha; // edge potential between LIKE/LIKE & DISLIKE/DISLIKE
-const double phi_diff = 0.5-alpha; // edge potiential between LIKE/DISLIKE & DISLIKE/LIKE
-const int p = 3; // Normalizing factor
 const int max_iter = 10;
 // First build the library yourself as described in the README in the libdai folder
 // Compile with: make
 // Examples used: example_sprinkler.cpp and example.cpp
 int main(int argc, char *argv[]) {
 
-    /* READ IN DATA */
-    /* Replace the reading-in part later by:
-    rinput_t ri;
-    initialize(&ri, fileLocation,1);
-    */
-
     const char* fileLocation = argc > 1 ? argv[1] : "../test/data/ratings_small.csv";
 
-    FILE *fp = fopen(fileLocation, "r");
-
-    if(fp == NULL){
-        printf("File %s cannot be opened.", fileLocation);
-    }
-
-    char c;
-    int numRatings = 0;
-    while(!feof(fp)) // feof
-    {
-        c = fgetc(fp);
-        if(c == '\n')
-        {
-            numRatings++;
-        }
-    }
-
-    numRatings--; // Always assume the file is \n-terminated
-    rewind(fp);
-    
-    int users[numRatings];
-    int movies[numRatings];
-    double ratings[numRatings];
-    int targetUser = 0; // TODO: Read in (id-1)
-    int numRatingsTargetUser = 0;
-    double avgMovieRatingTargetUser = 0; // the mean for calculating the z-score of node potentials
-
-    int numUsers = 0;
-    int numMovies = 0;
-
-    fscanf(fp, "%*s,%*s,%*s,%*s"); // skip line
-    for (int i=0; i < numRatings; i++) {
-      fscanf(fp, "%i,%i,%lf,%*lu", &(users[i]), &(movies[i]), &(ratings[i])); 
-      numUsers = users[i] > numUsers ? users[i] : numUsers; // user ids start from 1
-      numMovies = movies[i] > numMovies ? movies[i] : numMovies; // movie ids start from 1
-      users[i]-=1; // -1 to use as index directly
-      movies[i]-=1; // -1 to use as index directly
-      if(users[i]==targetUser){
-          numRatingsTargetUser++;
-          avgMovieRatingTargetUser += ratings[i];
-      }
-    }
-    avgMovieRatingTargetUser /= numRatingsTargetUser;
-
-    fclose(fp);
-
+    /* READ IN DATA */
+    rinput_t ri;
+    initialize(&ri,fileLocation,1);
 
     myInt64 start, stop;
     double total = 0;
@@ -82,7 +30,7 @@ int main(int argc, char *argv[]) {
     FactorGraph fgraphclone;
     BP bpclone;
     vector<size_t> var_states; //needed to temporarly save states of variables in factorgraph needed for flop counting, for some reason after when factorgraph gets deconstructed, the fclonegraph variable states memory get freed
-    double ratedByTargetUser[numMovies] = {-1};
+    double ratedByTargetUser[ri.numMovies] = {-1};
     vector<Factor> factors;
     for (int j = 0; j < REP; j++) {
         start = start_tsc();
@@ -91,49 +39,49 @@ int main(int argc, char *argv[]) {
         // Factors psi_i*phi_ij (https://en.wikipedia.org/wiki/Belief_propagation#Description_of_the_sum-product_algorithm)
 
         // Calculate edge threshold & collect target user ratings
-        int numRatingsPerUser[numUsers] = {0};
-        double averageRatingPerUser[numUsers] = {0}; // for edge thresholding
-        double ratingsTargetUser[numRatingsTargetUser] = {0};
+        int numRatingsPerUser[ri.numUsers] = {0};
+        double averageRatingPerUser[ri.numUsers] = {0}; // for edge thresholding
+        double ratingsTargetUser[ri.numRatingsTargetUser] = {0};
         // double ratedByTargetUser[numMovies] = {-1};
         int idxRatingsTargetUser = 0;
-        for(int i=0; i<numRatings; i++){
-            numRatingsPerUser[users[i]]++;
-            averageRatingPerUser[users[i]]+=ratings[i];
-            if(users[i] == targetUser){
-                ratingsTargetUser[idxRatingsTargetUser++] = ratings[i];
-                ratedByTargetUser[movies[i]] = ratings[i];
+        for(size_t i=0; i<ri.numRatings; i++){
+            numRatingsPerUser[ri.users[i]]++;
+            averageRatingPerUser[ri.users[i]]+=ri.ratings[i];
+            if(ri.users[i] == ri.targetUser){
+                ratingsTargetUser[idxRatingsTargetUser++] = ri.ratings[i];
+                ratedByTargetUser[ri.movies[i]] = ri.ratings[i];
             }
         }
-        for(int i=0; i<numUsers; i++){
+        for(size_t i=0; i<ri.numUsers; i++){
             averageRatingPerUser[i] /= numRatingsPerUser[i];
         }
 
         // Preparation for calculating node potentials
         double sampleVariance = 0; // Not sure
-        for(int i=0; i<numRatingsTargetUser; i++){
-            double diff = ratingsTargetUser[i] - avgMovieRatingTargetUser;
+        for(size_t i=0; i<ri.numRatingsTargetUser; i++){
+            double diff = ratingsTargetUser[i] - ri.avgMovieRatingTargetUser;
             sampleVariance += diff*diff;
         }
-        sampleVariance /= (numRatingsTargetUser); // Not sure   ST: removed -1
+        sampleVariance /= (ri.numRatingsTargetUser); // Not sure   ST: removed -1
         double standardDerivation = sqrt(sampleVariance);
 
         // Initialize factor variables for term psi_i, phi_ij for all nodes
         // vector<Factor> factors;
         factors.clear();
-        for(int i=0; i<numUsers; i++){
-            Var user(numMovies + i, 2);
+        for(size_t i=0; i<ri.numUsers; i++){
+            Var user(ri.numMovies + i, 2);
             Factor m(user);
             m.set(0, 0.5);
             m.set(1, 0.5);
             factors.push_back(m);
         }
-        for(int i=0; i<numMovies; i++){
+        for(size_t i=0; i<ri.numMovies; i++){
             Var movie(i, 2);
             Factor m(movie);
             double dislikePotential = 0.5;
             double likePotential = 0.5;
             if(ratedByTargetUser[i]!=-1){
-                double zscore = (ratedByTargetUser[i] - avgMovieRatingTargetUser)/standardDerivation;
+                double zscore = (ratedByTargetUser[i] - ri.avgMovieRatingTargetUser)/standardDerivation;
                 dislikePotential -= zscore/p;
                 likePotential += zscore/p;
                 dislikePotential = dislikePotential > 0.9 ? 0.9 
@@ -145,10 +93,10 @@ int main(int argc, char *argv[]) {
             m.set(1, likePotential);
             factors.push_back(m);
         }
-        for(int i=0; i<numRatings; i++) {
-            if(ratings[i]>=averageRatingPerUser[users[i]]) {
-                Var user(numMovies + users[i], 2);
-                Var movie(movies[i], 2);
+        for(size_t i=0; i<ri.numRatings; i++) {
+            if(ri.ratings[i]>=averageRatingPerUser[ri.users[i]]) {
+                Var user(ri.numMovies + ri.users[i], 2);
+                Var movie(ri.movies[i], 2);
                 Factor m(VarSet (user, movie)); // movie labels are smaller than user labels, so the order in the table (m.set() below) will be switched
                 // let's assume DISLIKE=0 and LIKE=1 // TODO: also not sure
                 m.set(0, phi_same); // movies[i]: DISLIKE, users[i]: DISLIKE
@@ -189,8 +137,8 @@ int main(int argc, char *argv[]) {
     unsigned int flops = 0;
     unsigned int iterations = bpclone.Iterations();
 
-    flops += 10 * numRatingsTargetUser + 3; //node potentials
-    flops += numRatings + numUsers; //edge threshold
+    flops += 10 * ri.numRatingsTargetUser + 3; //node potentials
+    flops += ri.numRatings + ri.numUsers; //edge threshold
     flops += 2; //propagation matrix
 
 
