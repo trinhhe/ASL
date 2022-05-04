@@ -1,5 +1,5 @@
 DEBUG_FLAGS := -g
-CFLAGS := -Wall -lm
+CFLAGS := -Wall -lm -Wno-sign-compare
 #TEST_INPUT := test/ratings1.csv
 TEST_INPUT := ../with_library/test/data/ratings_small.csv  
 #TEST_INPUT := ../Data/ml-latest-small/ratings.csv
@@ -17,13 +17,9 @@ run-debug: $(subst =,__,$(subst $(s),@,$(EXEC) $(DEBUG_FLAGS)))
 run: $(EXEC)
 	$(EXEC) $(TEST_INPUT)
 
-$(EXEC): $(wildcard src/*.c src/*.h)
-	@mkdir -p build
-	gcc $(SRC) $(CFLAGS) -o $@
-
 $(EXEC)%: $(wildcard src/*.c src/*.h)
 	@mkdir -p build
-	gcc $(SRC) $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
+	g++ $(SRC) $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
 
 clean:
 	rm -f build/*
