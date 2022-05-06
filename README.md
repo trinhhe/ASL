@@ -7,9 +7,9 @@
 
 ## Ideas
 - data structures for more sequential access
-- loop unrolling and scalar rplacement
-- savein pointer derefferncing
-- precompute message product
+- loop unrolling and scalar replacement
+- saving pointer derefferncing
+- precompute message products
 - log adds instead of multiplications
 - read input data more efficiently
 - vector instructions
@@ -20,5 +20,5 @@
 ### Example
 - File name
 - What changed
-- Reasoning, why/hypothesis 
+- Reasoning, why / hypothesis 
 - did it work?
