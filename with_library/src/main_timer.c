@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     // int cnt = 0;
     FactorGraph fgraphclone;
     BP bpclone;
-    vector<size_t> var_states; //needed to temporarly save states of variables in factorgraph needed for flop counting, for some reason after when factorgraph gets deconstructed, the fclonegraph variable states memory get freed
+    //vector<size_t> var_states; //needed to temporarly save states of variables in factorgraph needed for flop counting, for some reason after when factorgraph gets deconstructed, the fclonegraph variable states memory get freed
     double ratedByTargetUser[ri.numMovies] = {-1};
     vector<Factor> factors;
     for (int j = 0; j < REP; j++) {
@@ -126,9 +126,9 @@ int main(int argc, char *argv[]) {
             fgraphclone = factorGraph;
             bpclone = bp;
             size_t n = factorGraph.nrFactors();
-            var_states.reserve(n);
-            for( size_t k = 0; k < n; ++k) //DELETE
-                var_states[k] = factorGraph.var(k).states();
+            //var_states.reserve(n);
+            //for( size_t k = 0; k < n; ++k) //DELETE
+            //    var_states[k] = factorGraph.var(k).states();
         }
     }
     total /= REP;
