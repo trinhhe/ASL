@@ -3,9 +3,9 @@
 [Link](https://grouplens.org/datasets/movielens/) to the MovieLens data set.
 
 
-#Optimizations
+# Optimizations
 
-##Ideas
+## Ideas
 - data structures for more sequential access
 - loop unrolling and scalar rplacement
 - savein pointer derefferncing
@@ -15,9 +15,9 @@
 - vector instructions
 - find a way to make algorithm more efficient
 
-##Implementations
+## Implementations
 
-###Example
+### Example
 - File name
 - What changed
 - Reasoning, why/hypothesis 
