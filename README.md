@@ -22,3 +22,9 @@
 - What changed
 - Reasoning, why / hypothesis 
 - did it work?
+
+### Unrolled j-loop in belief
+- belief_simpleUnroll.h
+- unrolled the j loop with a factor of 4 and continued to use scalar replacement
+- hopefully increases ilp, also preparing step vor vector instructions
+- still with bugs, get a segfault
