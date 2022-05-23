@@ -9,8 +9,6 @@ void propagate(graph_t *G) {
 	msg_t *tmp = G->in;
 	G->in = G->in_old;
 	G->in_old = tmp;
-	// zero G->in out so that we can write our messages to it.
-	memset(G->in, 0, G->m * sizeof *G->in);
 
 	const auto n = G->n;
 	const auto off = G->off;
@@ -38,8 +36,8 @@ void propagate(graph_t *G) {
 
 			msg_t *out = in + Gout[j];
 			float_t *_out = (float_t *)out;
-			float out0 = _out[0];
-			float out1 = _out[1];
+			float_t out0 = 0;
+			float_t out1 = 0;
 
 			out0 += PROP_EQUAL * pot_i0 * prod0;
 			out1 += PROP_UNEQUAL * pot_i0 * prod0;
