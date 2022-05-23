@@ -17,6 +17,12 @@ run-debug: $(subst =,__,$(subst $(s),@,$(EXEC) $(DEBUG_FLAGS)))
 run: $(EXEC)
 	$(EXEC) $(TEST_INPUT)
 
+run-%: build/%
+	$< $(TEST_INPUT)
+
+run-debug-%: build/%
+	valgrind $< $(TEST_INPUT)
+
 $(EXEC)%: $(wildcard src/*.c src/*.h)
 	@mkdir -p build
 	g++ $(SRC) $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))

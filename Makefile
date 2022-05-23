@@ -2,7 +2,8 @@
 # " " becomes @ and "=" becomes "__" Furthermore, we want an initial @.
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
 interesting_cflags = @-O3 @-Ofast
-variants = from_scratch from_scratch@-DOPTVARIANT__2 with_library
+#variants = from_scratch from_scratch@-DOPTVARIANT__2 with_library
+variants = from_scratch@-DOPTVARIANT__2 from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING
 combinations = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/$(var)$(cflags).csv))
 
 all: plot
@@ -10,9 +11,9 @@ all: plot
 plot: measurement_utils/plot_perf.py $(combinations)
 	$<
 
-measurements/%.csv: build/%
+measurements/%.csv: build/% measurement_utils/measure_runtime.sh
 	@mkdir -p measurements
-	measurement_utils/measure_runtime.sh $< $@
+	measurement_utils/measure_runtime.sh $< $@ $(EXTRA_FLAGS)
 
 build/from_scratch%: .FORCE
 	@mkdir -p build
