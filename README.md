@@ -39,7 +39,7 @@
 - belief4.h
 - combined belief_simpleUnroll.h and belief3.h
 - unrolling j-loop with precomputed msg products should increase ilp
-- Did not work, runtime is bounded by divisions
+- Did not work, runtime is bounded by divisions, not enough registers or "it's also interesting that -DOPTVARIANT=5 + -O3 is way faster than -DOPTVARIANT=3 + -O3, but the opposite is true with -Ofast, which suggests some -ffast-math flop reordering (i.e. some algebraic simplification) is taking place with -Ofast but not O3 and loop unrolling just messes with it?" ????
 
 ### Padding the graph
 - `#ifdef GRAPH_PADDING` in factor.h
