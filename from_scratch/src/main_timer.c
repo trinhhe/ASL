@@ -1,5 +1,7 @@
 #if OPTVARIANT == 2
 #include "belief2.h"
+#elif OPTVARIANT == 3
+#include "belief3.h"
 #else
 #include "belief.h"
 #endif
@@ -51,6 +53,9 @@ int main(int argc, const char **argv)
 			graph_destroy(&G);
         }
     }
+#ifdef DEBUG
+	dump_graph(&G);
+#endif
     total_gbuild /= REP;
     total_prop /= REP;
     total = total_gbuild + total_prop;
