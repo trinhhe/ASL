@@ -41,6 +41,9 @@ for file in fileNames:
     perm = x.argsort()
     y = y[perm]
     x = x[perm]
+    if not x.size:
+        # the corresponding run has probably crashed, if we don't ignore it, we run into problems later
+        continue
     marker = next(markers)
     pretty_name = Path(file).stem.replace("@", " ").replace("__", "=")
     plt.plot(x, y, label = pretty_name, marker=marker)
