@@ -49,9 +49,14 @@ void propagate(graph_t *G) {
 #ifdef DEBUG
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
-			double a = out0 + out1;
-			_out[0] = out0 / a;
-			_out[1] = out1 / a;
+			float_t a = out0 + out1;
+			if (fabs(a) < 1e-6) {
+				_out[0] = .5;
+				_out[1] = .5;
+			} else {
+				_out[0] = out0 / a;
+				_out[1] = out1 / a;
+			}
 		}
 	}
 }
