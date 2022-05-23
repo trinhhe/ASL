@@ -34,7 +34,7 @@ void propagate(graph_t *G) {
 
 		//unrolled just like belief_simpleUnroll.h
         size_t end = off[i + 1];
-        for (int j = off[i]; j < end - 3; j++) {
+        for (int j = off[i]; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
