@@ -26,8 +26,8 @@
 ### Unrolled j-loop in belief
 - belief_simpleUnroll.h
 - unrolled the j loop with a factor of 4 and continued to use scalar replacement
-- hopefully increases ilp, also preparing step vor vector instructions
-- still with bugs, get a segfault
+- hopefully increases ilp, also preparing step for vector instructions
+- woked, by far not as good as belief3.h but runs faster (only measured inside VM!)
 
 ### Precomputing message products
 - belief3.h
