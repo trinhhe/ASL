@@ -2,6 +2,8 @@
 #include "belief2.h"
 #elif OPTVARIANT == 3
 #include "belief3.h"
+#elif OPTVARIANT == 4
+#include "belief_simpleUnroll.h"
 #else
 #include "belief.h"
 #endif

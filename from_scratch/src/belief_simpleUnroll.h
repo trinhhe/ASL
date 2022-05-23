@@ -32,7 +32,7 @@ void propagate(graph_t *G) {
         //unrolled, using a,b,c,d for j = 0,1,2,3...
         size_t end = off[i + 1];
 
-        for (int j = off[i]; j < end - (end%4); j += 4) {
+        for (int j = off[i]; j < end - 3; j += 4) {
 			float_t prod0a = 1;
 			float_t prod1a = 1;
             float_t prod0b = 1;
@@ -121,7 +121,7 @@ void propagate(graph_t *G) {
 
         
         //leftover loop directly copied from belief2.h
-        for (int j = end - (end%4); j < end; j++){
+        for (int j = max(0, end - 3); j < end; j++){
             float_t prod0 = 1;
 			float_t prod1 = 1;
 
