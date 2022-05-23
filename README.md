@@ -7,7 +7,7 @@
 
 ## Ideas
 - [x] data structures for more sequential access
-- [ ] loop unrolling and scalar replacement
+- [x] loop unrolling and scalar replacement (only for j-loop so far)
 - [x] saving pointer derefferncing
 - [x] precompute message products
 - [ ] log adds instead of multiplications
@@ -40,3 +40,9 @@
 - pad the graph so that each vertex starts on an address divisible by SIMD size
 - should not incur a performance penalty (or a negligible one), paves the way for vectorisation
 - originally, incurred some performance penalty because of repeated zeroing, but the zeroing was unnecessary. now comparable with unpadded graph.
+
+### Vector instructions
+- belief3_vector.h (on basis of belief3_unrolled.h)
+- use the optimized belief3.h unrolle the j-loop like in belief_simpleUnroll.h and use it for vector instructions
+- vecotr instructions should make flops run more efficiently
+- just started working on it
