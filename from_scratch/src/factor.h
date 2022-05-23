@@ -75,8 +75,8 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	graph_t G = {0};
 	translator_init(&G.tr, E);
 	G.n = G.tr.max_out_id;
-	G.off = (size_t *) calloc(G.n + 1, sizeof *G.off);
-	G.belief = (statevector_t *) calloc(G.n, sizeof *G.belief);
+	G.off = (size_t *) aligned_calloc(G.n + 1, sizeof *G.off);
+	G.belief = (statevector_t *) aligned_calloc(G.n, sizeof *G.belief);
 
 	// make all ``disabled'' edges have rating = -1
 	filter_below_mean(E);
@@ -91,6 +91,12 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 		G.off[v]++;
 	}
 
+#ifdef GRAPH_PADDING
+	for (int i = 0; i < G.n; i++) {
+		G.off[i] = round_up(G.off[i], SIMD_ALIGN_BYTES / sizeof *G.in);
+	}
+#endif
+
 	// degrees => offsets, using prefix sums
 	int tmp = 0;
 	for (int i = 0; i <= G.n; i++) { // yes, <= G.n, as G.off[n] serves as a terminator
@@ -101,19 +107,17 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 
 	G.m = G.off[G.n];
 
-	G.out = (size_t *) malloc(G.m * sizeof *G.out);
-	G.eix = (size_t *) malloc(G.m * sizeof *G.eix);
-	G.in = (msg_t *) malloc(G.m * sizeof *G.in);
-	G.in_old = (msg_t *) malloc(G.m * sizeof *G.in_old);
+	G.out = (size_t *) aligned_malloc(G.m * sizeof *G.out);
+	G.eix = (size_t *) aligned_malloc(G.m * sizeof *G.eix);
+	G.in = (msg_t *) aligned_malloc(G.m * sizeof *G.in);
+	G.in_old = (msg_t *) aligned_malloc(G.m * sizeof *G.in_old);
 
-	// TODO: unsure about this; should the initialisation be random instead?
+	// "zero"-initialise everything, will get rewritten below everywhere except
+	// for padding where this zeroing out is actually important
 	for (int i = 0; i < G.m; i++) {
-//		float_t r = drand48();
-		float_t r = .5;
-		G.in_old[i] = G.in[i] = (msg_t){r, 1 - r};
-#ifdef DEBUG
-		printf("%f %f\n", G.in[i].D, G.in[i].L);
-#endif
+		G.in_old[i] = G.in[i] = (msg_t){1, 1};
+		G.out[i] = -1;
+		G.eix[i] = -1;
 	}
 
 	// second pass to actually work with the edges
@@ -123,9 +127,13 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 		int u = translator_user_to_id(&G.tr, p->user);
 		int v = translator_movie_to_id(&G.tr, p->movie);
 
+		size_t off_v = G.off[v];
+		size_t off_u = G.off[u];
 		// construct the pointer to the ``other end'' of this edge
-		G.out[G.off[u]] = G.off[v];
-		G.out[G.off[v]] = G.off[u];
+		G.out[off_u] = off_v;
+		G.out[off_v] = off_u;
+		G.in[off_u] = G.in_old[off_u] = (msg_t){.5, .5};
+		G.in[off_v] = G.in_old[off_v] = (msg_t){.5, .5};
 
 		G.eix[G.off[u]] = G.eix[G.off[v]] = p - E;
 		G.off[u]++;
@@ -133,9 +141,14 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	}
 
 	// now we need to "unwind" off:
-	for (int i = G.n - 1; i >= 0; i--)
-		G.off[i + 1] = G.off[i];
-	G.off[0] = 0;
+	for (rating_t *p = E; p->user > 0; p++) {
+		if (p->rating < 0)
+			continue;
+		int u = translator_user_to_id(&G.tr, p->user);
+		int v = translator_movie_to_id(&G.tr, p->movie);
+		G.off[u]--;
+		G.off[v]--;
+	}
 
 	// finally, do target-user-dependent calculations
 	rating_t *target = find_user(E, target_uid);
@@ -144,7 +157,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	assert(target->user == target_uid);
 	float_t target_mean = get_user_mean(target);
 	float_t target_stddev = get_user_stddev(target, target_mean);
-	G.node_pot = (potential_t *) calloc(G.n, sizeof *G.node_pot);
+	G.node_pot = (potential_t *) aligned_calloc(G.n, sizeof *G.node_pot);
 	for (int i = 0; i < G.n; i++)
 		G.node_pot[i] = (potential_t){.5, .5}; // defaults
 
@@ -184,6 +197,8 @@ void dump_graph(graph_t *G) {
 	for (int v = 0; v < G->n; v++) {
 		printf("[ %d:  ", v);
 		for (int i = G->off[v]; i < G->off[v + 1]; i++) {
+			if (G->eix[i] == -1)
+				break;
 			size_t e = G->eix[i];
 #ifdef VERBOSE_DUMP
 			printf("%zd (u%d->m%d, r=%.0f, out=%zd) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating, G->out[i]);

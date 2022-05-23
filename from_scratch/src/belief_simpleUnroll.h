@@ -3,6 +3,10 @@
 #include <string.h>
 #include "factor.h"
 
+#ifdef GRAPH_PADDING
+#error "FIXME: incompatible with -DGRAPH_PADDING yet"
+#endif
+
 /* Do one step of belief propagation. */
 void propagate(graph_t *G) {
 	// swap G->in and G->in_out

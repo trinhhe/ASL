@@ -23,6 +23,10 @@ void propagate(graph_t *G) {
 
 		// idea: if no message is almost 0, we may just calculate prod* outside and inside just divide by the current in_old[j]
 		for (int j = off[i]; j < off[i + 1]; j++) {
+#ifdef GRAPH_PADDING
+			if (Gout[j] == -1)
+				break; // reached padding
+#endif
 			float_t prod0 = 1;
 			float_t prod1 = 1;
 
@@ -39,10 +43,10 @@ void propagate(graph_t *G) {
 			float_t out0 = 0;
 			float_t out1 = 0;
 
-			out0 += PROP_EQUAL * pot_i0 * prod0;
-			out1 += PROP_UNEQUAL * pot_i0 * prod0;
-			out0 += PROP_UNEQUAL * pot_i1 * prod1;
-			out1 += PROP_EQUAL * pot_i1 * prod1;
+			out0 += PROP_00 * pot_i0 * prod0;
+			out1 += PROP_01 * pot_i0 * prod0;
+			out0 += PROP_10 * pot_i1 * prod1;
+			out1 += PROP_11 * pot_i1 * prod1;
 
 #ifdef DEBUG
 			printf("unnorm: %f %f\n", out0, out1);

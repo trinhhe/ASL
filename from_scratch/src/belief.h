@@ -12,6 +12,10 @@ void propagate(graph_t *G) {
 
 	for (int i = 0; i < G->n; i++) {
 		for (int j = G->off[i]; j < G->off[i + 1]; j++) {
+#ifdef GRAPH_PADDING
+			if (G->out[j] == -1)
+				break; // reached padding
+#endif
 			// calculate the address where we should write our message to
 			msg_t *out = G->in + G->out[j];
 			float_t *_out = (float_t *)out;
