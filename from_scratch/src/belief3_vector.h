@@ -49,10 +49,11 @@ void propagate(graph_t *G) {
 		__m256 half = _mm256_set1_ps(0.5);
 
 		// TODO: Are these correct?
-		__m256i msg1_mask = _mm256_set_epi64x(0x0, 0x0, 0x0, 0x1);
-		__m256i msg2_mask = _mm256_set_epi64x(0x0, 0x0, 0x1, 0x0);
-		__m256i msg3_mask = _mm256_set_epi64x(0x0, 0x1, 0x0, 0x0);
-		__m256i msg4_mask = _mm256_set_epi64x(0x1, 0x0, 0x0, 0x0);
+		__m256i msg1_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF);
+		__m256i msg2_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000);
+		__m256i msg3_mask = _mm256_set_epi64x(0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000);
+		__m256i msg4_mask = _mm256_set_epi64x(0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
+
 
         for (int j = off[i]; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
