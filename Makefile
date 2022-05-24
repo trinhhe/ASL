@@ -6,7 +6,8 @@ interesting_cflags = @-O3 @-Ofast
 #variants = from_scratch from_scratch@-DOPTVARIANT__2 with_library
 #variants = from_scratch@-DOPTVARIANT__2 from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__4 from_scratch@-DOPTVARIANT__5 from_scratch@-DOPTVARIANT__5@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__6@-mavx2
 #variants = from_scratch@-DOPTVARIANT__2 from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__6@-mavx2
-variants = from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DGRAPH_PADDING@-DVEC2@-mavx2
+#variants = from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DGRAPH_PADDING@-DVEC2@-mavx2
+variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2
 combinations = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/$(var)$(cflags).csv))
 
 all: plot
