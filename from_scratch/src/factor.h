@@ -17,10 +17,15 @@ typedef struct {
 	float D;
 } statevector_t;
 
+#ifdef COMPACT_MESSAGE
+typedef float_t msg_t;
+#else
 typedef statevector_t msg_t;
-typedef statevector_t potential_t;
-// Semantically these two things are different, but we can treat them the same
+#endif
 
+typedef statevector_t potential_t;
+
+#ifndef COMPACT_MESSAGE
 void normalise_msg(msg_t *m) {
 	// TODO: numerical stability
 	float_t s = m->L + m->D;
@@ -31,10 +36,7 @@ void normalise_msg(msg_t *m) {
 		m->D /= s;
 	}
 }
-
-#define NORMALISE_UNSAFE_0(a, b) (a) / ((a) + (b))
-#define NORMALISE_UNSAFE_1(a, b) (b) / ((a) + (b))
-
+#endif
 
 typedef struct {
 	size_t n; // Total number of vertices
@@ -115,7 +117,11 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	// "zero"-initialise everything, will get rewritten below everywhere except
 	// for padding where this zeroing out is actually important
 	for (int i = 0; i < G.m; i++) {
+#ifdef COMPACT_MESSAGE
+		G.in_old[i] = G.in[i] = 1.0;
+#else
 		G.in_old[i] = G.in[i] = (msg_t){1, 1};
+#endif
 		G.out[i] = -1;
 		G.eix[i] = -1;
 	}
@@ -132,8 +138,13 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 		// construct the pointer to the ``other end'' of this edge
 		G.out[off_u] = off_v;
 		G.out[off_v] = off_u;
+#ifdef COMPACT_MESSAGE
+		G.in[off_u] = G.in_old[off_u] = .5;
+		G.in[off_v] = G.in_old[off_v] = .5;
+#else
 		G.in[off_u] = G.in_old[off_u] = (msg_t){.5, .5};
 		G.in[off_v] = G.in_old[off_v] = (msg_t){.5, .5};
+#endif
 
 		G.eix[G.off[u]] = G.eix[G.off[v]] = p - E;
 		G.off[u]++;

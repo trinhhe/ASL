@@ -1,7 +1,8 @@
 #ifndef BELIEF_BELIEF_H
 #define BELIEF_BELIEF_H
 #include <string.h>
-#include "factor2.h"
+#define COMPACT_MESSAGE
+#include "factor.h"
 
 // Based on belief3.h
 /* Do one step of belief propagation. */

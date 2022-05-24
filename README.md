@@ -60,7 +60,7 @@
 - just started working on it
 
 ### Keep only single state
-- belief5.h (on basis of belief3.h & uses factor2.h instead of factor.h)
+- belief5.h (on basis of belief3.h & uses factor.h with -DCOMPACT_MESSAGE)
 - G.in and G.in_old only store single float_t for the LIKE state instead of msg_t of two float_t
 - increase memory throughput
 - yes, it increases flops/cycle slightly 
