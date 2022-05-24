@@ -43,7 +43,7 @@ void propagate(graph_t *G) {
 #ifdef VEC2
 		__m256 glob_eq = _mm256_set_ps(glob11, glob00, glob11, glob00, glob11, glob00, glob11, glob00);
 		__m256 glob_diff = _mm256_set_ps(glob01, glob10, glob01, glob10, glob01, glob10, glob01, glob10);
-        __m256i rev_idx = _mm256_set_epi32(0xC, 0x1, 0xC, 0x1, 0xC, 0x1, 0xC, 0x1);
+        __m256i rev_idx = _mm256_set_epi32(0x2, 0x3, 0x0, 0x1, 0x2, 0x3, 0x0, 0x1);
 		__m256 abs_mask = _mm256_set1_ps(-0.0);
 		__m256 eps = _mm256_set1_ps(1e-6);
 		__m256 half = _mm256_set1_ps(0.5);
