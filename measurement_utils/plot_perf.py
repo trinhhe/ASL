@@ -51,7 +51,6 @@ for file in fileNames:
 plt.title("Belief Propagation [Processor, Flags ...]")
 plt.xlabel('n')
 plt.ylabel('Performance [F/C]')
-#plt.legend()
 plt.ylim(ymin=0)
 plt.ylabel('flops/cycle')
 #plt.grid()
@@ -59,12 +58,16 @@ ax = plt.gca()
 ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 ax.grid(b=True, which='major', color='w', linewidth=1.0)
 ax.grid(b=True, which='minor', color='w', linewidth=0.5)
-labelLines(ax.get_lines(), 
-            yoffsets=0.022, 
-            fontsize=10, 
-            align=False, 
-            outline_color=None, 
-            outline_width=0)
+#labelLines(ax.get_lines(), 
+#            yoffsets=0.022, 
+#            fontsize=10, 
+#            align=False, 
+#            outline_color=None, 
+#            outline_width=0)
+box = ax.get_position()
+ax.set_position([box.x0, box.y0 + box.height * 0.3,
+                 box.width, box.height * 0.7])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2,prop={'size': 6})
 ### Generate the plot
 plt.savefig(OUT + 'performance_plot.png')
 plt.savefig(OUT + 'performance_plot.pdf')

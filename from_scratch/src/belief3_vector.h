@@ -1,6 +1,7 @@
 #ifndef BELIEF_BELIEF_H
 #define BELIEF_BELIEF_H
 #include <string.h>
+#include <immintrin.h>
 #include "factor.h"
 
 /* Do one step of belief propagation. */
@@ -37,100 +38,87 @@ void propagate(graph_t *G) {
         float_t pot[4] = {pot_i0, pot_i0, pot_i1, pot_i1};
         float_t prod_tot[4] = {prod_tot0, prod_tot0, prod_tot1, prod_tot1};
 
+		__m256 glob_00v = _mm256_set1_ps(glob00);
+		__m256 glob_01v = _mm256_set1_ps(glob01);
+		__m256 glob_10v = _mm256_set1_ps(glob10);
+		__m256 glob_11v = _mm256_set1_ps(glob11);
+		__m256 abs_mask = _mm256_set1_ps(-0.0);
+		__m256 eps = _mm256_set1_ps(1e-6);
+		__m256 half = _mm256_set1_ps(0.5);
+
 		//unrolled just like belief_simpleUnroll.h
         size_t end = off[i + 1];
-        for (int j = off[i]; j < end - 3; j+=4) {
+        for (int j = off[i]; j < end - 7; j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
 #endif
 
-			float_t val0a = ((float_t *)&in_old[j])[0];
-			float_t val1a = ((float_t *)&in_old[j])[1];
-			float_t *_outa = (float_t *)(in + Gout[j]);
-			float_t out0a = 0;
-			float_t out1a = 0;
+			__m256 out0 = _mm256_setzero_ps();
+			__m256 out1 = _mm256_setzero_ps();
 
-            float_t val0b = ((float_t *)&in_old[j+1])[0];
-			float_t val1b = ((float_t *)&in_old[j+1])[1];
-			float_t *_outb = (float_t *)(in + Gout[j+1]);
-			float_t out0b = 0;
-			float_t out1b = 0;
+			__m256 val0 = _mm256_set_ps(((float_t *)&in_old[j+7])[0],
+			                             ((float_t *)&in_old[j+6])[0],
+										 ((float_t *)&in_old[j+5])[0],
+										 ((float_t *)&in_old[j+4])[0],
+										 ((float_t *)&in_old[j+3])[0],
+										 ((float_t *)&in_old[j+2])[0],
+										 ((float_t *)&in_old[j+1])[0],
+										 ((float_t *)&in_old[j+0])[0]);
+			__m256 val1 = _mm256_set_ps(((float_t *)&in_old[j+7])[1],
+			                             ((float_t *)&in_old[j+6])[1],
+										 ((float_t *)&in_old[j+5])[1],
+										 ((float_t *)&in_old[j+4])[1],
+										 ((float_t *)&in_old[j+3])[1],
+										 ((float_t *)&in_old[j+2])[1],
+										 ((float_t *)&in_old[j+1])[1],
+										 ((float_t *)&in_old[j+0])[1]);
 
-            float_t val0c = ((float_t *)&in_old[j+2])[0];
-			float_t val1c = ((float_t *)&in_old[j+2])[1];
-			float_t *_outc = (float_t *)(in + Gout[j+2]);
-			float_t out0c = 0;
-			float_t out1c = 0;
+			out0 = _mm256_add_ps(_mm256_div_ps(glob_00v, val0), _mm256_div_ps(glob_10v, val1));
+			out1 = _mm256_add_ps(_mm256_div_ps(glob_01v, val0), _mm256_div_ps(glob_11v, val1));
 
-            float_t val0d = ((float_t *)&in_old[j]+3)[0];
-			float_t val1d = ((float_t *)&in_old[j+3])[1];
-			float_t *_outd = (float_t *)(in + Gout[j+3]);
-			float_t out0d = 0;
-			float_t out1d = 0;
-
-			out0a += glob00 / val0a;
-			out1a += glob01 / val0a;
-			out0a += glob10 / val1a;
-			out1a += glob11 / val1a;
-
-            out0b += glob00 / val0b;
-			out1b += glob01 / val0b;
-			out0b += glob10 / val1b;
-			out1b += glob11 / val1b;
-
-            out0c += glob00 / val0c;
-			out1c += glob01 / val0c;
-			out0c += glob10 / val1c;
-			out1c += glob11 / val1c;
-
-            out0d += glob00 / val0d;
-			out1d += glob01 / val0d;
-			out0d += glob10 / val1d;
-			out1d += glob11 / val1d;
+			__m256 out_sum = _mm256_add_ps(out0, out1);
 
 #ifdef DEBUG
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
-			float_t a = out0a + out1a;
-			if (fabs(a) < 1e-6) {
-				_outa[0] = .5;
-				_outa[1] = .5;
-			} else {
-				_outa[0] = out0a / a;
-				_outa[1] = out1a / a;
-			}
 
-            float_t b = out0b + out1b;
-			if (fabs(b) < 1e-6) {
-				_outb[0] = .5;
-				_outb[1] = .5;
-			} else {
-				_outb[0] = out0b / b;
-				_outb[1] = out1b / b;
-			}
+			__m256 abs_out_sum = _mm256_andnot_ps(abs_mask, out_sum);
+			__m256 lt_mask = _mm256_cmp_ps(abs_out_sum, eps, _CMP_LT_OQ);
+			__m256 out0_norm = _mm256_div_ps(out0, out_sum); // Is _mm256_mask_div_ps only for avx-512?
+			__m256 out1_norm = _mm256_div_ps(out1, out_sum); // Is _mm256_mask_div_ps only for avx-512?
+			__m256 final_out0 = _mm256_blendv_ps(out0_norm, half, lt_mask);
+			__m256 final_out1 = _mm256_blendv_ps(out1_norm, half, lt_mask);
 
-            float_t c = out0c + out1c;
-			if (fabs(c) < 1e-6) {
-				_outc[0] = .5;
-				_outc[1] = .5;
-			} else {
-				_outc[0] = out0c / c;
-				_outc[1] = out1c / c;
-			}
-
-            float_t d = out0d + out1d;
-			if (fabs(d) < 1e-6) {
-				_outd[0] = .5;
-				_outd[1] = .5;
-			} else {
-				_outd[0] = out0d / d;
-				_outd[1] = out1d / d;
-			}
+			// Is _mm256_mask_storeu_ps supported on SkyLake?
+			float_t *_outa = (float_t *)(in + Gout[j]);
+			float_t *_outb = (float_t *)(in + Gout[j+1]);
+			float_t *_outc = (float_t *)(in + Gout[j+2]);
+			float_t *_outd = (float_t *)(in + Gout[j+3]);
+			float_t *_oute = (float_t *)(in + Gout[j+4]);
+			float_t *_outf = (float_t *)(in + Gout[j+5]);
+			float_t *_outg = (float_t *)(in + Gout[j+6]);
+			float_t *_outh = (float_t *)(in + Gout[j+7]);
+			_outa[0] = final_out0[0];
+			_outa[1] = final_out1[0];
+			_outb[0] = final_out0[1];
+			_outb[1] = final_out1[1];
+			_outc[0] = final_out0[2];
+			_outc[1] = final_out1[2];
+			_outd[0] = final_out0[3];
+			_outd[1] = final_out1[3];
+			_oute[0] = final_out0[4];
+			_oute[1] = final_out1[4];
+			_outf[0] = final_out0[5];
+			_outf[1] = final_out1[5];
+			_outg[0] = final_out0[6];
+			_outg[1] = final_out1[6];
+			_outh[0] = final_out0[7];
+			_outh[1] = final_out1[7];
 		}
 
         //leftover loop
-        for (int j = max(0, end-3); j < end; j++) {
+        for (int j = max(0, end-7); j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding

@@ -6,6 +6,8 @@
 #include "belief_simpleUnroll.h"
 #elif OPTVARIANT == 5
 #include "belief4.h"
+#elif OPTVARIANT == 6
+#include "belief3_vector.h"
 #else
 #include "belief.h"
 #endif
