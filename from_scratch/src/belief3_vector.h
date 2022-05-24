@@ -38,6 +38,83 @@ void propagate(graph_t *G) {
         float_t pot[4] = {pot_i0, pot_i0, pot_i1, pot_i1};
         float_t prod_tot[4] = {prod_tot0, prod_tot0, prod_tot1, prod_tot1};
 
+		//unrolled just like belief_simpleUnroll.h
+        size_t end = off[i + 1];
+#ifdef VEC2
+		__m256 glob_eq = _mm256_set_ps(glob11, glob00, glob11, glob00, glob11, glob00, glob11, glob00);
+		__m256 glob_diff = _mm256_set_ps(glob01, glob10, glob01, glob10, glob01, glob10, glob01, glob10);
+        __m256i rev_idx = _mm256_set_epi32(0xC, 0x1, 0xC, 0x1, 0xC, 0x1, 0xC, 0x1);
+		__m256 abs_mask = _mm256_set1_ps(-0.0);
+		__m256 eps = _mm256_set1_ps(1e-6);
+		__m256 half = _mm256_set1_ps(0.5);
+
+        for (int j = off[i]; j < end - 3; j+=4) {
+#ifdef GRAPH_PADDING
+			if (Gout[j] == -1)
+				break; // reached padding
+#endif
+			__m256 val = _mm256_loadu_ps((const float*)&(in_old[j]));
+			__m256 val_rev = _mm256_permutevar_ps(val, rev_idx);
+
+			__m256 out = _mm256_add_ps(_mm256_div_ps(glob_eq, val), _mm256_div_ps(glob_diff, val_rev));
+
+			__m256 out_rev = _mm256_permutevar_ps(out, rev_idx);
+			__m256 out_sum = _mm256_add_ps(out, out_rev);
+
+#ifdef DEBUG
+			printf("unnorm: %f %f\n", out0, out1);
+#endif
+
+			__m256 abs_out_sum = _mm256_andnot_ps(abs_mask, out_sum);
+			__m256 lt_mask = _mm256_cmp_ps(abs_out_sum, eps, _CMP_LT_OQ);
+			__m256 out_norm = _mm256_div_ps(out, out_sum); 
+			__m256 final_out = _mm256_blendv_ps(out_norm, half, lt_mask);
+
+			float_t *_outa = (float_t *)(in + Gout[j]);
+			float_t *_outb = (float_t *)(in + Gout[j+1]);
+			float_t *_outc = (float_t *)(in + Gout[j+2]);
+			float_t *_outd = (float_t *)(in + Gout[j+3]);
+			_outa[0] = final_out[0];
+			_outa[1] = final_out[1];
+			_outb[0] = final_out[2];
+			_outb[1] = final_out[3];
+			_outc[0] = final_out[4];
+			_outc[1] = final_out[5];
+			_outd[0] = final_out[6];
+			_outd[1] = final_out[7];
+		}
+
+		//leftover loop
+        for (int j = max(0, end-3); j < end; j++) {
+#ifdef GRAPH_PADDING
+			if (Gout[j] == -1)
+				break; // reached padding
+#endif
+
+			float_t val0 = ((float_t *)&in_old[j])[0];
+			float_t val1 = ((float_t *)&in_old[j])[1];
+			float_t *_out = (float_t *)(in + Gout[j]);
+			float_t out0 = 0;
+			float_t out1 = 0;
+
+			out0 += glob00 / val0;
+			out1 += glob01 / val0;
+			out0 += glob10 / val1;
+			out1 += glob11 / val1;
+
+#ifdef DEBUG
+			printf("unnorm: %f %f\n", out0, out1);
+#endif
+			float_t a = out0 + out1;
+			if (fabs(a) < 1e-6) {
+				_out[0] = .5;
+				_out[1] = .5;
+			} else {
+				_out[0] = out0 / a;
+				_out[1] = out1 / a;
+			}
+		}
+#else
 		__m256 glob_00v = _mm256_set1_ps(glob00);
 		__m256 glob_01v = _mm256_set1_ps(glob01);
 		__m256 glob_10v = _mm256_set1_ps(glob10);
@@ -46,17 +123,11 @@ void propagate(graph_t *G) {
 		__m256 eps = _mm256_set1_ps(1e-6);
 		__m256 half = _mm256_set1_ps(0.5);
 
-		//unrolled just like belief_simpleUnroll.h
-        size_t end = off[i + 1];
         for (int j = off[i]; j < end - 7; j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
 #endif
-
-			__m256 out0 = _mm256_setzero_ps();
-			__m256 out1 = _mm256_setzero_ps();
-
 			__m256 val0 = _mm256_set_ps(((float_t *)&in_old[j+7])[0],
 			                             ((float_t *)&in_old[j+6])[0],
 										 ((float_t *)&in_old[j+5])[0],
@@ -74,8 +145,8 @@ void propagate(graph_t *G) {
 										 ((float_t *)&in_old[j+1])[1],
 										 ((float_t *)&in_old[j+0])[1]);
 
-			out0 = _mm256_add_ps(_mm256_div_ps(glob_00v, val0), _mm256_div_ps(glob_10v, val1));
-			out1 = _mm256_add_ps(_mm256_div_ps(glob_01v, val0), _mm256_div_ps(glob_11v, val1));
+			__m256 out0 = _mm256_add_ps(_mm256_div_ps(glob_00v, val0), _mm256_div_ps(glob_10v, val1));
+			__m256 out1 = _mm256_add_ps(_mm256_div_ps(glob_01v, val0), _mm256_div_ps(glob_11v, val1));
 
 			__m256 out_sum = _mm256_add_ps(out0, out1);
 
@@ -117,7 +188,7 @@ void propagate(graph_t *G) {
 			_outh[1] = final_out1[7];
 		}
 
-        //leftover loop
+	    //leftover loop
         for (int j = max(0, end-7); j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
@@ -147,6 +218,8 @@ void propagate(graph_t *G) {
 				_out[1] = out1 / a;
 			}
 		}
+# endif
+
 	}
 
 }
