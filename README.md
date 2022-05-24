@@ -14,6 +14,12 @@
 - [ ] read input data more efficiently
 - [ ] vector instructions
 - [x] find a way to make algorithm more efficient
+- [o] store only single state because message gets normalized
+- [ ] unroll i-loop (?)
+- [ ] strength reduction (?)
+- [ ] function inlining (?)
+- [ ] compiler flags (?)
+- [ ] sequential access for out messages (?)
 
 ## Implementations
 
