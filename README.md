@@ -14,7 +14,7 @@
 - [ ] read input data more efficiently
 - [ ] vector instructions
 - [x] find a way to make algorithm more efficient
-- [o] store only single state because message gets normalized
+- [o] keep only single state because message gets normalized
 - [ ] unroll i-loop (?)
 - [ ] strength reduction (?)
 - [ ] function inlining (?)
@@ -58,3 +58,9 @@
 - use the optimized belief3.h unrolle the j-loop like in belief_simpleUnroll.h and use it for vector instructions
 - vector instructions should make flops run more efficiently
 - just started working on it
+
+### Keep only single state
+- belief5.h (on basis of belief3.h & uses factor2.h instead of factor.h)
+- G.in and G.in_old only store single float_t for the LIKE state instead of msg_t of two float_t
+- increase memory throughput
+- yes, it increases flops/cycle slightly 
