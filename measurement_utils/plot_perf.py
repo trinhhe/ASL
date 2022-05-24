@@ -67,7 +67,7 @@ ax.grid(b=True, which='minor', color='w', linewidth=0.5)
 box = ax.get_position()
 ax.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2,prop={'size': 6})
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
 plt.savefig(OUT + 'performance_plot.png')
 plt.savefig(OUT + 'performance_plot.pdf')

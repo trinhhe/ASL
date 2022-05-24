@@ -48,12 +48,22 @@ void propagate(graph_t *G) {
 		__m256 eps = _mm256_set1_ps(1e-6);
 		__m256 half = _mm256_set1_ps(0.5);
 
+		// TODO: Are these correct?
+		__m256i msg1_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF);
+		__m256i msg2_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000);
+		__m256i msg3_mask = _mm256_set_epi64x(0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000);
+		__m256i msg4_mask = _mm256_set_epi64x(0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
+
         for (int j = off[i]; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
-#endif
+
+			__m256 val = _mm256_load_ps((const float*)&(in_old[j]));
+#else
 			__m256 val = _mm256_loadu_ps((const float*)&(in_old[j]));
+#endif
+			
 			__m256 val_rev = _mm256_permutevar_ps(val, rev_idx);
 
 			__m256 out = _mm256_add_ps(_mm256_div_ps(glob_eq, val), _mm256_div_ps(glob_diff, val_rev));
@@ -74,6 +84,12 @@ void propagate(graph_t *G) {
 			float_t *_outb = (float_t *)(in + Gout[j+1]);
 			float_t *_outc = (float_t *)(in + Gout[j+2]);
 			float_t *_outd = (float_t *)(in + Gout[j+3]);
+#ifdef GRAPH_PADDING
+			_mm256_maskstore_ps(_outa, msg1_mask, final_out);
+			_mm256_maskstore_ps(_outb, msg2_mask, final_out);
+			_mm256_maskstore_ps(_outc, msg3_mask, final_out);
+			_mm256_maskstore_ps(_outd, msg4_mask, final_out);
+#else
 			_outa[0] = final_out[0];
 			_outa[1] = final_out[1];
 			_outb[0] = final_out[2];
@@ -82,6 +98,7 @@ void propagate(graph_t *G) {
 			_outc[1] = final_out[5];
 			_outd[0] = final_out[6];
 			_outd[1] = final_out[7];
+#endif
 		}
 
 		//leftover loop
@@ -156,12 +173,11 @@ void propagate(graph_t *G) {
 
 			__m256 abs_out_sum = _mm256_andnot_ps(abs_mask, out_sum);
 			__m256 lt_mask = _mm256_cmp_ps(abs_out_sum, eps, _CMP_LT_OQ);
-			__m256 out0_norm = _mm256_div_ps(out0, out_sum); // Is _mm256_mask_div_ps only for avx-512?
-			__m256 out1_norm = _mm256_div_ps(out1, out_sum); // Is _mm256_mask_div_ps only for avx-512?
+			__m256 out0_norm = _mm256_div_ps(out0, out_sum);
+			__m256 out1_norm = _mm256_div_ps(out1, out_sum);
 			__m256 final_out0 = _mm256_blendv_ps(out0_norm, half, lt_mask);
 			__m256 final_out1 = _mm256_blendv_ps(out1_norm, half, lt_mask);
 
-			// Is _mm256_mask_storeu_ps supported on SkyLake?
 			float_t *_outa = (float_t *)(in + Gout[j]);
 			float_t *_outb = (float_t *)(in + Gout[j+1]);
 			float_t *_outc = (float_t *)(in + Gout[j+2]);
