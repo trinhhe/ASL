@@ -18,7 +18,7 @@
 #include "util.h"
 #include "../../measurement_utils/tsc_x86.h"
 
-#define REP 10
+#define REP 100
 
 int main(int argc, const char **argv)
 {
