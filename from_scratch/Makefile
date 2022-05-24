@@ -27,5 +27,9 @@ $(EXEC)%: $(wildcard src/*.c src/*.h)
 	@mkdir -p build
 	g++ $(SRC) $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
 
+$(EXEC)%.S: $(wildcard src/*.c src/*.h)
+	@mkdir -p build
+	g++ -S -fverbose-asm $(SRC) $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
+
 clean:
 	rm -f build/*
