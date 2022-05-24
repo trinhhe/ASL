@@ -14,7 +14,7 @@
 - [ ] read input data more efficiently
 - [ ] vector instructions
 - [x] find a way to make algorithm more efficient
-- [o] keep only single state because message gets normalized
+- [ ] keep only single state because message gets normalized
 - [ ] unroll i-loop (?)
 - [ ] strength reduction (?)
 - [ ] function inlining (?)
