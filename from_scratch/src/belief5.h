@@ -73,13 +73,13 @@ void get_beliefs(graph_t *G) {
 	const auto belief = G->belief;
 
 	for (int i = 0; i < n; i++) {
-		float_t b0 = 0;
+		float_t b0 = 1;
 		float_t b1 = 1;
 		for (int j = off[i]; j < off[i + 1]; j++){
 			b0 *= 1-in[j];
 			b1 *= in[j];
 		}
-		((float_t *)&belief[i])[1] = b0;
+		((float_t *)&belief[i])[0] = b0;
 		((float_t *)&belief[i])[1] = b1;
 
 		// normalize
