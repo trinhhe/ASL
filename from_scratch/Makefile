@@ -1,12 +1,13 @@
 DEBUG_FLAGS := -g
 CFLAGS := -Wall -lm -Wno-sign-compare -Ofast
-TEST_INPUT := ../measurement_utils/data/ratings_120user_norm.csv 
+TEST_INPUT_easy := ../with_library/test/data/ratings_small.csv
+TEST_INPUT_hard := ../measurement_utils/data/ratings_120user_norm.csv 
 MAIN := build/main
 TEST := build/test
 
-variants = -DOPTVARIANT__2 -DOPTVARIANT__3 -DOPTVARIANT__3@-DGRAPH_PADDING -DOPTVARIANT__7 -DOPTVARIANT__6@-DVEC2@-mavx2 -DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING -DOPTVARIANT__6@-mavx2 -DOPTVARIANT__6@-mavx2@-DGRAPH_PADDING
+variants = -DOPTVARIANT__2 -DOPTVARIANT__3 -DOPTVARIANT__3@-DGRAPH_PADDING -DOPTVARIANT__7 #-DOPTVARIANT__6@-DVEC2@-mavx2 -DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING -DOPTVARIANT__6@-mavx2 -DOPTVARIANT__6@-mavx2@-DGRAPH_PADDING
 
-LOGS = $(foreach var,$(variants),test/@$(var).log)
+LOGS = $(foreach var,$(variants),test/easy@$(var).log test/hard@$(var).log)
 
 # literal space:
 s := $(subst ,, )
@@ -17,15 +18,15 @@ all: run-debug
 logs: $(LOGS)
 
 run-debug: $(subst =,__,$(subst $(s),@,$(MAIN) $(DEBUG_FLAGS)))
-	valgrind $^ $(TEST_INPUT)
+	valgrind $^ $(TEST_INPUT_hard)
 run: $(MAIN)
-	$(MAIN) $(TEST_INPUT)
+	$(MAIN) $(TEST_INPUT_hard)
 
 run-%: build/%
-	$< $(TEST_INPUT)
+	$< $(TEST_INPUT_hard)
 
 run-debug-%: build/%
-	valgrind $< $(TEST_INPUT)
+	valgrind $< $(TEST_INPUT_hard)
 
 $(MAIN)%: src/main_timer.cpp $(wildcard src/*.h)
 	@mkdir -p build
@@ -39,9 +40,13 @@ $(TEST)%: src/test.cpp $(wildcard src/*.h)
 	@mkdir -p build
 	g++ $< $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
 
-test/%.log: $(TEST)%
-	@mkdir -p build
-	$< $(TEST_INPUT) > $@
+test/easy%.log: $(TEST)%
+	@mkdir -p test
+	$< $(TEST_INPUT_easy) > $@
+
+test/hard%.log: $(TEST)%
+	@mkdir -p test
+	$< $(TEST_INPUT_hard) > $@
 
 clean:
 	rm -f build/*
