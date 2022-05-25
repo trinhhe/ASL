@@ -45,10 +45,10 @@ void propagate(graph_t *G) {
 
 #ifdef GRAPH_PADDING
 		// TODO: Are these correct?
-		__m256i msg1_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF);
-		__m256i msg2_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000);
-		__m256i msg3_mask = _mm256_set_epi64x(0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000);
-		__m256i msg4_mask = _mm256_set_epi64x(0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
+		__m256i msg1_mask = _mm256_set_epi64x(0, 0, 0, -1);
+		__m256i msg2_mask = _mm256_set_epi64x(0, 0, -1, 0);
+		__m256i msg3_mask = _mm256_set_epi64x(0, -1, 0, 0);
+		__m256i msg4_mask = _mm256_set_epi64x(-1, 0, 0, 0);
 #endif
 
 		// RH: I think the intermediate loop bound should be end & ~3 (as opposed to end - 3), otherwise, we may count something twice in the leftover loop.
@@ -80,10 +80,11 @@ void propagate(graph_t *G) {
 			float_t *_outc = (float_t *)(in + Gout[j+2]);
 			float_t *_outd = (float_t *)(in + Gout[j+3]);
 #ifdef GRAPH_PADDING
+			// TODO: Check
 			_mm256_maskstore_ps(_outa, msg1_mask, final_out);
-			_mm256_maskstore_ps(_outb, msg2_mask, final_out);
-			_mm256_maskstore_ps(_outc, msg3_mask, final_out);
-			_mm256_maskstore_ps(_outd, msg4_mask, final_out);
+			_mm256_maskstore_ps(_outb-2, msg2_mask, final_out);
+			_mm256_maskstore_ps(_outc-4, msg3_mask, final_out);
+			_mm256_maskstore_ps(_outd-6, msg4_mask, final_out);
 #else
 			_outa[0] = final_out[0];
 			_outa[1] = final_out[1];
