@@ -18,7 +18,8 @@
 #include "util.h"
 #include "../../measurement_utils/tsc_x86.h"
 
-#define REP 100
+int REP = 30;
+const long long MIN_CYCLES = 2000000000;
 
 int main(int argc, const char **argv)
 {
@@ -57,6 +58,8 @@ int main(int argc, const char **argv)
         end_prop = stop_tsc(start_prop);
         total_prop += (double) end_prop;
 
+		if (i == REP-1 && total_prop + total_gbuild <= MIN_CYCLES)
+			REP++;
         if (i != REP-1) {
 			graph_destroy(&G);
         }
@@ -86,6 +89,10 @@ int main(int argc, const char **argv)
     // number of flops in propagate
     for (int i = 0; i < G.n; i++) {
 		for (int j = G.off[i]; j < G.off[i + 1]; j++) {
+#ifdef GRAPH_PADDING
+			if (G.out[j] == -1)
+				break; // reached padding
+#endif
             for (int c = 0; c < 2; c++) {
 				for (int d = 0; d < 2; d++) {
                     for (int k = G.off[i]; k < G.off[i + 1]; k++) {
