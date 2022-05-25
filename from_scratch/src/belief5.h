@@ -75,17 +75,22 @@ void get_beliefs(graph_t *G) {
 			b0 *= 1-in[j];
 			b1 *= in[j];
 		}
-		((float_t *)&belief[i])[0] = b0;
-		((float_t *)&belief[i])[1] = b1;
 
-		// normalize
-		float_t s = belief[i].L + belief[i].D;
+		float_t s = b1 + b0;
+
+#ifdef COMPACT_MESSAGE
+		belief[i] = s < EPS ? .5 : b0/=s;
+#else
 		if (s < EPS) {
-			belief[i].L = belief[i].D = .5;
+			b1 = b0 = .5;
 		} else {
-			belief[i].L /= s;
-			belief[i].D /= s;
+			b0 /= s;
+			b1 /= s;
 		}
+
+		((float_t *)&belief[i]).D = b0;
+		((float_t *)&belief[i]).L = b1;
+#endif
 	}
 }
 

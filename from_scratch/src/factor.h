@@ -12,15 +12,16 @@
 /* Contains the definition of a factor graph and functions for its construction
  * from the list of ratings. */
 
+#ifdef COMPACT_MESSAGE
+typedef float_t msg_t;
+typedef float_t potential_t;
+typedef float_t statevector_t;
+#else
 typedef struct {
 	float L;
 	float D;
 } statevector_t;
 
-#ifdef COMPACT_MESSAGE
-typedef float_t msg_t;
-typedef float_t potential_t;
-#else
 typedef statevector_t msg_t;
 typedef statevector_t potential_t;
 
@@ -208,8 +209,13 @@ void graph_destroy(graph_t *G) {
 }
 
 void dump_beliefs(graph_t *G) {
-	for (int v = G->tr.m_lo; v < G->tr.m_hi; v++)
+	for (int v = G->tr.m_lo; v < G->tr.m_hi; v++){
+#ifdef COMPACT_MESSAGE
+		printf("%.3f ", G->belief[v]);
+#else
 		printf("%.3f ", G->belief[v].L);
+#endif
+	}
 	printf("\n");
 }
 
