@@ -31,6 +31,7 @@ PATH = os.path.join(os.path.dirname(__file__), '../measurements/')
 OUT = PATH + '/plots/'
 
 fileNames = glob.glob(f"{PATH}/*.csv")
+fileNames = sorted(fileNames)
 
 for file in fileNames:
     df = pd.read_csv(file, usecols= [0,1,2], index_col=False)
