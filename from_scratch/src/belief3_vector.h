@@ -57,9 +57,6 @@ void propagate(graph_t *G) {
 
         for (int j = off[i]; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
-			if (Gout[j] == -1)
-				break; // reached padding
-
 			__m256 val = _mm256_load_ps((const float*)&(in_old[j]));
 #else
 			__m256 val = _mm256_loadu_ps((const float*)&(in_old[j]));
@@ -102,13 +99,9 @@ void propagate(graph_t *G) {
 #endif
 		}
 
+#ifndef GRAPH_PADDING
 		//leftover loop
         for (int j = max(0, end-3); j < end; j++) {
-#ifdef GRAPH_PADDING
-			if (Gout[j] == -1)
-				break; // reached padding
-#endif
-
 			float_t val0 = ((float_t *)&in_old[j])[0];
 			float_t val1 = ((float_t *)&in_old[j])[1];
 			float_t *_out = (float_t *)(in + Gout[j]);
@@ -132,6 +125,7 @@ void propagate(graph_t *G) {
 				_out[1] = out1 / a;
 			}
 		}
+#endif
 #else
 		__m256 glob_00v = _mm256_set1_ps(glob00);
 		__m256 glob_01v = _mm256_set1_ps(glob01);
