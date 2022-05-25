@@ -28,7 +28,7 @@ sns.set_theme()
 markers = cycle_markers(('^','o','s'),1)
 
 PATH = os.path.join(os.path.dirname(__file__), '../measurements/')
-OUT = os.path.join(os.path.dirname(__file__), "plots/")
+OUT = PATH + '/plots/'
 
 fileNames = glob.glob(f"{PATH}/*.csv")
 
