@@ -10,6 +10,8 @@
 #include "belief3_vector.h"
 #elif OPTVARIANT == 7
 #include "belief5.h"
+#elif OPTVARIANT == 8
+#include "belief6.h"
 #else
 #include "belief.h"
 #endif

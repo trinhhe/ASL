@@ -64,3 +64,9 @@
 - G.in/G.in_old/G.node_pot/G.belief only store single float_t for the LIKE state only instead of two float_t corresponding to DISLIKE/LIKE; also the size_t in the graph data structure are replaced by u_int32_t
 - increase memory throughput
 - yes, it increases flops/cycle slightly 
+
+### Vector instructions + compact messages/node potentials/beliefs
+- belief6.h
+- combines belief5.h and belief3_vector.h
+- increase memory throughput + flops/cycle should move closer to 2 and be greater than for all previous approaches
+- no, the flops/cycle is not greater than for all previous approaches for all input sizes
