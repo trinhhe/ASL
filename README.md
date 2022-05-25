@@ -14,7 +14,7 @@
 - [ ] read input data more efficiently
 - [ ] vector instructions
 - [x] find a way to make algorithm more efficient
-- [ ] keep only single state because message gets normalized
+- [ ] compact messages/node potentials/beliefs (storing only single state)
 - [ ] unroll i-loop (?)
 - [ ] strength reduction (?)
 - [ ] function inlining (?)
@@ -59,7 +59,7 @@
 - vector instructions should make flops run more efficiently
 - just started working on it
 
-### Keep only single state
+### Compact messages/node potentials/beliefs
 - belief5.h (on basis of belief3.h & uses factor.h with -DCOMPACT_MESSAGE)
 - G.in and G.in_old only store single float_t for the LIKE state instead of msg_t of two float_t
 - increase memory throughput

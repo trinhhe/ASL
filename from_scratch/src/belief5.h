@@ -20,8 +20,8 @@ void propagate(graph_t *G) {
 	const auto node_pot = G->node_pot;
 
 	for (int i = 0; i < n; i++) {
-		float_t pot_i0 = ((float_t *)&node_pot[i])[0];
-		float_t pot_i1 = ((float_t *)&node_pot[i])[1];
+		float_t pot_i1 = node_pot[i];
+		float_t pot_i0 = 1 - pot_i1;
 
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
@@ -55,11 +55,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
-			if (fabs(a) < EPS) {
-				_out[0] = .5;
-			} else {
-				_out[0] = out1 / a;
-			}
+			*_out = fabs(a) < EPS ? .5 : out1 / a;
 		}
 	}
 

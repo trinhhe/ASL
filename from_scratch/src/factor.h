@@ -19,13 +19,11 @@ typedef struct {
 
 #ifdef COMPACT_MESSAGE
 typedef float_t msg_t;
+typedef float_t potential_t;
 #else
 typedef statevector_t msg_t;
-#endif
-
 typedef statevector_t potential_t;
 
-#ifndef COMPACT_MESSAGE
 void normalise_msg(msg_t *m) {
 	// TODO: numerical stability
 	float_t s = m->L + m->D;
@@ -174,14 +172,23 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	float_t target_mean = get_user_mean(target);
 	float_t target_stddev = get_user_stddev(target, target_mean);
 	G.node_pot = (potential_t *) aligned_calloc(G.n, sizeof *G.node_pot);
-	for (int i = 0; i < G.n; i++)
+	for (int i = 0; i < G.n; i++){
+#ifdef COMPACT_MESSAGE
+		G.node_pot[i] = .5; // defaults
+#else
 		G.node_pot[i] = (potential_t){.5, .5}; // defaults
+#endif
+	}
 
 	for (rating_t *p = target; p->user == target_uid; p++) {
 		int v = translator_movie_to_id(&G.tr, p->movie);
 		float_t raw_Lpot = .5 + get_z_score(p->rating, target_mean, target_stddev) / NORMALISE_P;
+#ifdef COMPACT_MESSAGE
+		G.node_pot[v] = fmax(0.1, fmin(0.9, raw_Lpot));
+#else
 		G.node_pot[v].L = fmax(0.1, fmin(0.9, raw_Lpot));
 		G.node_pot[v].D = 1 -  G.node_pot[v].L;
+#endif
 	}
 
 	G.E = E;
@@ -230,7 +237,11 @@ void dump_graph(graph_t *G) {
 	printf("\n");
 	printf("node potentials:\n");
 	for (int v = 0; v < G->n; v++) {
+#ifdef COMPACT_MESSAGE
+		printf("[%.3f %.3f] ", G->node_pot[v], 1-G->node_pot[v]);
+#else
 		printf("[%.3f %.3f] ", G->node_pot[v].L, G->node_pot[v].D);
+#endif
 	}
 	printf("\n");
 	printf("beliefs (= predicted film ratings):\n");
