@@ -34,6 +34,7 @@ void propagate(graph_t *G) {
 		float_t glob11 = PROP_11 * pot_i1 * prod_tot1;
 
 		//unrolled just like belief_simpleUnroll.h
+		int j = off[i];
         size_t end = off[i + 1];
 #ifdef VEC2
 		__m256 glob_eq = _mm256_set_ps(glob11, glob00, glob11, glob00, glob11, glob00, glob11, glob00);
@@ -51,8 +52,7 @@ void propagate(graph_t *G) {
 		__m256i msg4_mask = _mm256_set_epi64x(-1, 0, 0, 0);
 #endif
 
-		// RH: I think the intermediate loop bound should be end & ~3 (as opposed to end - 3), otherwise, we may count something twice in the leftover loop.
-        for (int j = off[i]; j < end - 3; j+=4) {
+        for (; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
 			__m256 val = _mm256_load_ps((const float*)&(in_old[j]));
 #else
@@ -99,7 +99,7 @@ void propagate(graph_t *G) {
 
 		// RH: I think this leftover loop can be left out if GRAPH_PADDING. But it shouldn't matter if we fix the loop bounds first (see above)
 		//leftover loop
-        for (int j = max(0, end-3); j < end; j++) {
+        for (; j < end; j++) {
 			float_t val0 = ((float_t *)&in_old[j])[0];
 			float_t val1 = ((float_t *)&in_old[j])[1];
 			float_t *_out = (float_t *)(in + Gout[j]);
@@ -132,8 +132,7 @@ void propagate(graph_t *G) {
 		__m256 eps = _mm256_set1_ps(EPS);
 		__m256 half = _mm256_set1_ps(0.5);
 
-		// RH: same here, I think it should be end & ~7
-        for (int j = off[i]; j < end - 7; j+=8) {
+        for (; j < end - 7; j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -198,7 +197,7 @@ void propagate(graph_t *G) {
 		}
 
 	    //leftover loop
-        for (int j = max(0, end-7); j < end; j++) {
+        for (; j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
