@@ -18,6 +18,20 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
+	__m256 abs_mask = _mm256_set1_ps(-0.0);
+	__m256 eps = _mm256_set1_ps(EPS);
+	__m256 half = _mm256_set1_ps(0.5);
+#ifdef VEC2
+    __m256i rev_idx = _mm256_set_epi32(0x2, 0x3, 0x0, 0x1, 0x2, 0x3, 0x0, 0x1);
+	#ifdef GRAPH_PADDING
+		// TODO: Are these correct?
+		__m256i msg1_mask = _mm256_set_epi64x(0, 0, 0, -1);
+		__m256i msg2_mask = _mm256_set_epi64x(0, 0, -1, 0);
+		__m256i msg3_mask = _mm256_set_epi64x(0, -1, 0, 0);
+		__m256i msg4_mask = _mm256_set_epi64x(-1, 0, 0, 0);
+	#endif
+#endif
+
 	for (int i = 0; i < n; i++) {
 		float_t pot_i0 = ((float_t *)&node_pot[i])[0];
 		float_t pot_i1 = ((float_t *)&node_pot[i])[1];
@@ -39,18 +53,6 @@ void propagate(graph_t *G) {
 #ifdef VEC2
 		__m256 glob_eq = _mm256_set_ps(glob11, glob00, glob11, glob00, glob11, glob00, glob11, glob00);
 		__m256 glob_diff = _mm256_set_ps(glob01, glob10, glob01, glob10, glob01, glob10, glob01, glob10);
-        __m256i rev_idx = _mm256_set_epi32(0x2, 0x3, 0x0, 0x1, 0x2, 0x3, 0x0, 0x1);
-		__m256 abs_mask = _mm256_set1_ps(-0.0);
-		__m256 eps = _mm256_set1_ps(EPS);
-		__m256 half = _mm256_set1_ps(0.5);
-
-#ifdef GRAPH_PADDING
-		// TODO: Are these correct?
-		__m256i msg1_mask = _mm256_set_epi64x(0, 0, 0, -1);
-		__m256i msg2_mask = _mm256_set_epi64x(0, 0, -1, 0);
-		__m256i msg3_mask = _mm256_set_epi64x(0, -1, 0, 0);
-		__m256i msg4_mask = _mm256_set_epi64x(-1, 0, 0, 0);
-#endif
 
         for (; j < max(0, end - 3); j+=4) {
 #ifdef GRAPH_PADDING
@@ -128,9 +130,6 @@ void propagate(graph_t *G) {
 		__m256 glob_01v = _mm256_set1_ps(glob01);
 		__m256 glob_10v = _mm256_set1_ps(glob10);
 		__m256 glob_11v = _mm256_set1_ps(glob11);
-		__m256 abs_mask = _mm256_set1_ps(-0.0);
-		__m256 eps = _mm256_set1_ps(EPS);
-		__m256 half = _mm256_set1_ps(0.5);
 
         for (; j < max(0,end - 7); j+=8) {
 #ifdef GRAPH_PADDING
