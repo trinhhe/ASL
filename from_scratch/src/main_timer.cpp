@@ -90,7 +90,7 @@ int main(int argc, const char **argv)
                     flops_prop += 3; //_out[c] += pot_i * pot_ij * prod;
                 }
             }
-            flops_prop++; //float_t s = m->L + m->D in normalise_msg(out), conservative estimate (don't consider s >= 1e-6 resulting to one more flop)
+            flops_prop++; //float_t s = m->L + m->D in normalise_msg(out), conservative estimate (don't consider s >= EPS resulting to one more flop)
         }
     }
     flops_prop *= iterations;

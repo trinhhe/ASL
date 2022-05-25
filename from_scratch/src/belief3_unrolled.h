@@ -88,7 +88,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0a + out1a;
-			if (fabs(a) < 1e-6) {
+			if (fabs(a) < EPS) {
 				_outa[0] = .5;
 				_outa[1] = .5;
 			} else {
@@ -97,7 +97,7 @@ void propagate(graph_t *G) {
 			}
 
             float_t b = out0b + out1b;
-			if (fabs(b) < 1e-6) {
+			if (fabs(b) < EPS) {
 				_outb[0] = .5;
 				_outb[1] = .5;
 			} else {
@@ -106,7 +106,7 @@ void propagate(graph_t *G) {
 			}
 
             float_t c = out0c + out1c;
-			if (fabs(c) < 1e-6) {
+			if (fabs(c) < EPS) {
 				_outc[0] = .5;
 				_outc[1] = .5;
 			} else {
@@ -115,7 +115,7 @@ void propagate(graph_t *G) {
 			}
 
             float_t d = out0d + out1d;
-			if (fabs(d) < 1e-6) {
+			if (fabs(d) < EPS) {
 				_outd[0] = .5;
 				_outd[1] = .5;
 			} else {
@@ -146,7 +146,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
-			if (fabs(a) < 1e-6) {
+			if (fabs(a) < EPS) {
 				_out[0] = .5;
 				_out[1] = .5;
 			} else {

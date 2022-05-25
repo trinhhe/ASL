@@ -45,7 +45,7 @@ void propagate(graph_t *G) {
 		__m256 glob_diff = _mm256_set_ps(glob01, glob10, glob01, glob10, glob01, glob10, glob01, glob10);
         __m256i rev_idx = _mm256_set_epi32(0x2, 0x3, 0x0, 0x1, 0x2, 0x3, 0x0, 0x1);
 		__m256 abs_mask = _mm256_set1_ps(-0.0);
-		__m256 eps = _mm256_set1_ps(1e-6);
+		__m256 eps = _mm256_set1_ps(EPS);
 		__m256 half = _mm256_set1_ps(0.5);
 
 		// TODO: Are these correct?
@@ -118,7 +118,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
-			if (fabs(a) < 1e-6) {
+			if (fabs(a) < EPS) {
 				_out[0] = .5;
 				_out[1] = .5;
 			} else {
@@ -132,7 +132,7 @@ void propagate(graph_t *G) {
 		__m256 glob_10v = _mm256_set1_ps(glob10);
 		__m256 glob_11v = _mm256_set1_ps(glob11);
 		__m256 abs_mask = _mm256_set1_ps(-0.0);
-		__m256 eps = _mm256_set1_ps(1e-6);
+		__m256 eps = _mm256_set1_ps(EPS);
 		__m256 half = _mm256_set1_ps(0.5);
 
 		// RH: same here, I think it should be end & ~7
@@ -222,7 +222,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
-			if (fabs(a) < 1e-6) {
+			if (fabs(a) < EPS) {
 				_out[0] = .5;
 				_out[1] = .5;
 			} else {

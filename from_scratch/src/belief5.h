@@ -55,7 +55,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
-			if (fabs(a) < 1e-6) {
+			if (fabs(a) < EPS) {
 				_out[0] = .5;
 			} else {
 				_out[0] = out1 / a;
@@ -84,7 +84,7 @@ void get_beliefs(graph_t *G) {
 
 		// normalize
 		float_t s = belief[i].L + belief[i].D;
-		if (s < 1e-6) {
+		if (s < EPS) {
 			belief[i].L = belief[i].D = .5;
 		} else {
 			belief[i].L /= s;

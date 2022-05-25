@@ -52,7 +52,7 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
-			if (fabs(a) < 1e-6) {
+			if (fabs(a) < EPS) {
 				_out[0] = .5;
 				_out[1] = .5;
 			} else {

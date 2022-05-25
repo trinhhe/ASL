@@ -17,14 +17,14 @@ void calculate_graph_and_beliefs(rating_t *ratings, int target_uid, graph_t *G) 
 
 	get_beliefs(G);
 #ifdef DEBUG
-	dump_graph(&G);
+	dump_graph(G);
 #endif
 }
 
 void dump_nontrivial_beliefs(graph_t *G) {
 	for (int v = G->tr.m_lo; v < G->tr.m_hi; v++) {
 		auto b = G->belief[v].L;
-		if (fabs(b - .5) < 1e-5)
+		if (fabs(b - .5) < EPS)
 			continue;
 		printf("%d %.3f\n", v, b);
 	}
