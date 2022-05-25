@@ -94,4 +94,3 @@ void get_beliefs(graph_t *G) {
 }
 
 #endif
-

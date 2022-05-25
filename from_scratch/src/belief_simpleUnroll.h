@@ -156,18 +156,5 @@ void propagate(graph_t *G) {
     
 }
 
-/* Calculates the current node beliefs given current messages. */
-void get_beliefs(graph_t *G) {
-	for (int i = 0; i < G->n; i++) {
-		for (int c = 0; c < 2; c++) {
-			float_t belief = 1;
-			for (int j = G->off[i]; j < G->off[i + 1]; j++)
-				belief *= ((float_t *)&G->in[j])[c];
-			((float_t *)&G->belief[i])[c] = belief;
-		}
-
-		normalise_msg(&G->belief[i]);
-	}
-}
-
+#include "get_belief_stock.h"
 #endif
