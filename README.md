@@ -14,7 +14,7 @@
 - [ ] read input data more efficiently
 - [ ] vector instructions
 - [x] find a way to make algorithm more efficient
-- [ ] compact messages/node potentials/beliefs (storing only single state)
+- [x] compact messages/node potentials/beliefs (storing only single state) / replace size_t by int32
 - [ ] unroll i-loop (?)
 - [ ] strength reduction (?)
 - [ ] function inlining (?)
@@ -61,6 +61,6 @@
 
 ### Compact messages/node potentials/beliefs
 - belief5.h (on basis of belief3.h & uses factor.h with -DCOMPACT_MESSAGE)
-- G.in and G.in_old only store single float_t for the LIKE state instead of msg_t of two float_t
+- G.in/G.in_old/G.node_pot/G.belief only store single float_t for the LIKE state only instead of two float_t corresponding to DISLIKE/LIKE; also the size_t in the graph data structure are replaced by u_int32_t
 - increase memory throughput
 - yes, it increases flops/cycle slightly 
