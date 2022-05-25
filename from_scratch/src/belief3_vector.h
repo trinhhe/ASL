@@ -55,6 +55,7 @@ void propagate(graph_t *G) {
 		__m256i msg4_mask = _mm256_set_epi64x(0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
 
 
+		// RH: I think the intermediate loop bound should be end & ~3 (as opposed to end - 3), otherwise, we may count something twice in the leftover loop.
         for (int j = off[i]; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
 			__m256 val = _mm256_load_ps((const float*)&(in_old[j]));
@@ -99,7 +100,7 @@ void propagate(graph_t *G) {
 #endif
 		}
 
-#ifndef GRAPH_PADDING
+		// RH: I think this leftover loop can be left out if GRAPH_PADDING. But it shouldn't matter if we fix the loop bounds first (see above)
 		//leftover loop
         for (int j = max(0, end-3); j < end; j++) {
 			float_t val0 = ((float_t *)&in_old[j])[0];
@@ -125,7 +126,6 @@ void propagate(graph_t *G) {
 				_out[1] = out1 / a;
 			}
 		}
-#endif
 #else
 		__m256 glob_00v = _mm256_set1_ps(glob00);
 		__m256 glob_01v = _mm256_set1_ps(glob01);
@@ -135,6 +135,7 @@ void propagate(graph_t *G) {
 		__m256 eps = _mm256_set1_ps(1e-6);
 		__m256 half = _mm256_set1_ps(0.5);
 
+		// RH: same here, I think it should be end & ~7
         for (int j = off[i]; j < end - 7; j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
