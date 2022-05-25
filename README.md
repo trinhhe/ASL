@@ -47,6 +47,11 @@
 - unrolling j-loop with precomputed msg products should increase ilp
 - Did not work, runtime is bounded by divisions, not enough registers or "it's also interesting that -DOPTVARIANT=5 + -O3 is way faster than -DOPTVARIANT=3 + -O3, but the opposite is true with -Ofast, which suggests some -ffast-math flop reordering (i.e. some algebraic simplification) is taking place with -Ofast but not O3 and loop unrolling just messes with it?" ????
 
+### Unrolled i-loop in belief + Precomputing message products
+- belief3_unroll_i4.h
+- unroll i loop with factor of 4
+- increasing ilp
+- Did not work, runtime even slower than unroll j-loop + precomp msg products for all input sizes (perf_unroll.png)
 ### Padding the graph
 - `#ifdef GRAPH_PADDING` in factor.h
 - pad the graph so that each vertex starts on an address divisible by SIMD size

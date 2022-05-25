@@ -1,6 +1,7 @@
 # because make doesn't like spaces and =, the cflags are encoded as follows:
 # " " becomes @ and "=" becomes "__" Furthermore, we want an initial @.
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
+# interesting_cflags = @-Ofast @-O3
 interesting_cflags = @-Ofast
 #variants = from_scratch from_scratch@-DOPTVARIANT__2 with_library
 #variants = from_scratch@-DOPTVARIANT__2 from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__4 from_scratch@-DOPTVARIANT__5 from_scratch@-DOPTVARIANT__5@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__6@-mavx2
@@ -8,6 +9,7 @@ interesting_cflags = @-Ofast
 #variants = from_scratch@-DOPTVARIANT__3@-DOLD_FLOP_COUNT from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING@-DOLD_FLOP_COUNT from_scratch@-DOPTVARIANT__7@-DOLD_FLOP_COUNT from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DOLD_FLOP_COUNT from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING@-DOLD_FLOP_COUNT
 #variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2@-DOLD_FLOP_COUNT
 variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2
+# variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__9 from_scratch@-DOPTVARIANT__10
 combinations = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/$(var)$(cflags).csv))
 
 all: plot

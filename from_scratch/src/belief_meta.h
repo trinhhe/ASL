@@ -12,6 +12,10 @@
 #include "belief5.h"
 #elif OPTVARIANT == 8
 #include "belief6.h"
+#elif OPTVARIANT == 9
+#include "belief3_unroll_i4.h"
+#elif OPTVARIANT == 10
+#include "belief3_unrolled.h"
 #else
 #include "belief.h"
 #endif
