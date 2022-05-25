@@ -52,7 +52,7 @@ void propagate(graph_t *G) {
 		__m256i msg4_mask = _mm256_set_epi64x(-1, 0, 0, 0);
 #endif
 
-        for (; j < end - 3; j+=4) {
+        for (; j < max(0, end - 3); j+=4) {
 #ifdef GRAPH_PADDING
 			__m256 val = _mm256_load_ps((const float*)&(in_old[j]));
 #else
@@ -132,7 +132,7 @@ void propagate(graph_t *G) {
 		__m256 eps = _mm256_set1_ps(EPS);
 		__m256 half = _mm256_set1_ps(0.5);
 
-        for (; j < end - 7; j+=8) {
+        for (; j < max(0,end - 7); j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
