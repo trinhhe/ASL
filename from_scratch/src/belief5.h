@@ -79,7 +79,7 @@ void get_beliefs(graph_t *G) {
 		float_t s = b1 + b0;
 
 #ifdef COMPACT_MESSAGE
-		belief[i] = s < EPS ? .5 : b0/=s;
+		belief[i] = s < EPS ? .5 : b1/=s;
 #else
 		if (s < EPS) {
 			b1 = b0 = .5;
