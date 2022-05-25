@@ -17,22 +17,28 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
+	int start;
+	int end = off[0];
 	for (int i = 0; i < n; i++) {
 		float_t pot_i0 = ((float_t *)&node_pot[i])[0];
 		float_t pot_i1 = ((float_t *)&node_pot[i])[1];
 
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
-		for (int k = off[i]; k < off[i + 1]; k++) {
+
+		start = end;
+		end = off[i + 1];
+		for (int k = start; k < end; k++) {
 			prod_tot0 *= ((float_t *)&in_old[k])[0];
 			prod_tot1 *= ((float_t *)&in_old[k])[1];
 		}
+
 		float_t glob00 = PROP_00 * pot_i0 * prod_tot0;
 		float_t glob01 = PROP_01 * pot_i0 * prod_tot0;
 		float_t glob10 = PROP_10 * pot_i1 * prod_tot1;
 		float_t glob11 = PROP_11 * pot_i1 * prod_tot1;
 
-		for (int j = off[i]; j < off[i + 1]; j++) {
+		for (int j = start; j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -62,7 +68,6 @@ void propagate(graph_t *G) {
 			}
 		}
 	}
-
 }
 
 /* Calculates the current node beliefs given current messages. */
