@@ -33,11 +33,6 @@ void propagate(graph_t *G) {
 		float_t glob10 = PROP_10 * pot_i1 * prod_tot1;
 		float_t glob11 = PROP_11 * pot_i1 * prod_tot1;
 
-        float_t glob[4];
-        float_t PROP[4] = {PROP_00, PROP_01, PROP_10, PROP_11};
-        float_t pot[4] = {pot_i0, pot_i0, pot_i1, pot_i1};
-        float_t prod_tot[4] = {prod_tot0, prod_tot0, prod_tot1, prod_tot1};
-
 		//unrolled just like belief_simpleUnroll.h
         size_t end = off[i + 1];
 #ifdef VEC2
@@ -48,12 +43,13 @@ void propagate(graph_t *G) {
 		__m256 eps = _mm256_set1_ps(EPS);
 		__m256 half = _mm256_set1_ps(0.5);
 
+#ifdef GRAPH_PADDING
 		// TODO: Are these correct?
 		__m256i msg1_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF);
 		__m256i msg2_mask = _mm256_set_epi64x(0x0000000000000000, 0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000);
 		__m256i msg3_mask = _mm256_set_epi64x(0x0000000000000000, 0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000);
 		__m256i msg4_mask = _mm256_set_epi64x(0xFFFFFFFFFFFFFFFF, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
-
+#endif
 
 		// RH: I think the intermediate loop bound should be end & ~3 (as opposed to end - 3), otherwise, we may count something twice in the leftover loop.
         for (int j = off[i]; j < end - 3; j+=4) {

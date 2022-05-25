@@ -13,6 +13,7 @@
  * from the list of ratings. */
 
 #ifdef COMPACT_MESSAGE
+typedef u_int32_t idx_t;
 typedef float_t msg_t;
 typedef float_t potential_t;
 typedef float_t statevector_t;
@@ -22,6 +23,7 @@ typedef struct {
 	float D;
 } statevector_t;
 
+typedef size_t idx_t;
 typedef statevector_t msg_t;
 typedef statevector_t potential_t;
 
@@ -38,18 +40,18 @@ void normalise_msg(msg_t *m) {
 #endif
 
 typedef struct {
-	size_t n; // Total number of vertices
-	size_t m; // Total number of half-edges (i.e., 2|E|)
-	size_t *off; // size = n; off[v] = the offset where the v-th vertex begins
+	idx_t n; // Total number of vertices
+	idx_t m; // Total number of half-edges (i.e., 2|E|)
+	idx_t *off; // size = n; off[v] = the offset where the v-th vertex begins
 	msg_t *in; // size = m; buffer for incoming messages, the ones for vertex v are at in[off[v]] … in[off[v + 1] - 1]
 	msg_t *in_old; // size = m; the same, but for the previous iteration, these two get swapped after every iteration
-	size_t *out; // size = m; out[off[v]] … out[off[v + 1] - 1] contain the indices in in where the messages from v should be delivered
+	idx_t *out; // size = m; out[off[v]] … out[off[v + 1] - 1] contain the indices in in where the messages from v should be delivered
 	potential_t *node_pot; // size = n; the potential for each node
 	struct translator tr; // translates user and movie ids into graph vertex ids
 	statevector_t *belief; // the final belief of each node
 	// debug info:
 	rating_t *E; // the original input sequence of edges
-	size_t *eix; // the index of the edge in the input sequence
+	idx_t *eix; // the index of the edge in the input sequence
 	int target_uid; // the id of the target vertex
 } graph_t;
 
@@ -78,7 +80,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	graph_t G = {0};
 	translator_init(&G.tr, E);
 	G.n = G.tr.max_out_id;
-	G.off = (size_t *) aligned_calloc(G.n + 1, sizeof *G.off);
+	G.off = (idx_t *) aligned_calloc(G.n + 1, sizeof *G.off);
 	G.belief = (statevector_t *) aligned_calloc(G.n, sizeof *G.belief);
 
 	// make all ``disabled'' edges have rating = -1
@@ -110,8 +112,8 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 
 	G.m = G.off[G.n];
 
-	G.out = (size_t *) aligned_malloc(G.m * sizeof *G.out);
-	G.eix = (size_t *) aligned_malloc(G.m * sizeof *G.eix);
+	G.out = (idx_t *) aligned_malloc(G.m * sizeof *G.out);
+	G.eix = (idx_t *) aligned_malloc(G.m * sizeof *G.eix);
 	G.in = (msg_t *) aligned_malloc((G.m + GRAPH_IN_ALIGN_NMEMB) * sizeof *G.in);
 	G.in_old = (msg_t *) aligned_malloc((G.m + GRAPH_IN_ALIGN_NMEMB) * sizeof *G.in_old);
 	// introduce some space before, to allow writing at position -1
@@ -137,8 +139,8 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 		int u = translator_user_to_id(&G.tr, p->user);
 		int v = translator_movie_to_id(&G.tr, p->movie);
 
-		size_t off_v = G.off[v];
-		size_t off_u = G.off[u];
+		idx_t off_v = G.off[v];
+		idx_t off_u = G.off[u];
 		// construct the pointer to the ``other end'' of this edge
 		G.out[off_u] = off_v;
 		G.out[off_v] = off_u;
@@ -220,10 +222,19 @@ void dump_beliefs(graph_t *G) {
 }
 
 void dump_graph(graph_t *G) {
+#ifdef COMPACT_MESSAGE
+	printf("Graph, n = %d (%zd user IDs + %zd movie IDs), m = %d\n", G->n, G->tr.u_hi - G->tr.u_lo, G->tr.m_hi - G->tr.m_lo, G->m);
+#else
 	printf("Graph, n = %zd (%zd user IDs + %zd movie IDs), m = %zd\n", G->n, G->tr.u_hi - G->tr.u_lo, G->tr.m_hi - G->tr.m_lo, G->m);
+#endif
 	printf("offsets: ");
-	for (int i = 0; i <= G->n; i++)
+	for (int i = 0; i <= G->n; i++){
+#ifdef COMPACT_MESSAGE
+		printf("%d ", G->off[i]);
+#else
 		printf("%zd ", G->off[i]);
+#endif
+	}
 	printf("\n");
 	printf("edges:\n");
 	for (int v = 0; v < G->n; v++) {
@@ -231,11 +242,19 @@ void dump_graph(graph_t *G) {
 		for (int i = G->off[v]; i < G->off[v + 1]; i++) {
 			if (G->eix[i] == -1)
 				break;
-			size_t e = G->eix[i];
+			idx_t e = G->eix[i];
 #ifdef VERBOSE_DUMP
+#ifdef COMPACT_MESSAGE
+			printf("%d (u%d->m%d, r=%.0f, out=%d) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating, G->out[i]);
+#else
 			printf("%zd (u%d->m%d, r=%.0f, out=%zd) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating, G->out[i]);
+#endif
+#else
+#ifdef COMPACT_MESSAGE
+			printf("%d (u%d->m%d, r=%.0f) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating);
 #else
 			printf("%zd (u%d->m%d, r=%.0f) ", e, G->E[e].user, G->E[e].movie, G->E[e].rating);
+#endif
 #endif
 		}
 		printf("]\n");
