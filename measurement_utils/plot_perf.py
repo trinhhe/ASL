@@ -4,6 +4,7 @@
 """
 
 import os
+import glob
 from re import X
 from pathlib import Path
 import pandas as pd
@@ -29,12 +30,10 @@ markers = cycle_markers(('^','o','s'),1)
 PATH = os.path.join(os.path.dirname(__file__), '../measurements/')
 OUT = os.path.join(os.path.dirname(__file__), "plots/")
 
-fileNames = os.listdir(PATH)
-
-fileNames = [file for file in fileNames if '.csv' in file]
+fileNames = glob.glob(f"{PATH}/*.csv")
 
 for file in fileNames:
-    df = pd.read_csv(PATH + file, usecols= [0,1,2], index_col=False)
+    df = pd.read_csv(file, usecols= [0,1,2], index_col=False)
     x = df.iloc[:,0].to_numpy()
     y = df.iloc[:,2].to_numpy()/df.iloc[:,1].to_numpy()
     #sort array after n
