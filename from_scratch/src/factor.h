@@ -54,6 +54,8 @@ typedef struct {
 	int target_uid; // the id of the target vertex
 } graph_t;
 
+static constexpr int GRAPH_IN_ALIGN_NMEMB = SIMD_ALIGN_BYTES / sizeof *graph_t::in;
+
 
 /* For each user, mark the movies that are below the user's average, with a rating of -1. */
 void filter_below_mean(rating_t *E)
@@ -95,7 +97,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 
 #ifdef GRAPH_PADDING
 	for (int i = 0; i < G.n; i++) {
-		G.off[i] = round_up(G.off[i], SIMD_ALIGN_BYTES / sizeof *G.in);
+		G.off[i] = round_up(G.off[i], GRAPH_IN_ALIGN_NMEMB);
 	}
 #endif
 
@@ -111,8 +113,11 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 
 	G.out = (size_t *) aligned_malloc(G.m * sizeof *G.out);
 	G.eix = (size_t *) aligned_malloc(G.m * sizeof *G.eix);
-	G.in = (msg_t *) aligned_malloc(G.m * sizeof *G.in);
-	G.in_old = (msg_t *) aligned_malloc(G.m * sizeof *G.in_old);
+	G.in = (msg_t *) aligned_malloc((G.m + GRAPH_IN_ALIGN_NMEMB) * sizeof *G.in);
+	G.in_old = (msg_t *) aligned_malloc((G.m + GRAPH_IN_ALIGN_NMEMB) * sizeof *G.in_old);
+	// introduce some space before, to allow writing at position -1
+	G.in += GRAPH_IN_ALIGN_NMEMB;
+	G.in_old += GRAPH_IN_ALIGN_NMEMB;
 
 	// "zero"-initialise everything, will get rewritten below everywhere except
 	// for padding where this zeroing out is actually important
@@ -184,12 +189,15 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 }
 
 void graph_destroy(graph_t *G) {
-		free(G->in_old);
-		free(G->in);
-		free(G->eix);
-		free(G->out);
-		free(G->belief);
-		free(G->off);
+	// "remember" about the scratch space right before the pointers we introduced previously
+	G->in -= GRAPH_IN_ALIGN_NMEMB;
+	G->in_old -= GRAPH_IN_ALIGN_NMEMB;
+	free(G->in_old);
+	free(G->in);
+	free(G->eix);
+	free(G->out);
+	free(G->belief);
+	free(G->off);
 }
 
 void dump_beliefs(graph_t *G) {
