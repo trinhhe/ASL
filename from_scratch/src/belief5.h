@@ -77,20 +77,7 @@ void get_beliefs(graph_t *G) {
 		}
 
 		float_t s = b1 + b0;
-
-#ifdef COMPACT_MESSAGE
 		belief[i] = s < EPS ? .5 : b1/=s;
-#else
-		if (s < EPS) {
-			b1 = b0 = .5;
-		} else {
-			b0 /= s;
-			b1 /= s;
-		}
-
-		((float_t *)&belief[i]).D = b0;
-		((float_t *)&belief[i]).L = b1;
-#endif
 	}
 }
 
