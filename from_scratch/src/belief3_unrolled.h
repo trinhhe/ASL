@@ -17,13 +17,13 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
-	for (int i = 0; i < n; i++) {
+	for (idx_t i = 0; i < n; i++) {
 		float_t pot_i0 = ((float_t *)&node_pot[i])[0];
 		float_t pot_i1 = ((float_t *)&node_pot[i])[1];
 
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
-		for (int k = off[i]; k < off[i + 1]; k++) {
+		for (idx_t k = off[i]; k < off[i + 1]; k++) {
 			prod_tot0 *= ((float_t *)&in_old[k])[0];
 			prod_tot1 *= ((float_t *)&in_old[k])[1];
 		}
@@ -34,7 +34,7 @@ void propagate(graph_t *G) {
 
 		//unrolled just like belief_simpleUnroll.h
         size_t end = off[i + 1];
-        for (int j = off[i]; j < end - 3; j+=4) {
+        for (idx_t j = off[i]; j < end - 3; j+=4) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -125,7 +125,7 @@ void propagate(graph_t *G) {
 		}
 
         //leftover loop
-        for (int j = max(0, end-3); j < end; j++) {
+        for (idx_t j = max(0, end-3); j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding

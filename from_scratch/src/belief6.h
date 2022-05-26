@@ -25,13 +25,17 @@ void propagate(graph_t *G) {
 	__m256 one = _mm256_set1_ps(1.0);
 	__m256 half = _mm256_set1_ps(0.5);
 
-	for (int i = 0; i < n; i++) {
+	size_t start;
+	size_t end = off[0];
+	for (idx_t i = 0; i < n; i++) {
+		start = end;
+		end = off[i + 1];
 		float_t pot_i1 = node_pot[i];
 		float_t pot_i0 = 1 - pot_i1;
 
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
-		for (int k = off[i]; k < off[i + 1]; k++) {
+		for (auto k = start; k < end; k++) {
 			prod_tot0 *= 1-in_old[k];
 			prod_tot1 *= in_old[k];
 		}
@@ -45,9 +49,8 @@ void propagate(graph_t *G) {
 		__m256 glob_10v = _mm256_set1_ps(glob10);
 		__m256 glob_11v = _mm256_set1_ps(glob11);
 
-		int j = off[i];
-        idx_t end = off[i + 1];
-		for (; j < max(0,end - 7); j+=8) {
+		size_t j = start;
+		for (; j < max(0,(long long)end - 7); j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding

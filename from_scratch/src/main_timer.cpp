@@ -5,7 +5,7 @@
 #include "util.h"
 #include "../../measurement_utils/tsc_x86.h"
 
-int REP = 30;
+int REP = 5;
 const long long MIN_CYCLES = 2000000000;
 
 int main(int argc, const char **argv)

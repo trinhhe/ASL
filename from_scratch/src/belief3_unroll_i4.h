@@ -49,22 +49,22 @@ void propagate(graph_t *G) {
         end3 = off[i + 3];
         start4 = end3;
         end4 = off[i + 4];
-		for (int k = start; k < end; k++) {
+		for (auto k = start; k < end; k++) {
 			prod_tota0 *= ((float_t *)&in_old[k])[0];
 			prod_tota1 *= ((float_t *)&in_old[k])[1];
 		}
 
-        for (int k = start2; k < end2; k++) {
+        for (auto k = start2; k < end2; k++) {
 			prod_totb0 *= ((float_t *)&in_old[k])[0];
 			prod_totb1 *= ((float_t *)&in_old[k])[1];
 		}
 
-        for (int k = start3; k < end3; k++) {
+        for (auto k = start3; k < end3; k++) {
 			prod_totc0 *= ((float_t *)&in_old[k])[0];
 			prod_totc1 *= ((float_t *)&in_old[k])[1];
 		}
 
-        for (int k = start4; k < end4; k++) {
+        for (auto k = start4; k < end4; k++) {
 			prod_totd0 *= ((float_t *)&in_old[k])[0];
 			prod_totd1 *= ((float_t *)&in_old[k])[1];
 		}
@@ -89,7 +89,7 @@ void propagate(graph_t *G) {
 		float_t globd10 = PROP_10 * pot_id1 * prod_totd1;
 		float_t globd11 = PROP_11 * pot_id1 * prod_totd1;
 
-		for (int j = start; j < end; j++) {
+		for (auto j = start; j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -119,7 +119,7 @@ void propagate(graph_t *G) {
 			}
 		}
 
-        for (int j = start2; j < end2; j++) {
+        for (auto j = start2; j < end2; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -149,7 +149,7 @@ void propagate(graph_t *G) {
 			}
 		}
 
-        for (int j = start3; j < end3; j++) {
+        for (auto j = start3; j < end3; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -179,7 +179,7 @@ void propagate(graph_t *G) {
 			}
 		}
 
-        for (int j = start4; j < end4; j++) {
+        for (auto j = start4; j < end4; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -220,7 +220,7 @@ void propagate(graph_t *G) {
 
 		start = off[i];
 		end = off[i + 1];
-		for (int k = start; k < end; k++) {
+		for (auto k = start; k < end; k++) {
 			prod_tot0 *= ((float_t *)&in_old[k])[0];
 			prod_tot1 *= ((float_t *)&in_old[k])[1];
 		}
@@ -230,7 +230,7 @@ void propagate(graph_t *G) {
 		float_t glob10 = PROP_10 * pot_i1 * prod_tot1;
 		float_t glob11 = PROP_11 * pot_i1 * prod_tot1;
 
-		for (int j = start; j < end; j++) {
+		for (auto j = start; j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding

@@ -19,13 +19,18 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
-	for (int i = 0; i < n; i++) {
+	size_t start;
+	size_t end = off[0];
+	for (idx_t i = 0; i < n; i++) {
+		start = end;
+		end = off[i + 1];
+
 		float_t pot_i1 = node_pot[i];
 		float_t pot_i0 = 1 - pot_i1;
 
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
-		for (int k = off[i]; k < off[i + 1]; k++) {
+		for (auto k = start; k < end; k++) {
 			prod_tot0 *= 1-in_old[k];
 			prod_tot1 *= in_old[k];
 		}
@@ -34,7 +39,7 @@ void propagate(graph_t *G) {
 		float_t glob10 = PROP_10 * pot_i1 * prod_tot1;
 		float_t glob11 = PROP_11 * pot_i1 * prod_tot1;
 
-		for (int j = off[i]; j < off[i + 1]; j++) {
+		for (auto j = start; j < end; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -68,10 +73,10 @@ void get_beliefs(graph_t *G) {
 	const auto in = G->in;
 	const auto belief = G->belief;
 
-	for (int i = 0; i < n; i++) {
+	for (idx_t i = 0; i < n; i++) {
 		float_t b0 = 1;
 		float_t b1 = 1;
-		for (int j = off[i]; j < off[i + 1]; j++){
+		for (idx_t j = off[i]; j < off[i + 1]; j++){
 			b0 *= 1-in[j];
 			b1 *= in[j];
 		}

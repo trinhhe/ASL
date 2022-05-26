@@ -10,8 +10,8 @@ void propagate(graph_t *G) {
 	G->in = G->in_old;
 	G->in_old = tmp;
 
-	for (int i = 0; i < G->n; i++) {
-		for (int j = G->off[i]; j < G->off[i + 1]; j++) {
+	for (idx_t i = 0; i < G->n; i++) {
+		for (idx_t j = G->off[i]; j < G->off[i + 1]; j++) {
 #ifdef GRAPH_PADDING
 			if (G->out[j] == -1)
 				break; // reached padding
@@ -19,13 +19,13 @@ void propagate(graph_t *G) {
 			// calculate the address where we should write our message to
 			msg_t *out = G->in + G->out[j];
 			float_t *_out = (float_t *)out;
-			for (int c = 0; c < 2; c++) {
+			for (idx_t c = 0; c < 2; c++) {
 				_out[c] = 0;
-				for (int d = 0; d < 2; d++) {
+				for (idx_t d = 0; d < 2; d++) {
 					float_t pot_i = ((float_t *)&G->node_pot[i])[d];
 					float_t pot_ij = PROP_MATRIX[d][c];
 					float_t prod = 1;
-					for (int k = G->off[i]; k < G->off[i + 1]; k++) {
+					for (idx_t k = G->off[i]; k < G->off[i + 1]; k++) {
 						if (k == j)
 							continue;
 						prod *= ((float_t *)&G->in_old[k])[d];

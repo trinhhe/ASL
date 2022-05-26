@@ -17,12 +17,12 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
-	for (int i = 0; i < n; i++) {
+	for (idx_t i = 0; i < n; i++) {
 		float_t pot_i0 = ((float_t *)&node_pot[i])[0];
 		float_t pot_i1 = ((float_t *)&node_pot[i])[1];
 
 		// idea: if no message is almost 0, we may just calculate prod* outside and inside just divide by the current in_old[j]
-		for (int j = off[i]; j < off[i + 1]; j++) {
+		for (idx_t j = off[i]; j < off[i + 1]; j++) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
@@ -31,7 +31,7 @@ void propagate(graph_t *G) {
 			float_t prod1 = 1;
 
 			// idea for more speedup: temporarily write in_old[k] = 1 in order to eliminate the if
-			for (int k = off[i]; k < off[i + 1]; k++) {
+			for (idx_t k = off[i]; k < off[i + 1]; k++) {
 				if (k != j) {
 					prod0 *= ((float_t *)&in_old[k])[0];
 					prod1 *= ((float_t *)&in_old[k])[1];

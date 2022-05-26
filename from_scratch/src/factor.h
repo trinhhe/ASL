@@ -97,14 +97,14 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	}
 
 #ifdef GRAPH_PADDING
-	for (int i = 0; i < G.n; i++) {
+	for (idx_t i = 0; i < G.n; i++) {
 		G.off[i] = round_up(G.off[i], GRAPH_IN_ALIGN_NMEMB);
 	}
 #endif
 
 	// degrees => offsets, using prefix sums
 	int tmp = 0;
-	for (int i = 0; i <= G.n; i++) { // yes, <= G.n, as G.off[n] serves as a terminator
+	for (idx_t i = 0; i <= G.n; i++) { // yes, <= G.n, as G.off[n] serves as a terminator
 		int tmp2 = G.off[i];
 		G.off[i] = tmp;
 		tmp += tmp2;
@@ -122,7 +122,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 
 	// "zero"-initialise everything, will get rewritten below everywhere except
 	// for padding where this zeroing out is actually important
-	for (int i = 0; i < G.m; i++) {
+	for (idx_t i = 0; i < G.m; i++) {
 #ifdef COMPACT_MESSAGE
 		G.in_old[i] = G.in[i] = 1.0;
 #else
@@ -175,7 +175,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	float_t target_mean = get_user_mean(target);
 	float_t target_stddev = get_user_stddev(target, target_mean);
 	G.node_pot = (potential_t *) aligned_calloc(G.n, sizeof *G.node_pot);
-	for (int i = 0; i < G.n; i++){
+	for (idx_t i = 0; i < G.n; i++){
 #ifdef COMPACT_MESSAGE
 		G.node_pot[i] = .5; // defaults
 #else
@@ -211,7 +211,7 @@ void graph_destroy(graph_t *G) {
 }
 
 void dump_beliefs(graph_t *G) {
-	for (int v = G->tr.m_lo; v < G->tr.m_hi; v++){
+	for (idx_t v = G->tr.m_lo; v < G->tr.m_hi; v++){
 #ifdef COMPACT_MESSAGE
 		printf("%.3f ", G->belief[v]);
 #else
@@ -228,7 +228,7 @@ void dump_graph(graph_t *G) {
 	printf("Graph, n = %zd (%zd user IDs + %zd movie IDs), m = %zd\n", G->n, G->tr.u_hi - G->tr.u_lo, G->tr.m_hi - G->tr.m_lo, G->m);
 #endif
 	printf("offsets: ");
-	for (int i = 0; i <= G->n; i++){
+	for (idx_t i = 0; i <= G->n; i++){
 #ifdef COMPACT_MESSAGE
 		printf("%d ", G->off[i]);
 #else
@@ -237,9 +237,9 @@ void dump_graph(graph_t *G) {
 	}
 	printf("\n");
 	printf("edges:\n");
-	for (int v = 0; v < G->n; v++) {
+	for (idx_t v = 0; v < G->n; v++) {
 		printf("[ %d:  ", v);
-		for (int i = G->off[v]; i < G->off[v + 1]; i++) {
+		for (idx_t i = G->off[v]; i < G->off[v + 1]; i++) {
 			if (G->eix[i] == -1)
 				break;
 			idx_t e = G->eix[i];
@@ -261,7 +261,7 @@ void dump_graph(graph_t *G) {
 	}
 	printf("\n");
 	printf("node potentials:\n");
-	for (int v = 0; v < G->n; v++) {
+	for (idx_t v = 0; v < G->n; v++) {
 #ifdef COMPACT_MESSAGE
 		printf("[%.3f %.3f] ", G->node_pot[v], 1-G->node_pot[v]);
 #else

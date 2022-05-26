@@ -16,6 +16,8 @@
 #include "belief3_unroll_i4.h"
 #elif OPTVARIANT == 10
 #include "belief3_unrolled.h"
+#elif OPTVARIANT == 11
+#include "belief_lowerbound.h"
 #else
 #include "belief.h"
 #endif

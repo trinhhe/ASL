@@ -5,10 +5,10 @@ void get_beliefs(graph_t *G) {
 	const auto in = G->in;
 	const auto belief = G->belief;
 
-	for (int i = 0; i < n; i++) {
-		for (int c = 0; c < 2; c++) {
+	for (idx_t i = 0; i < n; i++) {
+		for (idx_t c = 0; c < 2; c++) {
 			float_t b = 1;
-			for (int j = off[i]; j < off[i + 1]; j++)
+			for (idx_t j = off[i]; j < off[i + 1]; j++)
 				b *= ((float_t *)&in[j])[c];
 			((float_t *)&belief[i])[c] = b;
 		}

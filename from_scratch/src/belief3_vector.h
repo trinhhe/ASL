@@ -32,13 +32,13 @@ void propagate(graph_t *G) {
 	#endif
 #endif
 
-	for (int i = 0; i < n; i++) {
+	for (idx_t i = 0; i < n; i++) {
 		float_t pot_i0 = ((float_t *)&node_pot[i])[0];
 		float_t pot_i1 = ((float_t *)&node_pot[i])[1];
 
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
-		for (int k = off[i]; k < off[i + 1]; k++) {
+		for (idx_t k = off[i]; k < off[i + 1]; k++) {
 			prod_tot0 *= ((float_t *)&in_old[k])[0];
 			prod_tot1 *= ((float_t *)&in_old[k])[1];
 		}
