@@ -18,8 +18,8 @@ void propagate(graph_t *G) {
 	const idx_t * __restrict__ Gout = G->out;
 	const float_t * __restrict__ node_pot = G->node_pot;
 
-	size_t start;
-	size_t end = off[0];
+	idx_t start;
+	idx_t end = off[0];
 	for (idx_t i = 0; i < n; i++) {
 		start = end;
 		end = off[i + 1];
