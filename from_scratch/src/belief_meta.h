@@ -18,6 +18,8 @@
 #include "belief3_unrolled.h"
 #elif OPTVARIANT == 11
 #include "belief_lowerbound.h"
+#elif OPTVARIANT == 12
+#include "belief_lowerbound2.h"
 #else
 #include "belief.h"
 #endif
