@@ -20,8 +20,8 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
-	idx_t start;
-	idx_t end = off[0];
+	size_t start;
+	size_t end = off[0];
 	for (idx_t i = 0; i < n; i++) {
 		start = end;
 		end = off[i + 1];
@@ -32,8 +32,8 @@ void propagate(graph_t *G) {
 			prod_tot0 += in_old[k];
 		prod_tot0 *= pot_i1; // to force an use of pot_i1
 
-		idx_t j = start;
-		for (; j < max(0, end - 7); j+=8) {
+		size_t j = start;
+		for (; j < max(0, (long long)end - 7); j+=8) {
 			__m256 out0 = _mm256_set_ps(in_old[j+7], in_old[j+6], in_old[j+5], in_old[j+4], in_old[j+3], in_old[j+2], in_old[j+1], in_old[j+0]);
 
 			float_t *_outa = (float_t *)(in + Gout[j]);

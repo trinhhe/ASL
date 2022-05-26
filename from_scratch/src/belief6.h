@@ -25,8 +25,8 @@ void propagate(graph_t *G) {
 	__m256 one = _mm256_set1_ps(1.0);
 	__m256 half = _mm256_set1_ps(0.5);
 
-	idx_t start;
-	idx_t end = off[0];
+	size_t start;
+	size_t end = off[0];
 	for (idx_t i = 0; i < n; i++) {
 		start = end;
 		end = off[i + 1];
@@ -49,8 +49,8 @@ void propagate(graph_t *G) {
 		__m256 glob_10v = _mm256_set1_ps(glob10);
 		__m256 glob_11v = _mm256_set1_ps(glob11);
 
-		idx_t j = start;
-		for (; j < max(0, end - 7); j+=8) {
+		size_t j = start;
+		for (; j < max(0, (long long)end - 7); j+=8) {
 #ifdef GRAPH_PADDING
 			if (Gout[j] == -1)
 				break; // reached padding
