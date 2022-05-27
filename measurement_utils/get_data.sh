@@ -1,7 +1,7 @@
 #!/bin/bash
 ### downloads file ###
-file="ml-latest-small.zip"
-# file="ml-25m.zip"
+# file="ml-latest-small.zip"
+file="ml-25m.zip"
 dataURL="https://files.grouplens.org/datasets/movielens/$file"
 
 # DIR="$(dirname "${BASH_SOURCE[0]}")"
