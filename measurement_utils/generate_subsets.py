@@ -7,7 +7,7 @@ import shutil
 
 # user_steps = 3240 # ~162000 users / 3240 = 50 rating files
 user_steps = 16200 # 10 files
-user_steps = 100
+# user_steps = 100
 
 def main():   
     if len(sys.argv) < 2:
