@@ -5,7 +5,7 @@ TEST_INPUT_hard := ../measurement_utils/data/ratings_120user_norm.csv
 MAIN := build/main
 TEST := build/test
 
-variants = -DOPTVARIANT__2 -DOPTVARIANT__3 -DOPTVARIANT__3@-DGRAPH_PADDING -DOPTVARIANT__7 -DOPTVARIANT__6@-DVEC2@-mavx2 -DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING -DOPTVARIANT__6@-mavx2 -DOPTVARIANT__6@-mavx2@-DGRAPH_PADDING -DOPTVARIANT__8@-mavx2
+variants = -DOPTVARIANT__2 -DOPTVARIANT__3 -DOPTVARIANT__3@-DGRAPH_PADDING -DOPTVARIANT__7 -DOPTVARIANT__6@-DVEC2@-mavx2 -DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING -DOPTVARIANT__6@-mavx2 -DOPTVARIANT__6@-mavx2@-DGRAPH_PADDING -DOPTVARIANT__8@-mavx2 -DOPTVARIANT__8@-mavx2@-DNO_FABS
 
 LOGS = $(foreach var,$(variants),test/easy@$(var).log test/hard@$(var).log)
 

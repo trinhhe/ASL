@@ -75,3 +75,9 @@
 - combines belief5.h and belief3_vector.h
 - increase memory throughput + flops/cycle should move closer to 2 and be greater than for all previous approaches
 - no, the flops/cycle is not greater than for all previous approaches for all input sizes
+
+### Using __restrict__
+- belief3_restrict.h
+- based on belief3_unroll.h
+- see whether the compiler can take advantage of this additional information
+- no, it does not seem to make any difference
