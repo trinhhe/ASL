@@ -1,4 +1,4 @@
 .vscode/
 /build
-/Data/*
+/Data
 /measurement_utils/data_big
