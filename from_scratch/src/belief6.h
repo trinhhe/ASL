@@ -20,7 +20,9 @@ void propagate(graph_t *G) {
 	const auto Gout = G->out;
 	const auto node_pot = G->node_pot;
 
+#ifndef NO_FABS
 	__m256 abs_mask = _mm256_set1_ps(-0.0);
+#endif
 	__m256 eps = _mm256_set1_ps(EPS);
 	__m256 one = _mm256_set1_ps(1.0);
 	__m256 half = _mm256_set1_ps(0.5);
@@ -68,8 +70,12 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 
+#ifdef NO_FABS
+			__m256 lt_mask = _mm256_cmp_ps(out_sum, eps, _CMP_LT_OQ);
+#else
 			__m256 abs_out_sum = _mm256_andnot_ps(abs_mask, out_sum);
 			__m256 lt_mask = _mm256_cmp_ps(abs_out_sum, eps, _CMP_LT_OQ);
+#endif
 			__m256 out1_norm = _mm256_div_ps(out1, out_sum);
 			__m256 final_out1 = _mm256_blendv_ps(out1_norm, half, lt_mask);
 			
@@ -109,7 +115,11 @@ void propagate(graph_t *G) {
 			printf("unnorm: %f %f\n", out0, out1);
 #endif
 			float_t a = out0 + out1;
+#ifdef NO_FABS
+			*_out = a < EPS ? .5 : out1 / a;
+#else
 			*_out = fabs(a) < EPS ? .5 : out1 / a;
+#endif
 		}
 #endif
 	}
