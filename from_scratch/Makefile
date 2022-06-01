@@ -15,7 +15,12 @@ s := $(subst ,, )
 .PHONY: all run-debug run clean
 all: run-debug
 
+# TODO: don't loop through first variant
 logs: $(LOGS)
+	for var in $(variants); do \
+    	diff "test/easy@-DOPTVARIANT__2.log" "test/easy@$$var.log" || echo "easy@-DOPTVARIANT__2.log and easy@$$var.log are different"; \
+		diff "test/hard@-DOPTVARIANT__2.log" "test/hard@$$var.log" || echo "easy@-DOPTVARIANT__2.log and hard@$$var.log are different"; \
+    done
 
 run-debug: $(subst =,__,$(subst $(s),@,$(MAIN) $(DEBUG_FLAGS)))
 	valgrind $^ $(TEST_INPUT_hard)
