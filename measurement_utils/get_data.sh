@@ -8,7 +8,6 @@ dataURL="https://files.grouplens.org/datasets/movielens/$file"
 
 dataFolder="data_big"
 
-mkdir -p ../Data
 test -f ../Data/$file || wget -O ../Data/$file $dataURL
 test -f $dataFolder/ratings_all.csv || (unzip ../Data/$file -d ../Data/ && mv ../Data/${file%.*}/ratings.csv $dataFolder/ratings_all.csv && rm -r ../Data/${file%.*})
 
