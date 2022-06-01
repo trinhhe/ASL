@@ -132,7 +132,7 @@ void get_beliefs(graph_t *G) {
 		}
 
 		float_t s = b1 + b0;
-		belief[i] = s < EPS ? .5 : b1/=s;
+		belief[i] = s < EPS ? .5 : b1/s;
 	}
 }
 

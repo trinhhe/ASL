@@ -116,8 +116,15 @@ int main(int argc, const char **argv)
 #else
     // number of flops in propagate
     for (int i = 0; i < G.n; i++) {
+#ifndef WITHOUT_COMPACT_MSG
+        flops_prop += 1;
+#endif
         for (int k = G.off[i]; k < G.off[i+1]; k++) {
+#ifdef WITHOUT_COMPACT_MSG
             flops_prop += 2;
+#else
+            flops_prop += 3;
+#endif
         }
         flops_prop += 8; // four times globxx = PROP_xx * pot_ix * prod_totx
 		for (int j = G.off[i]; j < G.off[i + 1]; j++) {
@@ -125,20 +132,31 @@ int main(int argc, const char **argv)
 			if (G.out[j] == -1)
 				break; // reached padding
 #endif
+#ifdef WITHOUT_COMPACT_MSG
             flops_prop += 8; //four times outx += globxx / valx
             flops_prop+=3; //normalize (worst case if fabs(a) >= EPS)
+#else
+            flops_prop += 9; //four times outx += globxx / valx
+            flops_prop +=2; //normalize (worst case if fabs(a) >= EPS)
+#endif
         }
     }
     
 
     // number of flops in get_beliefs
     for (int i = 0; i < G.n; i++) {
+#ifdef WITHOUT_COMPACT_MSG
 		for (int c = 0; c < 2; c++) {
 			for (int j = G.off[i]; j < G.off[i + 1]; j++)
 				flops_belief++;
 		}
 
 		flops_belief+=3; //normalise_msg(&G->belief[i])
+#else
+        for (int j = G.off[i]; j < G.off[i + 1]; j++)
+            flops_belief+=3;
+        flops_belief += 2; //normalise_msg(&G->belief[i])
+#endif
 	}
 #endif
     flops_prop *= iterations;
