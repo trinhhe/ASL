@@ -1,5 +1,5 @@
 DEBUG_FLAGS := -g
-CFLAGS := -Wall -lm -Wno-sign-compare -Ofast
+CFLAGS := -Wall -lm -Wno-sign-compare -Ofast -MMD
 TEST_INPUT_easy := ../with_library/test/data/ratings_small.csv
 TEST_INPUT_hard := ../measurement_utils/data/ratings_120user_norm.csv 
 MAIN := build/main
@@ -33,7 +33,7 @@ run-%: build/%
 run-debug-%: build/%
 	valgrind $< $(TEST_INPUT_hard)
 
-$(MAIN)%: src/main_timer.cpp $(wildcard src/*.h)
+$(MAIN)%: src/main_timer.cpp
 	@mkdir -p build
 	g++ $< $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
 
@@ -41,7 +41,7 @@ $(MAIN)%.S: src/main_timer.cpp $(wildcard src/*.h)
 	@mkdir -p build
 	g++ -S -fverbose-asm $< $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
 
-$(TEST)%: src/test.cpp $(wildcard src/*.h)
+$(TEST)%: src/test.cpp
 	@mkdir -p build
 	g++ $< $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
 
@@ -55,3 +55,5 @@ test/hard%.log: $(TEST)%
 
 clean:
 	rm -f build/*
+
+-include $(wildcard build/*.d)
