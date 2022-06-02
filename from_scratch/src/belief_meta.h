@@ -1,7 +1,7 @@
 #if OPTVARIANT == 2
 #include "belief2.h"
 #elif OPTVARIANT == 3
-#include "belief3.h"
+#include "belief3.h" //precompute msg products
 #elif OPTVARIANT == 4
 #include "belief_simpleUnroll.h" //unroll j loop factor 4
 #elif OPTVARIANT == 5
@@ -20,6 +20,8 @@
 #include "belief_lowerbound.h"
 #elif OPTVARIANT == 12
 #include "belief_lowerbound2.h"
+#elif OPTVARIANT == 13
+#include "belief6_unroll16.h"
 #else
 #include "belief.h"
 #endif
