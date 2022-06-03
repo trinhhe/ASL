@@ -8,81 +8,17 @@
 int REP = 5;
 const long long MIN_CYCLES = 2000000000;
 
-int main(int argc, const char **argv)
-{
-	if (argc != 2)
-		die("Usage: %s file-with-ratings.csv\n", argv[0]);
+using ull = unsigned long long;
 
-    int target_uid = 1;
-    int iterations = 40;
+typedef struct {
+	ull prop, belief, total;
+} flop_count;
 
-    myInt64 start_gbuild, end_gbuild, start_prop, end_prop, start_belief, end_belief;
-    double total = 0;
-    double total_gbuild = 0;
-    double total_prop = 0;
-    double total_belief = 0;
-	for (int it = 0; it < 3000; it++) // warm up the CPU
-		drand48();
-
-	rating_t *ratings;
-	int n = from_file(argv[1], &ratings);
-    graph_t G;
-
-    for (int i = 0; i < REP; i++) {
-        start_gbuild = start_tsc();
-        graph_from_edge_list(ratings, target_uid, &G);
-        end_gbuild = stop_tsc(start_gbuild);
-        total_gbuild += (double) end_gbuild;
-        
-        start_prop = start_tsc();
-        for (int it = 0; it < iterations; it++) {
-#ifdef DEBUG
-            printf("=== Iteration %3d ===\n", it);
-            dump_beliefs(&G);
-#endif
-		    propagate(&G);
-	    }
-        end_prop = stop_tsc(start_prop);
-        if(total_prop + (double) end_prop < total_prop){
-            printf("overflow prop accumulaiton!!\n");
-        }
-        total_prop += (double) end_prop;
-        start_belief = start_tsc();
-        get_beliefs(&G);
-        end_belief = stop_tsc(start_belief);
-        total_belief += (double) end_belief;
-
-		if (i == REP-1 && total_prop + total_gbuild <= MIN_CYCLES)
-			REP++;
-        if (i != REP-1) {
-			graph_destroy(&G);
-        }
-    }
-#ifdef DEBUG
-	dump_graph(&G);
-#endif
-    total_gbuild /= REP;
-    total_prop /= REP;
-    total_belief /= REP;
-    total = total_gbuild + total_prop + total_belief;
-
-
-    unsigned long long int flops_gbuild = 0;
-    unsigned long long int flops_prop = 0;
-    unsigned long long int flops_belief = 0;
-    unsigned long long int total_flops;
-    // count number of flops in graph_from_edge_list (get_user_mean, get_user_stddev and z-score calcuations)
-    // get_user_mean in filter_below_mean: n ratings + number of users
-    flops_gbuild += (n + ratings[n-1].user);
-    // get_user_mean, get_user_stddev and node potential calculations for target user:
-    unsigned int cnt = 0;
-    for (rating_t *p = ratings; p->user == ratings->user; p++) //number of items by targetuser rated
-        cnt++;
-    flops_gbuild += (9*cnt + 3); //9 flops for each item + 3 by 
-    // printf("flops_gbuild: %d\n", flops_gbuild);
+ull flops_gbuild = 0;
 
 //original belief.h flop count
-#ifdef OLD_FLOP_COUNT
+flop_count count_flops_old(graph_t &G) {
+	ull flops_prop = 0, flops_belief = 0;
     // number of flops in propagate
     for (int i = 0; i < G.n; i++) {
 		for (int j = G.off[i]; j < G.off[i + 1]; j++) {
@@ -114,9 +50,14 @@ int main(int argc, const char **argv)
 
 		flops_belief+=3; //normalise_msg(&G->belief[i])
 	}
-    
-//precomputed msg produts flop count (based on)
-#else
+
+	return {flops_prop, flops_belief, flops_prop + flops_belief + flops_gbuild};
+}
+
+#define WITHOUT_COMPACT_MSG
+
+flop_count count_flops_new(graph_t &G) {
+	ull flops_prop = 0, flops_belief = 0;
     // number of flops in propagate
     for (int i = 0; i < G.n; i++) {
 #ifndef WITHOUT_COMPACT_MSG
@@ -161,16 +102,87 @@ int main(int argc, const char **argv)
         flops_belief += 2; //normalise_msg(&G->belief[i])
 #endif
 	}
-#endif
-    flops_prop *= iterations;
-    // printf("flops_belief: %d\n", flops_belief);
+	return {flops_prop, flops_belief, 0};
+}
 
-    total_flops = flops_belief + flops_gbuild + flops_prop;
+flop_count adjust_flops(flop_count c, int iterations) {
+	c.prop *= iterations;
+	c.total = c.prop + c.belief + flops_gbuild;
+	return c;
+}
+
+int main(int argc, const char **argv)
+{
+	if (argc != 2)
+		die("Usage: %s file-with-ratings.csv\n", argv[0]);
+
+    int target_uid = 1;
+    int iterations = 100;
+
+    myInt64 start_gbuild, end_gbuild, start_prop, end_prop, start_belief, end_belief;
+    double total = 0;
+    double total_gbuild = 0;
+    double total_prop = 0;
+    double total_belief = 0;
+	for (int it = 0; it < 3000; it++) // warm up the CPU
+		drand48();
+
+	rating_t *ratings;
+	int n = from_file(argv[1], &ratings);
+    graph_t G;
+
+    for (int i = 0; i < REP; i++) {
+        start_gbuild = start_tsc();
+        graph_from_edge_list(ratings, target_uid, &G);
+        end_gbuild = stop_tsc(start_gbuild);
+		if (i)
+			total_gbuild += (double) end_gbuild;
+        
+        start_prop = start_tsc();
+        for (int it = 0; it < iterations; it++)
+		    propagate(&G);
+        end_prop = stop_tsc(start_prop);
+		if (i)
+			total_prop += (double) end_prop;
+
+        start_belief = start_tsc();
+        get_beliefs(&G);
+        end_belief = stop_tsc(start_belief);
+		if (i)
+			total_belief += (double) end_belief;
+
+		if (i == REP-1 && total_prop + total_gbuild <= MIN_CYCLES)
+			REP++;
+        if (i != REP-1) {
+			graph_destroy(&G);
+        }
+    }
+
+#ifdef DEBUG
+	dump_graph(&G);
+#endif
+    total_gbuild /= REP;
+    total_prop /= REP;
+    total_belief /= REP;
+    total = total_gbuild + total_prop + total_belief;
+
+
+    // count number of flops in graph_from_edge_list (get_user_mean, get_user_stddev and z-score calcuations)
+    // get_user_mean in filter_below_mean: n ratings + number of users
+    flops_gbuild += (n + ratings[n-1].user);
+    // get_user_mean, get_user_stddev and node potential calculations for target user:
+    unsigned int cnt = 0;
+    for (rating_t *p = ratings; p->user == ratings->user; p++) //number of items by targetuser rated
+        cnt++;
+    flops_gbuild += (9*cnt + 3); //9 flops for each item + 3 by 
+
+	auto flops_old = adjust_flops(count_flops_old(G), iterations);
+	auto flops_new = adjust_flops(count_flops_new(G), iterations);
     
 	graph_destroy(&G);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%zu, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d\n", G.n, total, total_flops, total_gbuild, total_prop, total_belief, flops_gbuild, flops_prop, flops_belief, iterations);
+    printf("%zu, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu\n", G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total);
 
     free(ratings);
 }

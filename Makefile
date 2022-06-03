@@ -1,7 +1,7 @@
 # because make doesn't like spaces and =, the cflags are encoded as follows:
 # " " becomes @ and "=" becomes "__" Furthermore, we want an initial @.
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
-interesting_cflags = @-Ofast @-Ofast@-march__native  @-Ofast@-frename-registers @-O3@-march__native
+interesting_cflags = @-Ofast @-Ofast@-march__native  @-Ofast@-frename-registers @-Ofast@-frename-registers@-march__native
 #variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2@-DOLD_FLOP_COUNT
 variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__8@-mavx2@-DNO_FABS from_scratch@-DOPTVARIANT__11 with_library
 # variants = from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__13@-mavx2
