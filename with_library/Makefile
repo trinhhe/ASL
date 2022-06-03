@@ -2,7 +2,7 @@ DEBUG_FLAGS := -g
 CFLAGS := -I libdai/include -L libdai/lib -ldai -lgmpxx -lgmp -Wall -lm 
 TEST_INPUT := test/data/ratings_small.csv  
 EXEC := build/main
-SRC := src/main_timer.c
+SRC := src/main_timer3.c
 
 # literal space:
 s := $(subst ,, )

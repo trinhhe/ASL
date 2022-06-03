@@ -43,6 +43,9 @@ int main(int argc, const char **argv)
 		    propagate(&G);
 	    }
         end_prop = stop_tsc(start_prop);
+        if(total_prop + (double) end_prop < total_prop){
+            printf("overflow prop accumulaiton!!\n");
+        }
         total_prop += (double) end_prop;
         start_belief = start_tsc();
         get_beliefs(&G);
@@ -167,7 +170,7 @@ int main(int argc, const char **argv)
 	graph_destroy(&G);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%zu, %f, %llu, %f, %f, %f, %llu, %llu, %llu\n", G.n, total, total_flops, total_gbuild, total_prop, total_belief, flops_gbuild, flops_prop, flops_belief);
+    printf("%zu, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d\n", G.n, total, total_flops, total_gbuild, total_prop, total_belief, flops_gbuild, flops_prop, flops_belief, iterations);
 
     free(ratings);
 }
