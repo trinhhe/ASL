@@ -3,6 +3,7 @@
     plot performance
 """
 
+import argparse
 import os
 import glob
 from re import X
@@ -19,10 +20,13 @@ import sys
 
 from sympy import Q
 
-
-show = True
-if len(sys.argv) > 1 and sys.argv[1] == "-n":
-    show = False
+ROOT = os.path.join(os.path.dirname(__file__), '../')
+parser = argparse.ArgumentParser()
+parser.add_argument("measurements", default=[], type=str, nargs="*")
+parser.add_argument("-n", "--no-preview", action="store_true", help="Don't preview the graphs, just save them as PNG/PDF")
+parser.add_argument("-e", "--ext", type=str, default="png", help="Output file extension (png, pdf)")
+parser.add_argument("-o", "--out", type=str, default=ROOT + "/plots", help="Output directory")
+args = parser.parse_args()
 
 def cycle_markers(iterable,n):
   for item in itertools.cycle(iterable):
@@ -31,11 +35,15 @@ def cycle_markers(iterable,n):
 sns.set_theme()
 markers = cycle_markers(('^','o','s'),1)
 
-PATH = os.path.join(os.path.dirname(__file__), '../measurements/')
-OUT = PATH + '/plots/'
+OUT = args.out + "/"
+try:
+    os.mkdir(OUT)
+except FileExistsError:
+    pass
 
-fileNames = glob.glob(f"{PATH}/*.csv")
-fileNames = sorted(fileNames)
+if not args.measurements:
+    args.measurements = glob.glob(f"{ROOT}/measurements/*.csv")
+fileNames = sorted(args.measurements)
 
 perfFigure = plt.figure(1)
 ax1 = perfFigure.gca()
@@ -88,7 +96,7 @@ ax1.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax1.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
-perfFigure.savefig(OUT + 'performance_plot.png')
+perfFigure.savefig(f'{OUT}/performance_plot.{args.ext}')
 
 ax2.set_title("Belief Propagation [Processor, Flags ...]")
 ax2.set_xlabel('n')
@@ -109,7 +117,7 @@ ax2.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
-rtFigure.savefig(OUT + 'runtime_plot.png')
+rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}')
 
 ax3.set_title("Belief Propagation [Processor, Flags ...]")
 ax3.set_xlabel('cycles')
@@ -130,7 +138,7 @@ ax3.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
-cyclesVsFlopsFigure.savefig(OUT + 'cyclesVsFlops_plot.png')
+cyclesVsFlopsFigure.savefig(f'{OUT}/cyclesVsFlops_plot.{args.ext}')
 
 ax4.set_title("Belief Propagation [Processor, Flags ...]")
 ax4.set_xlabel('n')
@@ -145,9 +153,9 @@ ax4.set_position([box.x0, box.y0 + box.height * 0.3,
 ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ax4.set_yscale('log')
 ### Generate the plot
-rtFigure.savefig(OUT + 'runtime_plot.png')
+rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}')
 
 
-if show:
+if not args.no_preview:
     plt.show()
 plt.close()
