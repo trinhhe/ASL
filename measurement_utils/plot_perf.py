@@ -47,14 +47,14 @@ propRtFigure = plt.figure(4)
 ax4 = propRtFigure.gca()
 
 for file in fileNames:
-    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,6,7,8,9], index_col=False)
+    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,9], index_col=False)
     input_sizes = df.iloc[:,0].to_numpy()
     total_flops = df.iloc[:,2].to_numpy()
     total_cycles = df.iloc[:,1].to_numpy()
     gbuild_cycles = df.iloc[:,3].to_numpy() #index error
     prop_cycles = df.iloc[:,4].to_numpy()
     bel_cycles = df.iloc[:,5].to_numpy()
-    interations = df.iloc[:,9].to_numpy()
+    interations = df.iloc[:,6].to_numpy()
     flops_per_cycle = total_flops / total_cycles
     #sort array after n
     perm = input_sizes.argsort()
@@ -139,7 +139,7 @@ cyclesVsFlopsFigure.savefig(OUT + 'cyclesVsFlops_plot.png')
 
 ax4.set_title("Belief Propagation [Processor, Flags ...]")
 ax4.set_xlabel('n')
-ax4.set_ylim(ymin=0)
+#ax4.set_ylim(ymin=0)
 ax4.set_ylabel('cycles per iteration')
 ax4.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 ax4.grid(visible=True, which='major', color='w', linewidth=1.0)
@@ -148,6 +148,7 @@ box = ax4.get_position()
 ax4.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax4.set_yscale('log')
 ### Generate the plot
 rtFigure.savefig(OUT + 'runtime_plot.png')
 
