@@ -33,6 +33,9 @@ run-%: build/%
 run-debug-%: build/%
 	valgrind $< $(TEST_INPUT_hard)
 
+$(MAIN)%.d:	$(MAIN)%
+	@true
+
 $(MAIN)%: src/main_timer.cpp
 	@mkdir -p build
 	g++ $< $(CFLAGS) -o $@ $(subst __,=,$(subst @, ,$*))
