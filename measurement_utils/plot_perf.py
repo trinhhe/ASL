@@ -48,20 +48,15 @@ ax4 = propRtFigure.gca()
 
 for file in fileNames:
     df = pd.read_csv(file, usecols= [0,1,2,3,4,5,9], index_col=False)
+    df = df.sort_values(df.columns[0])
     input_sizes = df.iloc[:,0].to_numpy()
-    total_flops = df.iloc[:,2].to_numpy()
     total_cycles = df.iloc[:,1].to_numpy()
-    gbuild_cycles = df.iloc[:,3].to_numpy() #index error
+    total_flops = df.iloc[:,2].to_numpy()
+    gbuild_cycles = df.iloc[:,3].to_numpy()
     prop_cycles = df.iloc[:,4].to_numpy()
     bel_cycles = df.iloc[:,5].to_numpy()
     interations = df.iloc[:,6].to_numpy()
     flops_per_cycle = total_flops / total_cycles
-    #sort array after n
-    perm = input_sizes.argsort()
-    input_sizes = input_sizes[perm]  
-    total_flops = total_flops[perm]
-    total_cycles = total_cycles[perm]
-    flops_per_cycle = flops_per_cycle[perm]
     if not input_sizes.size:
         # the corresponding run has probably crashed, if we don't ignore it, we run into problems later
         continue
