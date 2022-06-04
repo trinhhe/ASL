@@ -4,6 +4,10 @@ import os
 import numpy as np
 from scipy.stats import truncnorm
 
+OUT = "data_compl_bipartite"
+
+OUT += "/"
+
 def main():
     # if len(sys.argv) < 3:
     #     print(f"Usage: n1, n2 (n1 nodes/users in set1, n2 nodes/movies in set2)")
@@ -18,14 +22,18 @@ def main():
         range = 2
         dist = truncnorm(a=-range/scale, b=+range/scale, scale=scale) #get ratings from 1-5 that behave similar to normal distribution
         
-        if not os.path.exists("compl_bipartite_graphs/"):
-            os.mkdir("compl_bipartite_graphs/")
+        if not os.path.exists(OUT):
+            os.mkdir(OUT)
         
-        file = open("compl_bipartite_graphs/" + str(n1) + "_" + str(n2) +"_norm.csv", 'w') # I put norm in filename for measure_runtime.sh script
-        file.write("userId,movieId,rating,timestamp\n")
-        for e in G.edges:
-            rating = dist.rvs().round().astype(int) + 3
-            file.write(f"{e[0] + 1}, {e[1]-n1+1}, {float(rating)}, 123456789\n")
+        out = []
+        rnd = dist.rvs(size=len(G.edges)).round().astype(int) + 3
+
+        fn = f"{OUT}%03d_%05d_norm.csv" % (n1, n2) # I put norm in filename for measure_runtime.sh script
+        with open(fn, 'w') as file:
+            file.write("userId,movieId,rating,timestamp\n")
+            for i, e in enumerate(G.edges):
+                rating = rnd[i]
+                file.write(f"{e[0] + 1}, {e[1]-n1+1}, {float(rating)}, 123456789\n")
     
 if __name__ == "__main__":
     main()
