@@ -26,11 +26,23 @@ parser.add_argument("measurements", default=[], type=str, nargs="*")
 parser.add_argument("-n", "--no-preview", action="store_true", help="Don't preview the graphs, just save them as PNG/PDF")
 parser.add_argument("-e", "--ext", type=str, default="png", help="Output file extension (png, pdf)")
 parser.add_argument("-o", "--out", type=str, default=ROOT + "/plots", help="Output directory")
+parser.add_argument("-r", "--ref", type=str, default=None, help="Reference measurements to which all other measurements will be related.")
 args = parser.parse_args()
 
 def cycle_markers(iterable,n):
   for item in itertools.cycle(iterable):
     yield item
+
+def read_csv(file):
+    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,9], index_col=False)
+    df = df.sort_values(df.columns[0])
+    return df.iloc[:].to_numpy()
+
+def split_to_cols(matrix):
+    out = []
+    for i in range(matrix.shape[1]):
+        out.append(matrix[:,i])
+    return out
 
 sns.set_theme()
 markers = cycle_markers(('^','o','s'),1)
@@ -53,17 +65,17 @@ cyclesVsFlopsFigure = plt.figure(3)
 ax3 = cyclesVsFlopsFigure.gca()
 propRtFigure = plt.figure(4)
 ax4 = propRtFigure.gca()
+if args.ref:
+    cyclesVsReference = plt.figure(5)
+    ax5 = cyclesVsReference.gca()
+
+if args.ref:
+    table = read_csv(args.ref)
+    total_cycles_reference = split_to_cols(table)[1]
 
 for file in fileNames:
-    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,9], index_col=False)
-    df = df.sort_values(df.columns[0])
-    input_sizes = df.iloc[:,0].to_numpy()
-    total_cycles = df.iloc[:,1].to_numpy()
-    total_flops = df.iloc[:,2].to_numpy()
-    gbuild_cycles = df.iloc[:,3].to_numpy()
-    prop_cycles = df.iloc[:,4].to_numpy()
-    bel_cycles = df.iloc[:,5].to_numpy()
-    interations = df.iloc[:,6].to_numpy()
+    table = read_csv(file)
+    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, interations = split_to_cols(table)
     flops_per_cycle = total_flops / total_cycles
     if not input_sizes.size:
         # the corresponding run has probably crashed, if we don't ignore it, we run into problems later
@@ -76,6 +88,9 @@ for file in fileNames:
 
     pcyclesPerIt = (prop_cycles + bel_cycles)/ interations
     ax4.plot(input_sizes, pcyclesPerIt, label = pretty_name, marker=marker)
+
+    if args.ref:
+        ax5.plot(input_sizes, total_cycles_reference / total_cycles, label=pretty_name, marker=marker)
 
 ax1.set_title("Belief Propagation [Processor, Flags ...]")
 ax1.set_xlabel('n')
@@ -154,6 +169,22 @@ ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 
 ax4.set_yscale('log')
 ### Generate the plot
 rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}')
+
+
+if args.ref:
+    ax5.set_title("Belief Propagation [Processor, Flags ...]")
+    ax5.set_xlabel('n')
+    #ax5.set_ylim(ymin=0)
+    ax5.set_ylabel('speedup w.r.t. reference') # TODO
+    ax5.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+    ax5.grid(visible=True, which='major', color='w', linewidth=1.0)
+    ax5.grid(visible=True, which='minor', color='w', linewidth=0.5)
+    box = ax5.get_position()
+    ax5.set_position([box.x0, box.y0 + box.height * 0.3,
+                     box.width, box.height * 0.7])
+    ax5.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+    ### Generate the plot
+    cyclesVsReference.savefig(f'{OUT}/cyclesVsReference_plot.{args.ext}')
 
 
 if not args.no_preview:
