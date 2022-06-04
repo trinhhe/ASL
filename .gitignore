@@ -2,4 +2,5 @@
 /build
 /Data
 /measurement_utils/data_big
-/measurement_utils/compl_bipartite_graphs
+/measurement_utils/data_compl_bipartite
+/measurement_utils/stream
