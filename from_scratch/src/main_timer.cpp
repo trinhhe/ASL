@@ -111,6 +111,22 @@ flop_count adjust_flops(flop_count c, int iterations) {
 	return c;
 }
 
+ull lower_bound_databytes(graph_t &G) {
+    ull n = (ull) G.n;
+    ull m = (ull) G.m;
+    ull data_bytes = 0;
+    data_bytes +=  4 * n; //G.off (size_t/unsigned int)
+    data_bytes +=  4 * m; //G.out (size_t/unsigned int)
+#ifdef COMPACT_MESSAGE
+    data_bytes += 2 * 4 * m; //G.in & G.in_old (float)
+    data_bytes += 2 * 4 * n; //G.node_pot & G.belief (float)
+#else
+    data_bytes += 2 * 8 * m; //G.in & G.in_old (float)
+    data_bytes += 2 * 8 * n; //G.node_pot & G.belief (float)
+#endif
+    return data_bytes;
+}
+
 int main(int argc, const char **argv)
 {
 	if (argc != 2)
@@ -178,11 +194,12 @@ int main(int argc, const char **argv)
 
 	auto flops_old = adjust_flops(count_flops_old(G), iterations);
 	auto flops_new = adjust_flops(count_flops_new(G), iterations);
+    auto data_bytes = lower_bound_databytes(G);
     
 	graph_destroy(&G);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%zu, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu\n", G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total);
+    printf("%lu, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu\n", G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, data_bytes);
 
     free(ratings);
 }
