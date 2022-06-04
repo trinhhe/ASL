@@ -161,9 +161,9 @@ int main(int argc, const char **argv)
 #ifdef DEBUG
 	dump_graph(&G);
 #endif
-    total_gbuild /= REP;
-    total_prop /= REP;
-    total_belief /= REP;
+    total_gbuild /= REP-1;
+    total_prop /= REP-1;
+    total_belief /= REP-1;
     total = total_gbuild + total_prop + total_belief;
 
 

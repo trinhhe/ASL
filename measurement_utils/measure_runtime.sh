@@ -6,7 +6,7 @@
 # $3: optional: if -q, runs just a few tests
 prog="$1"
 out="$2"
-echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, bel_cycle, gbuild_flops, prop_flops, bel_flops, iterations" > "$out".tmp
+echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, bel_cycle, gbuild_flops, prop_flops, bel_flops, iterations, old_prop_flops, old_bel_flops, old_total_flops" > "$out".tmp
 inputs_base="$(dirname "$0")"/data
 # inputs_base="$(dirname "$0")"/compl_bipartite_graphs
 if [ "$3" = -q ]; then
