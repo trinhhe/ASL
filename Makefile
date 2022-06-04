@@ -1,21 +1,37 @@
 # because make doesn't like spaces and =, the cflags are encoded as follows:
 # " " becomes @ and "=" becomes "__" Furthermore, we want an initial @.
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
-interesting_cflags = @-Ofast @-Ofast@-march__native  @-Ofast@-frename-registers @-Ofast@-frename-registers@-march__native
+interesting_cflags = @-Ofast@-march__native
 #variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2@-DOLD_FLOP_COUNT
-variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__8@-mavx2@-DNO_FABS from_scratch@-DOPTVARIANT__11 with_library
+variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__8@-mavx2@-DNO_FABS from_scratch@-DOPTVARIANT__11@-frename-registers
 # variants = from_scratch@-DOPTVARIANT__6@-mavx2 from_scratch@-DOPTVARIANT__6@-mavx2@-DVEC2 from_scratch@-DOPTVARIANT__6@-mavx2@-DVEC2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__6@-mavx2@-DGRAPH_PADDING
 # variants = from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__13@-mavx2
-combinations = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/$(var)$(cflags).csv))
+combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/small/$(var)$(cflags).csv))
+combinations_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/big/$(var)$(cflags).csv))
+combinations_compl_bipartite = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/compl_bipartite/$(var)$(cflags).csv))
 
-all: plot
+all: plot-small
 
-plot: measurement_utils/plot_perf.py $(combinations)
+plot-small: measurement_utils/plot_perf.py $(combinations_small)
 	$<
 
-measurements/%.csv: build/% measurement_utils/measure_runtime.sh
-	@mkdir -p measurements
-	measurement_utils/measure_runtime.sh $< $@ $(EXTRA_FLAGS)
+plot-big: measurement_utils/plot_perf.py $(combinations_big)
+	$<
+
+plot-compl_bipartite: measurement_utils/plot_perf.py $(combinations_compl_bipartite)
+	$<
+
+measurements/small/%.csv: build/% measurement_utils/measure_runtime.sh
+	@mkdir -p measurements/small
+	measurement_utils/measure_runtime.sh $< $@ small
+
+measurements/big/%.csv: build/% measurement_utils/measure_runtime.sh
+	@mkdir -p measurements/big
+	measurement_utils/measure_runtime.sh $< $@ big
+
+measurements/compl_bipartite/%.csv: build/% measurement_utils/measure_runtime.sh
+	@mkdir -p measurements/big
+	measurement_utils/measure_runtime.sh $< $@ compl_bipartite
 
 build/from_scratch%: .FORCE
 	@mkdir -p build
