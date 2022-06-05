@@ -8,9 +8,7 @@ import os
 import glob
 from re import X
 from pathlib import Path
-from jinja2 import PrefixLoader
 import pandas as pd
-from pytest import mark
 import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
@@ -18,8 +16,7 @@ from labellines import labelLines
 import itertools
 import sys
 from matplotlib.ticker import ScalarFormatter
-
-from sympy import Q
+import numpy as np
 
 ROOT = os.path.join(os.path.dirname(__file__), '../')
 parser = argparse.ArgumentParser()
@@ -47,7 +44,7 @@ def cycle_markers(iterable,n):
     yield item
 
 def read_csv(file):
-    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], index_col=False)
+    df = pd.read_csv(file, usecols= list(range(16)), index_col=False)
     df = df.sort_values(df.columns[0])
     return df.iloc[:].to_numpy()
 
@@ -65,6 +62,9 @@ if not args.measurements:
     args.measurements = glob.glob(f"{ROOT}/measurements/small/*.csv")
 args.pretty += [None] * (len(args.measurements) - len(args.pretty))
 fileNames = sorted(zip(args.measurements, args.pretty))
+
+perf_limits = [.5, 8]
+intensity_limits = [.2, 2]
 
 perfFigure = plt.figure(1)
 ax1 = perfFigure.gca()
@@ -86,7 +86,7 @@ if args.ref:
 
 for file, pretty_name in fileNames:
     table = read_csv(file)
-    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations, _, _, _, databytes_contiguous, databytes_random= split_to_cols(table)
+    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations, _, _, _, databytes_contiguous, databytes_random, sizeof_random = split_to_cols(table)
     if just_prop:
         total_flops = prop_flops
         total_cycles = prop_cycles
@@ -108,10 +108,17 @@ for file, pretty_name in fileNames:
         ax5.plot(input_sizes, total_cycles_reference[:total_cycles.size] / total_cycles, label=pretty_name, marker=marker)
     
     ### ROOFLINE ###
-    operational_intensity = total_flops/(databytes_contiguous + 64*databytes_random) #remove 64* for lowest data access bound
+    if np.any(sizeof_random == 1):
+        continue # with_library
+    databytes = databytes_contiguous + 64/sizeof_random*databytes_random #remove 64/sizeof_random for lowest data access bound
+    operational_intensity = total_flops/databytes
     performance = total_flops/total_cycles
     final_perf = [x if operational_intensity[i] > x/beta else operational_intensity[i]*beta for i, x in enumerate(performance)]
     ax6.plot(operational_intensity, final_perf, label=pretty_name, marker=marker, markersize=2, linewidth=1)
+    perf_limits[0] = min(perf_limits[0], min(final_perf))
+    perf_limits[1] = max(perf_limits[1], max(final_perf))
+    intensity_limits[0] = min(intensity_limits[0], min(operational_intensity))
+    intensity_limits[1] = max(intensity_limits[1], max(operational_intensity))
 
 try:
     os.mkdir(OUT)
@@ -237,8 +244,14 @@ yticks = [2,8]
 ax6.set_yticks(yticks)
 ax6.xaxis.set_major_formatter(ScalarFormatter())
 ax6.yaxis.set_major_formatter(ScalarFormatter())
-ax6.set_xlim([0.1,100])
-ax6.set_ylim([0.1,50])
+#ax6.set_xlim([0.1,100])
+#ax6.set_ylim([0.1,16])
+intensity_limits[0] /= 2
+intensity_limits[1] *= 2
+perf_limits[0] /= 2
+perf_limits[1] *= 2
+ax6.set_xlim(intensity_limits)
+ax6.set_ylim(perf_limits)
 ### Generate the plot
 rooflineFigure.savefig(f'{OUT}/roofline_plot.{args.ext}', dpi=DPI)
 

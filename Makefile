@@ -44,10 +44,10 @@ plots/slow-comparison: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*{__1,__2,with*}@* -p "baseline [1]" "scalar_replacement+collapse_2x2_loop [2]" library
 
 plots/slow-vs-fast: $(PLOT) $(combinations_small)
-	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_2@* measurements/small/*__{2,3}@* -p "[2]" "precompute_products [3]"
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_2@* measurements/small/*__{2,3}@* -p "scalar_replacement+collapse_2x2_loop[2]" "precompute_products [3]"
 
 plots/vectorisation: $(PLOT) $(combinations_small)
-	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_3@* measurements/small/*__{3,6}@* -p "precompute [3]" "precompute+vectorise [6]" "precompute+vectorise2 [6 -DVEC2]"
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_3@* measurements/small/*__{3,6@-O*,6@-DVEC2}@* -p "precompute [3]" "precompute+vectorise [6]" "precompute+vectorise2 [6 -DVEC2]"
 
 plots/compaction-and-vectorisation: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_3@* measurements/small/*__{3,6@-DVEC2,7,8@-O*}@* -p "precompute [3]" "precompute+vectorise2 [6 -DVEC2]" "precompute+save_memory [7]" "precompute+vectorise2+save_memory [8]"
@@ -56,7 +56,7 @@ plots/compaction-and-vectorisation2: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_8@-O*@* measurements/small/*__{3,6@-DVEC2,7,8@-O*}@*
 
 plots/compaction-and-vectorisation-big: $(PLOT) $(combinations_big)
-	$< $(PLOT_OPTS) -o $@ -r measurements/big/*_3@* measurements/big/*__{3,6@-DVEC2,7,8@-O*}@* -p "precompute [3]" "precompute+vectorise2 [6 -DVEC2]" "precompute+save_memory [7]" "precompute+vectorise2+save_memory [8]"
+	$< $(PLOT_OPTS) -o $@ -r measurements/small_and_big/*_3@* measurements/small_and_big/*__{3,6@-DVEC2,7,8@-O*}@* -p "precompute [3]" "precompute+vectorise2 [6 -DVEC2]" "precompute+save_memory [7]" "precompute+vectorise2+save_memory [8]"
 
 plots/end-to-end: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*__{1,3,8@-O*}@* -p "baseline [1]" "precompute products [3]" "precompute+vectorise2+save_memory [8]"
