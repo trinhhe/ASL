@@ -2,24 +2,60 @@
 # " " becomes @ and "=" becomes "__" Furthermore, we want an initial @.
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
 interesting_cflags = @-Ofast@-march__native
-#variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__3@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__8@-mavx2@-DOLD_FLOP_COUNT
-variants = from_scratch@-DOPTVARIANT__3 from_scratch@-DOPTVARIANT__7 from_scratch@-DOPTVARIANT__6@-DVEC2@-mavx2 from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__8@-mavx2@-DNO_FABS from_scratch@-DOPTVARIANT__11@-frename-registers
-# variants = from_scratch@-DOPTVARIANT__6@-mavx2 from_scratch@-DOPTVARIANT__6@-mavx2@-DVEC2 from_scratch@-DOPTVARIANT__6@-mavx2@-DVEC2@-DGRAPH_PADDING from_scratch@-DOPTVARIANT__6@-mavx2@-DGRAPH_PADDING
-# variants = from_scratch@-DOPTVARIANT__8@-mavx2 from_scratch@-DOPTVARIANT__13@-mavx2
-combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/small/$(var)$(cflags).csv))
+variants = \
+	from_scratch@-DOPTVARIANT__3\
+	from_scratch@-DOPTVARIANT__7\
+	from_scratch@-DOPTVARIANT__6\
+	from_scratch@-DOPTVARIANT__6@-DVEC2\
+	from_scratch@-DOPTVARIANT__8\
+	from_scratch@-DOPTVARIANT__8@-DNO_FABS\
+	from_scratch@-DOPTVARIANT__11@-frename-registers\
+	from_scratch@-DOPTVARIANT__4\
+	from_scratch@-DOPTVARIANT__9\
+	from_scratch@-DOPTVARIANT__10\
+	from_scratch@-DOPTVARIANT__13\
+	from_scratch@-DOPTVARIANT__14
+variants_small_only = \
+	from_scratch@-DOPTVARIANT__1\
+	from_scratch@-DOPTVARIANT__2\
+	with_library
+combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants) $(variants_small_only),measurements/small/$(var)$(cflags).csv))
 combinations_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/big/$(var)$(cflags).csv))
 combinations_compl_bipartite = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/compl_bipartite/$(var)$(cflags).csv))
 
-all: plot-small
+PLOT_OPTS=-n
+PLOT=measurement_utils/plot_perf.py
 
-plot-small: measurement_utils/plot_perf.py $(combinations_small)
-	$<
+all: plots
 
-plot-big: measurement_utils/plot_perf.py $(combinations_big)
-	$<
+plots: $(combinations_small) plots/slow-comparison plots/slow-vs-fast plots/vectorisation plots/compaction-and-vectorisation plots/compaction-and-vectorisation2 plots/end-to-end
 
-plot-compl_bipartite: measurement_utils/plot_perf.py $(combinations_compl_bipartite)
-	$<
+plot-small: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS)
+
+plot-big: $(PLOT) $(combinations_big)
+	$< $(PLOT_OPTS)
+
+plot-compl_bipartite: $(PLOT) $(combinations_compl_bipartite)
+	$< $(PLOT_OPTS)
+
+plots/slow-comparison: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*{__1,__2,with*}@*
+
+plots/slow-vs-fast: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_2@* measurements/small/*__{1,2,3}@*
+
+plots/vectorisation: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_3@* measurements/small/*__{3,6}@*
+
+plots/compaction-and-vectorisation: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_3@* measurements/small/*__{3,6@-DVEC2,7,8@-O*}@*
+
+plots/compaction-and-vectorisation2: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_8@-O*@* measurements/small/*__{3,6@-DVEC2,7,8@-O*}@*
+
+plots/end-to-end: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*__{1,3,8}@*
 
 measurements/small/%.csv: build/% measurement_utils/measure_runtime.sh
 	@mkdir -p measurements/small
