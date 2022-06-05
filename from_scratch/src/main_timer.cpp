@@ -6,7 +6,7 @@
 #include "../../measurement_utils/tsc_x86.h"
 
 int REP = 5;
-const long long MIN_CYCLES = 2000000000;
+const long long MIN_CYCLES = 2000000000LL;
 
 using ull = unsigned long long;
 
@@ -133,7 +133,7 @@ int main(int argc, const char **argv)
 		die("Usage: %s file-with-ratings.csv\n", argv[0]);
 
     int target_uid = 1;
-    int iterations = 100;
+    int iterations = 10;
 
     myInt64 start_gbuild, end_gbuild, start_prop, end_prop, start_belief, end_belief;
     double total = 0;
