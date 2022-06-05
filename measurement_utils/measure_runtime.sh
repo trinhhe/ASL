@@ -9,7 +9,7 @@ out="$2"
 name="small"
 [ -n "$3" ] && name="$3"
 
-echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, bel_cycle, gbuild_flops, prop_flops, bel_flops, iterations, old_prop_flops, old_bel_flops, old_total_flops, lowest_databytes, random_databytes" > "$out".tmp
+echo "n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, bel_cycle, gbuild_flops, prop_flops, bel_flops, iterations, old_prop_flops, old_bel_flops, old_total_flops, databytes_contiguous, databytes_random" > "$out".tmp
 inputs_base="$(dirname "$0")"/data_"$name"
 echo $inputs_base
 files=$inputs_base/*norm.csv

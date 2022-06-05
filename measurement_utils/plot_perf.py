@@ -86,7 +86,7 @@ if args.ref:
 
 for file, pretty_name in fileNames:
     table = read_csv(file)
-    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations, _, _, _, lowest_data_bytes, random_data_bytes = split_to_cols(table)
+    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations, _, _, _, databytes_contiguous, databytes_random= split_to_cols(table)
     if just_prop:
         total_flops = prop_flops
         total_cycles = prop_cycles
@@ -108,12 +108,10 @@ for file, pretty_name in fileNames:
         ax5.plot(input_sizes, total_cycles_reference[:total_cycles.size] / total_cycles, label=pretty_name, marker=marker)
     
     ### ROOFLINE ###
-    operational_intensity = total_flops/random_data_bytes #change with lowest_data_bytes if want upperbound of Operational Intensity
+    operational_intensity = total_flops/(databytes_contiguous + 64*databytes_random) #remove 64* for lowest data access bound
     performance = total_flops/total_cycles
     final_perf = [x if operational_intensity[i] > x/beta else operational_intensity[i]*beta for i, x in enumerate(performance)]
     ax6.plot(operational_intensity, final_perf, label=pretty_name, marker=marker, markersize=2, linewidth=1)
-    ax6.yaxis.set_label_coords(.05,0.5)
-    ax6.yaxis.set_label_text(f'{input_sizes[0]}')
 
 try:
     os.mkdir(OUT)
@@ -222,7 +220,7 @@ ax6.plot((I_s, I_s + 100), (peak_perf_scalar, peak_perf_scalar), color='black')
 #vector roofline
 ax6.plot((0,I_v), (intercept_v, peak_perf_vec),'--', color='black', label = 'Vector Roofline')
 ax6.plot((I_v, I_v + 100), (peak_perf_vec, peak_perf_vec), '--', color='black')
-ax6.set_title("Belief Propagation [Processor, Flags ...]")
+ax6.set_title(TITLE)
 ax6.set_xlabel('I(n) [flops/byte]')
 ax6.set_ylabel('P(n) [flops/cycle]')
 ax6.set_ylim(ymin=0)
