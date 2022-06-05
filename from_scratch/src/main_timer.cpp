@@ -5,6 +5,7 @@
 #include "util.h"
 #include "../../measurement_utils/tsc_x86.h"
 
+//#define JUST_METADATA
 #ifdef OVERNIGHT_MEASUREMENT
 int REP = 2;
 const long long MIN_CYCLES = 50000000000LL;
@@ -153,6 +154,9 @@ int main(int argc, const char **argv)
 	int n = from_file(argv[1], &ratings);
     graph_t G;
 
+#ifdef JUST_METADATA
+	graph_from_edge_list(ratings, target_uid, &G);
+#else
     for (int i = 0; i < REP; i++) {
         start_gbuild = start_tsc();
         graph_from_edge_list(ratings, target_uid, &G);
@@ -179,6 +183,7 @@ int main(int argc, const char **argv)
 			graph_destroy(&G);
         }
     }
+#endif
 
 #ifdef DEBUG
 	dump_graph(&G);
