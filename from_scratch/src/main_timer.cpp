@@ -1,4 +1,4 @@
- #include "belief_meta.h"
+#include "belief_meta.h"
 // edit belief_meta.h to add optimisation variants 
 #include "factor.h"
 #include "load.h"
@@ -116,20 +116,21 @@ flop_count adjust_flops(flop_count c, int iterations) {
 	return c;
 }
 
-ull lower_bound_databytes(graph_t &G) {
+struct bytes_bound_t {
+	ull contiguous, random;
+};
+
+bytes_bound_t lower_bound_databytes(graph_t &G) {
     ull n = (ull) G.n;
     ull m = (ull) G.m;
-    ull data_bytes = 0;
-    data_bytes +=  4 * n; //G.off (size_t/unsigned int)
-    data_bytes +=  4 * m; //G.out (size_t/unsigned int)
-#ifdef COMPACT_MESSAGE
-    data_bytes += 2 * 4 * m; //G.in & G.in_old (float)
-    data_bytes += 2 * 4 * n; //G.node_pot & G.belief (float)
-#else
-    data_bytes += 2 * 8 * m; //G.in & G.in_old (float)
-    data_bytes += 2 * 8 * n; //G.node_pot & G.belief (float)
-#endif
-    return data_bytes;
+    ull contiguous_bytes = 0;
+    ull random_bytes = 0;
+    contiguous_bytes += n * sizeof *G.off;
+    contiguous_bytes += m * sizeof *G.out;
+    contiguous_bytes += m * sizeof *G.in_old;
+    random_bytes += m * sizeof *G.in;
+	contiguous_bytes += n * sizeof *G.node_pot;
+    return {contiguous_bytes, random_bytes};
 }
 
 int main(int argc, const char **argv)
@@ -204,7 +205,7 @@ int main(int argc, const char **argv)
 	graph_destroy(&G);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%u, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu\n", (int)G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, data_bytes);
+    printf("%u, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu, %llu\n", (int)G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, data_bytes.contiguous, data_bytes.random);
 
     free(ratings);
 }
