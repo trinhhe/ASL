@@ -30,12 +30,14 @@ parser.add_argument("-r", "--ref", type=str, default=None, help="Reference measu
 args = parser.parse_args()
 DPI=200
 
+just_prop = True
+
 def cycle_markers(iterable,n):
   for item in itertools.cycle(iterable):
     yield item
 
 def read_csv(file):
-    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,9], index_col=False)
+    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,6,7,8,9], index_col=False)
     df = df.sort_values(df.columns[0])
     return df.iloc[:].to_numpy()
 
@@ -67,11 +69,14 @@ if args.ref:
 
 if args.ref:
     table = read_csv(args.ref)
-    total_cycles_reference = split_to_cols(table)[1]
+    total_cycles_reference = split_to_cols(table)[4 if just_prop else 1]
 
 for file in fileNames:
     table = read_csv(file)
-    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, interations = split_to_cols(table)
+    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations = split_to_cols(table)
+    if just_prop:
+        total_flops = prop_flops
+        total_cycles = prop_cycles
     flops_per_cycle = total_flops / total_cycles
     if not input_sizes.size:
         # the corresponding run has probably crashed, if we don't ignore it, we run into problems later
