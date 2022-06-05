@@ -22,6 +22,8 @@
 #include "belief_lowerbound2.h"
 #elif OPTVARIANT == 13
 #include "belief6_unroll16.h" //vectorization unrolled twice + precompute msg products
+#elif OPTVARIANT == 14
+#include "belief3_restrict.h"
 #else
 #include "belief.h"
 #endif
