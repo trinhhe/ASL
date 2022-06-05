@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from labellines import labelLines
 import itertools
 import sys
+from matplotlib.ticker import ScalarFormatter
 
 from sympy import Q
 
@@ -30,6 +31,13 @@ parser.add_argument("-r", "--ref", type=str, default=None, help="Reference measu
 args = parser.parse_args()
 DPI=200
 
+peak_perf_scalar = 2
+peak_perf_vec = 8
+beta = 6 #mem bandwidth bytes/cycles (15GB/s / 2.5 GHz) (https://ark.intel.com/content/www/us/en/ark/products/95443/intel-core-i57200u-processor-3m-cache-up-to-3-10-ghz.html)
+I_s = peak_perf_scalar/beta
+I_v = peak_perf_vec/beta
+intercept_s = peak_perf_scalar - beta*I_s
+intercept_v = peak_perf_vec - beta*I_v
 just_prop = True
 
 def cycle_markers(iterable,n):
@@ -37,7 +45,7 @@ def cycle_markers(iterable,n):
     yield item
 
 def read_csv(file):
-    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,6,7,8,9], index_col=False)
+    df = pd.read_csv(file, usecols= [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], index_col=False)
     df = df.sort_values(df.columns[0])
     return df.iloc[:].to_numpy()
 
@@ -66,6 +74,8 @@ ax4 = propRtFigure.gca()
 if args.ref:
     cyclesVsReference = plt.figure(5)
     ax5 = cyclesVsReference.gca()
+rooflineFigure = plt.figure(6)
+ax6 = rooflineFigure.gca()
 
 if args.ref:
     table = read_csv(args.ref)
@@ -73,7 +83,7 @@ if args.ref:
 
 for file in fileNames:
     table = read_csv(file)
-    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations = split_to_cols(table)
+    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations, _, _, _, lowest_data_bytes, random_data_bytes = split_to_cols(table)
     if just_prop:
         total_flops = prop_flops
         total_cycles = prop_cycles
@@ -92,6 +102,14 @@ for file in fileNames:
 
     if args.ref:
         ax5.plot(input_sizes, total_cycles_reference[:total_cycles.size] / total_cycles, label=pretty_name, marker=marker)
+    
+    ### ROOFLINE ###
+    operational_intensity = total_flops/random_data_bytes #change with lowest_data_bytes if want upperbound of Operational Intensity
+    performance = total_flops/total_cycles
+    final_perf = [x if operational_intensity[i] > x/beta else operational_intensity[i]*beta for i, x in enumerate(performance)]
+    ax6.plot(operational_intensity, final_perf, label=pretty_name, marker=marker, markersize=2, linewidth=1)
+    ax6.yaxis.set_label_coords(.05,0.5)
+    ax6.yaxis.set_label_text(f'{input_sizes[0]}')
 
 try:
     os.mkdir(OUT)
@@ -110,7 +128,7 @@ ax1.grid(visible=True, which='minor', color='w', linewidth=0.5)
 #labelLines(ax1.get_lines(), 
 #            yoffsets=0.022, 
 #            fontsize=10, 
-#            align=False, 
+#            align=False,
 #            outline_color=None, 
 #            outline_width=0)
 box = ax1.get_position()
@@ -193,6 +211,34 @@ if args.ref:
     ### Generate the plot
     cyclesVsReference.savefig(f'{OUT}/cyclesVsReference_plot.{args.ext}', dpi=DPI)
 
+
+#scalar roofline
+ax6.plot((0, I_s), (intercept_s,peak_perf_scalar), color='black', label = 'Scalar Roofline')
+ax6.plot((I_s, I_s + 100), (peak_perf_scalar, peak_perf_scalar), color='black')
+#vector roofline
+ax6.plot((0,I_v), (intercept_v, peak_perf_vec),'--', color='black', label = 'Vector Roofline')
+ax6.plot((I_v, I_v + 100), (peak_perf_vec, peak_perf_vec), '--', color='black')
+ax6.set_title("Belief Propagation [Processor, Flags ...]")
+ax6.set_xlabel('I(n) [flops/byte]')
+ax6.set_ylabel('P(n) [flops/cycle]')
+ax6.set_ylim(ymin=0)
+ax6.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+ax6.grid(visible=True, which='major', color='w', linewidth=1.0)
+ax6.grid(visible=True, which='minor', color='w', linewidth=0.5)
+box = ax6.get_position()
+ax6.set_position([box.x0, box.y0 + box.height * 0.3,
+                     box.width, box.height * 0.7])
+ax6.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax6.set_xscale('log', base=10)
+ax6.set_yscale('log', base=10)
+yticks = [2,8]
+ax6.set_yticks(yticks)
+ax6.xaxis.set_major_formatter(ScalarFormatter())
+ax6.yaxis.set_major_formatter(ScalarFormatter())
+ax6.set_xlim([0.1,100])
+ax6.set_ylim([0.1,50])
+### Generate the plot
+rooflineFigure.savefig(f'{OUT}/roofline_plot.{args.ext}', dpi=DPI)
 
 if not args.no_preview:
     plt.show()

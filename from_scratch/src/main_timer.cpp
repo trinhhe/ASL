@@ -120,12 +120,33 @@ ull lower_bound_databytes(graph_t &G) {
     ull n = (ull) G.n;
     ull m = (ull) G.m;
     ull data_bytes = 0;
-    data_bytes +=  4 * n; //G.off (size_t/unsigned int)
-    data_bytes +=  4 * m; //G.out (size_t/unsigned int)
 #ifdef COMPACT_MESSAGE
+    data_bytes +=  4 * n; //G.off (unsigned int)
+    data_bytes +=  4 * m; //G.out (unsigned int)
     data_bytes += 2 * 4 * m; //G.in & G.in_old (float)
     data_bytes += 2 * 4 * n; //G.node_pot & G.belief (float)
 #else
+    data_bytes +=  8 * n; //G.off (size_t)
+    data_bytes +=  8 * m; //G.out (size_t)
+    data_bytes += 2 * 8 * m; //G.in & G.in_old (float)
+    data_bytes += 2 * 8 * n; //G.node_pot & G.belief (float)
+#endif
+    return data_bytes;
+}
+
+//random access for G.out
+ull random_access_databytes(graph_t &G) {
+    ull n = (ull) G.n;
+    ull m = (ull) G.m;
+    ull data_bytes = 0;
+#ifdef COMPACT_MESSAGE
+    data_bytes +=  4 * n; //G.off (unsigned int)
+    data_bytes +=  64 * m; //G.out (unsigned int)
+    data_bytes += 2 * 4 * m; //G.in & G.in_old (float)
+    data_bytes += 2 * 4 * n; //G.node_pot & G.belief (float)
+#else
+    data_bytes +=  8 * n; //G.off (size_t)
+    data_bytes +=  64 * m; //G.out (size_t)
     data_bytes += 2 * 8 * m; //G.in & G.in_old (float)
     data_bytes += 2 * 8 * n; //G.node_pot & G.belief (float)
 #endif
@@ -199,12 +220,13 @@ int main(int argc, const char **argv)
 
 	auto flops_old = adjust_flops(count_flops_old(G), iterations);
 	auto flops_new = adjust_flops(count_flops_new(G), iterations);
-    auto data_bytes = lower_bound_databytes(G);
+    auto lowest_data_bytes = lower_bound_databytes(G);
+    auto random_data_bytes = random_access_databytes(G);
     
 	graph_destroy(&G);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%u, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu\n", (int)G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, data_bytes);
+    printf("%u, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu, %llu\n", (int)G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, lowest_data_bytes, random_data_bytes);
 
     free(ratings);
 }
