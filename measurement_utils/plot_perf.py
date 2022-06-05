@@ -28,6 +28,7 @@ parser.add_argument("-e", "--ext", type=str, default="png", help="Output file ex
 parser.add_argument("-o", "--out", type=str, default=ROOT + "/plots", help="Output directory")
 parser.add_argument("-r", "--ref", type=str, default=None, help="Reference measurements to which all other measurements will be related.")
 args = parser.parse_args()
+DPI=200
 
 def cycle_markers(iterable,n):
   for item in itertools.cycle(iterable):
@@ -48,13 +49,8 @@ sns.set_theme()
 markers = cycle_markers(('^','o','s'),1)
 
 OUT = args.out + "/"
-try:
-    os.mkdir(OUT)
-except FileExistsError:
-    pass
-
 if not args.measurements:
-    args.measurements = glob.glob(f"{ROOT}/measurements/*.csv")
+    args.measurements = glob.glob(f"{ROOT}/measurements/small/*.csv")
 fileNames = sorted(args.measurements)
 
 perfFigure = plt.figure(1)
@@ -90,7 +86,13 @@ for file in fileNames:
     ax4.plot(input_sizes, pcyclesPerIt, label = pretty_name, marker=marker)
 
     if args.ref:
-        ax5.plot(input_sizes, total_cycles_reference / total_cycles, label=pretty_name, marker=marker)
+        ax5.plot(input_sizes, total_cycles_reference[:total_cycles.size] / total_cycles, label=pretty_name, marker=marker)
+
+try:
+    os.mkdir(OUT)
+except FileExistsError:
+    os.utime(OUT) # touch for make
+    pass
 
 ax1.set_title("Belief Propagation [Processor, Flags ...]")
 ax1.set_xlabel('n')
@@ -111,7 +113,7 @@ ax1.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax1.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
-perfFigure.savefig(f'{OUT}/performance_plot.{args.ext}')
+perfFigure.savefig(f'{OUT}/performance_plot.{args.ext}', dpi=DPI)
 
 ax2.set_title("Belief Propagation [Processor, Flags ...]")
 ax2.set_xlabel('n')
@@ -132,7 +134,7 @@ ax2.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
-rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}')
+rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}', dpi=DPI)
 
 ax3.set_title("Belief Propagation [Processor, Flags ...]")
 ax3.set_xlabel('cycles')
@@ -153,7 +155,7 @@ ax3.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
 ax3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ### Generate the plot
-cyclesVsFlopsFigure.savefig(f'{OUT}/cyclesVsFlops_plot.{args.ext}')
+cyclesVsFlopsFigure.savefig(f'{OUT}/cyclesVsFlops_plot.{args.ext}', dpi=DPI)
 
 ax4.set_title("Belief Propagation [Processor, Flags ...]")
 ax4.set_xlabel('n')
@@ -168,7 +170,7 @@ ax4.set_position([box.x0, box.y0 + box.height * 0.3,
 ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
 ax4.set_yscale('log')
 ### Generate the plot
-rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}')
+rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}', dpi=DPI)
 
 
 if args.ref:
@@ -184,7 +186,7 @@ if args.ref:
                      box.width, box.height * 0.7])
     ax5.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
     ### Generate the plot
-    cyclesVsReference.savefig(f'{OUT}/cyclesVsReference_plot.{args.ext}')
+    cyclesVsReference.savefig(f'{OUT}/cyclesVsReference_plot.{args.ext}', dpi=DPI)
 
 
 if not args.no_preview:
