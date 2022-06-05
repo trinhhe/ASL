@@ -27,8 +27,10 @@ parser.add_argument("-n", "--no-preview", action="store_true", help="Don't previ
 parser.add_argument("-e", "--ext", type=str, default="png", help="Output file extension (png, pdf)")
 parser.add_argument("-o", "--out", type=str, default=ROOT + "/plots", help="Output directory")
 parser.add_argument("-r", "--ref", type=str, default=None, help="Reference measurements to which all other measurements will be related.")
+parser.add_argument("-p", "--pretty", type=str, default=[], nargs="+", help="Pretty names for the given measurement files.")
 args = parser.parse_args()
-DPI=200
+DPI=300
+TITLE = "Belief Propagation [Intel i5-7200U 2.5 GHz, g++ -Ofast -march=native]"
 
 just_prop = True
 
@@ -53,7 +55,8 @@ markers = cycle_markers(('^','o','s'),1)
 OUT = args.out + "/"
 if not args.measurements:
     args.measurements = glob.glob(f"{ROOT}/measurements/small/*.csv")
-fileNames = sorted(args.measurements)
+args.pretty += [None] * (len(args.measurements) - len(args.pretty))
+fileNames = sorted(zip(args.measurements, args.pretty))
 
 perfFigure = plt.figure(1)
 ax1 = perfFigure.gca()
@@ -71,7 +74,7 @@ if args.ref:
     table = read_csv(args.ref)
     total_cycles_reference = split_to_cols(table)[4 if just_prop else 1]
 
-for file in fileNames:
+for file, pretty_name in fileNames:
     table = read_csv(file)
     input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations = split_to_cols(table)
     if just_prop:
@@ -82,7 +85,8 @@ for file in fileNames:
         # the corresponding run has probably crashed, if we don't ignore it, we run into problems later
         continue
     marker = next(markers)
-    pretty_name = Path(file).stem.replace("@", " ").replace("__", "=")
+    if pretty_name is None:
+        pretty_name = Path(file).stem.replace("@", " ").replace("__", "=")
     ax1.plot(input_sizes, flops_per_cycle, label = pretty_name, marker=marker)
     ax2.plot(input_sizes, total_cycles, label = pretty_name, marker=marker)
     ax3.plot(total_cycles, total_flops, label = pretty_name, marker=marker)
@@ -99,7 +103,7 @@ except FileExistsError:
     os.utime(OUT) # touch for make
     pass
 
-ax1.set_title("Belief Propagation [Processor, Flags ...]")
+ax1.set_title(TITLE)
 ax1.set_xlabel('n')
 ax1.set_ylim(ymin=0)
 ax1.set_ylabel('flops/cycle')
@@ -120,7 +124,7 @@ ax1.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 
 ### Generate the plot
 perfFigure.savefig(f'{OUT}/performance_plot.{args.ext}', dpi=DPI)
 
-ax2.set_title("Belief Propagation [Processor, Flags ...]")
+ax2.set_title(TITLE)
 ax2.set_xlabel('n')
 ax2.set_ylim(ymin=0)
 ax2.set_ylabel('cycles')
@@ -141,7 +145,7 @@ ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 
 ### Generate the plot
 rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}', dpi=DPI)
 
-ax3.set_title("Belief Propagation [Processor, Flags ...]")
+ax3.set_title(TITLE)
 ax3.set_xlabel('cycles')
 ax3.set_ylim(ymin=0)
 ax3.set_ylabel('flops')
@@ -162,7 +166,7 @@ ax3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 
 ### Generate the plot
 cyclesVsFlopsFigure.savefig(f'{OUT}/cyclesVsFlops_plot.{args.ext}', dpi=DPI)
 
-ax4.set_title("Belief Propagation [Processor, Flags ...]")
+ax4.set_title(TITLE)
 ax4.set_xlabel('n')
 #ax4.set_ylim(ymin=0)
 ax4.set_ylabel('cycles per iteration')
@@ -179,7 +183,7 @@ rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}', dpi=DPI)
 
 
 if args.ref:
-    ax5.set_title("Belief Propagation [Processor, Flags ...]")
+    ax5.set_title(TITLE)
     ax5.set_xlabel('n')
     #ax5.set_ylim(ymin=0)
     ax5.set_ylabel('speedup w.r.t. reference') # TODO
