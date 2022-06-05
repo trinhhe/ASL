@@ -10,14 +10,13 @@ variants = \
 	from_scratch@-DOPTVARIANT__8\
 	from_scratch@-DOPTVARIANT__8@-DNO_FABS\
 	from_scratch@-DOPTVARIANT__11@-frename-registers\
-	from_scratch@-DOPTVARIANT__4\
 	from_scratch@-DOPTVARIANT__9\
 	from_scratch@-DOPTVARIANT__10\
-	from_scratch@-DOPTVARIANT__13\
-	from_scratch@-DOPTVARIANT__14
+	from_scratch@-DOPTVARIANT__13
 variants_small_only = \
 	from_scratch@-DOPTVARIANT__1\
 	from_scratch@-DOPTVARIANT__2\
+	from_scratch@-DOPTVARIANT__4\
 	with_library
 combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants) $(variants_small_only),measurements/small/$(var)$(cflags).csv))
 combinations_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/big/$(var)$(cflags).csv))
@@ -31,13 +30,13 @@ all: plots
 plots: $(combinations_small) plots/slow-comparison plots/slow-vs-fast plots/vectorisation plots/compaction-and-vectorisation plots/compaction-and-vectorisation2 plots/end-to-end
 
 plot-small: $(PLOT) $(combinations_small)
-	$< $(PLOT_OPTS)
+	$^ $(PLOT_OPTS) -o plots/small
 
 plot-big: $(PLOT) $(combinations_big)
-	$< $(PLOT_OPTS)
+	$^ $(PLOT_OPTS) -o plots/big
 
 plot-compl_bipartite: $(PLOT) $(combinations_compl_bipartite)
-	$< $(PLOT_OPTS)
+	$^ $(PLOT_OPTS) -o plots/compl_bipartite
 
 plots/slow-comparison: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*{__1,__2,with*}@*
@@ -66,7 +65,7 @@ measurements/big/%.csv: build/% measurement_utils/measure_runtime.sh
 	measurement_utils/measure_runtime.sh $< $@ big
 
 measurements/compl_bipartite/%.csv: build/% measurement_utils/measure_runtime.sh
-	@mkdir -p measurements/big
+	@mkdir -p measurements/compl_bipartite
 	measurement_utils/measure_runtime.sh $< $@ compl_bipartite
 
 build/from_scratch%: .FORCE

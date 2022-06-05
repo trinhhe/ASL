@@ -5,8 +5,13 @@
 #include "util.h"
 #include "../../measurement_utils/tsc_x86.h"
 
+#ifdef OVERNIGHT_MEASUREMENT
+int REP = 2;
+const long long MIN_CYCLES = 50000000000LL;
+#else
 int REP = 5;
 const long long MIN_CYCLES = 2000000000LL;
+#endif
 
 using ull = unsigned long long;
 
