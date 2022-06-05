@@ -238,7 +238,7 @@ void dump_graph(graph_t *G) {
 	printf("\n");
 	printf("edges:\n");
 	for (idx_t v = 0; v < G->n; v++) {
-		printf("[ %ld:  ", v);
+		printf("[ %d:  ", (int)v);
 		for (idx_t i = G->off[v]; i < G->off[v + 1]; i++) {
 			if (G->eix[i] == -1)
 				break;
