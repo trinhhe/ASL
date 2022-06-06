@@ -44,7 +44,7 @@ plots/slow-comparison: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*{__1,__2,with*}@* -p "baseline [1]" "scalar_replacement+collapse_2x2_loop [2]" library
 
 plots/slow-vs-fast: $(PLOT) $(combinations_small)
-	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_2@* measurements/small/*__{2,3}@* -p "scalar_replacement+collapse_2x2_loop[2]" "precompute_products [3]"
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_2@* measurements/small/*__{2,3}@* -p "scalar_replacement+collapse_2x2_loop [2]" "precompute_products [3]"
 
 plots/vectorisation: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_3@* measurements/small/*__{3,6@-O*,6@-DVEC2}@* -p "precompute [3]" "precompute+vectorise [6]" "precompute+vectorise2 [6 -DVEC2]"

@@ -29,6 +29,7 @@ parser.add_argument("-p", "--pretty", type=str, default=[], nargs="+", help="Pre
 args = parser.parse_args()
 DPI=300
 TITLE = "Belief Propagation [Intel i5-7200U 2.5 GHz, g++ -Ofast -march=native]"
+LEGEND_SIZE = 10
 
 peak_perf_scalar = 2
 peak_perf_vec = 8
@@ -143,7 +144,7 @@ ax1.grid(visible=True, which='minor', color='w', linewidth=0.5)
 box = ax1.get_position()
 ax1.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
-ax1.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax1.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': LEGEND_SIZE})
 ### Generate the plot
 perfFigure.savefig(f'{OUT}/performance_plot.{args.ext}', dpi=DPI)
 
@@ -164,7 +165,7 @@ ax2.grid(visible=True, which='minor', color='w', linewidth=0.5)
 box = ax2.get_position()
 ax2.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
-ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': LEGEND_SIZE})
 ### Generate the plot
 rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}', dpi=DPI)
 
@@ -185,7 +186,7 @@ ax3.grid(visible=True, which='minor', color='w', linewidth=0.5)
 box = ax3.get_position()
 ax3.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
-ax3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': LEGEND_SIZE})
 ### Generate the plot
 cyclesVsFlopsFigure.savefig(f'{OUT}/cyclesVsFlops_plot.{args.ext}', dpi=DPI)
 
@@ -199,7 +200,7 @@ ax4.grid(visible=True, which='minor', color='w', linewidth=0.5)
 box = ax4.get_position()
 ax4.set_position([box.x0, box.y0 + box.height * 0.3,
                  box.width, box.height * 0.7])
-ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax4.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': LEGEND_SIZE})
 ax4.set_yscale('log')
 ### Generate the plot
 rtFigure.savefig(f'{OUT}/runtime_plot.{args.ext}', dpi=DPI)
@@ -216,7 +217,7 @@ if args.ref:
     box = ax5.get_position()
     ax5.set_position([box.x0, box.y0 + box.height * 0.3,
                      box.width, box.height * 0.7])
-    ax5.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+    ax5.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': LEGEND_SIZE})
     ### Generate the plot
     cyclesVsReference.savefig(f'{OUT}/cyclesVsReference_plot.{args.ext}', dpi=DPI)
 
@@ -237,7 +238,7 @@ ax6.grid(visible=True, which='minor', color='w', linewidth=0.5)
 box = ax6.get_position()
 ax6.set_position([box.x0, box.y0 + box.height * 0.3,
                      box.width, box.height * 0.7])
-ax6.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': 6})
+ax6.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=1,prop={'size': LEGEND_SIZE})
 ax6.set_xscale('log', base=10)
 ax6.set_yscale('log', base=10)
 yticks = [2,8]
