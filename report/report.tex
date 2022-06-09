@@ -21,8 +21,7 @@
 %
 % Single address.
 % ---------------
-\name{Markus P\"uschel\thanks{The author thanks Jelena Kovacevic. This paper
-is a modified version of the template she used in her class.}}
+\name{Henry Trinh, Richard Hladik, Stephanie Ruhstaller, Sarah Tr\"ondle}
 \address{Department of Computer Science\\ ETH Zurich, Switzerland}
 
 % For example:
@@ -89,6 +88,27 @@ references. Briefly explain what they do. In the end contrast to what
 you do to make now precisely clear what your contribution is.
 
 
+%ideas for what to write about
+\mypar{Motivation}
+\begin{itemize}
+\item use from paper: recommending things used widely, movies, online shopping...
+\item need best n recommendation, not an absolute prediction of expected rating.
+\end{itemize}
+
+\mypar{Contribution}
+\begin{itemize}
+\item implement optimized version
+\item up to over 500 times speedup compared to existing libraries
+\end{itemize}
+
+\mypar{Related Work}
+\begin{itemize}
+\item paper we used as basis
+\item other paper proposed?
+\item libDAI?
+\end{itemize}
+
+
 \section{Background on the Algorithm/Application}\label{sec:background}
 
 Give a short, self-contained summary of necessary
@@ -117,6 +137,13 @@ cost as explained in class. In the end you will likely consolidate it into one n
 Also state what is known about the complexity (asymptotic usually)
 about your problem (including citations).
 
+% a few more ideas
+\begin{itemize}
+\item belief propagation how we explained in presentation (maybe generally state, what it is and mention that there are multiple ways of doing it, before giving our algorithm)
+\item how to adapt it to make recommendations (just the sorting of the beliefs)
+\item cost analysis from presentation
+\end{itemize}
+
 
 \section{Your Proposed Method}\label{sec:yourmethod}
 
@@ -132,6 +159,11 @@ As important as the final results is to show that you took a structured, organiz
 Mention and cite any external resources including library or other code.
 
 Good visuals or even brief code snippets to illustrate what you did are good. Pasting large amounts of code to fill the space is not good.
+
+%idea how we could structure this seciton
+\begin{itemize}
+\item maybe make a subsection for every field in the diagram, explain what we did and what we expected form it
+\end{itemize}
 
 \section{Experimental Results}\label{sec:exp}
 
