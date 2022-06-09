@@ -1,0 +1,14 @@
+*.log
+*.dvi
+*.aux
+*.toc
+*.lof
+*.lot
+*.out
+*.bbl
+*.blg
+*.xmpi
+*.bcf
+*.run.xml
+*.syntex.gz
+/*.pdf
