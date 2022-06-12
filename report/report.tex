@@ -5,6 +5,7 @@
 
 \documentclass[letterpaper]{article}
 \usepackage{spconf,amsmath,amssymb,graphicx}
+\usepackage[sort&compress,numbers,sectionbib]{natbib}
 
 % Example definitions.
 % --------------------
@@ -110,6 +111,8 @@ you do to make now precisely clear what your contribution is.
 
 
 \section{Background on the Algorithm/Application}\label{sec:background}
+
+\citet{top-n-recommendation}
 
 Give a short, self-contained summary of necessary
 background information on the algorithm or application that you then later optimize including a cost analysis.
@@ -285,7 +288,8 @@ Example and structure follows.
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
 % style file from IEEE produces unsorted bibliography list.
 % -------------------------------------------------------------------------
-\bibliographystyle{IEEEbib}
+%\bibliographystyle{IEEEbib}
+\bibliographystyle{IEEEtranN}
 \bibliography{bibliography}
 
 \end{document}
