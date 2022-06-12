@@ -1,0 +1,23 @@
+\def\ve#1{\mathchoice{\mbox{\boldmath$\displaystyle\bf#1$}}
+{\mbox{\boldmath$\textstyle\bf#1$}}
+{\mbox{\boldmath$\scriptstyle\bf#1$}}
+{\mbox{\boldmath$\scriptscriptstyle\bf#1$}}}
+\def\vex{{\ve x}}
+\def\ves{{\ve s}}
+\def\Pr{\mathrm{Pr}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Rpos}{\R^+}
+\def\nodepot{\phi}
+\def\edgepot{\psi}
+\def\pluseq{\mathrel+=}
+
+
+% Algo
+\newcommand{\algodefaults}{%
+	\DontPrintSemicolon
+	\SetCommentSty{textit}
+	\SetAlgoHangIndent{0pt}
+}
+\newcommand{\nonl}{\renewcommand{\nl}{\let\nl\oldnl}}
+\setlength{\algomargin}{0pt}
+\LinesNumberedHidden

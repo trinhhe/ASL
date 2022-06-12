@@ -4,14 +4,11 @@
 % --------------------------------------------------------------------------
 
 \documentclass[letterpaper]{article}
-\usepackage{spconf,amsmath,amssymb,graphicx}
+\usepackage{spconf,amsmath,amssymb,graphicx,xspace}
 \usepackage[sort&compress,numbers,sectionbib]{natbib}
-
-% Example definitions.
-% --------------------
-% nice symbols for real and complex numbers
-\newcommand{\R}[0]{\mathbb{R}}
-\newcommand{\C}[0]{\mathbb{C}}
+\usepackage[ruled,noalgohanging]{algorithm2e}
+\input macros/todo
+\input macros/macros
 
 % bold paragraph titles
 \newcommand{\mypar}[1]{{\bf #1.}}
@@ -112,7 +109,76 @@ you do to make now precisely clear what your contribution is.
 
 \section{Background on the Algorithm/Application}\label{sec:background}
 
-\citet{top-n-recommendation}
+In this section, we briefly touch upon the general idea behind belief
+propagation algorithms and formally define the variant that is at the heart of
+our algorithm.
+
+\todo[inline]{one paragraph about general belief propagation}
+
+\mypar{Belief propagation} For the purpose of this article, we use \emph{belief
+propagation} to refer to the algorithm of \citet[Section
+2.1]{top-n-recommendation}, which we describe in the following paragraphs.
+
+The input of the algorithm is a bipartite\rh{it is, but it isn't important to
+the algorithm} undirected graph $G = (V, E)$. Each of the vertices $v\in V$ can
+be in one of $S$ \emph{states}, labeled $x_1, \ldots, x_S \in X$. There is a
+joint probability mass function $p: X^V \to [0, 1]$ (assumed intractable and
+inaccessible to us) that captures the probability of each possible assignment of
+states to vertices. The goal of the algorithm is, for each vertex $v_i$, to
+calculate its marginal distribution $p_i: X \to [0, 1]$, i.e.:
+%
+$$p_i(x_j) = \sum_{\ves \in X^V: s_i = x_j} p(\ves) = \Pr_p[s_i = x_j]$$
+%
+% In other words, we want to know how probable it is that $v_i$ ends up in the respective states $\in X$.
+To model $p$, the algorithm is also given a collection of node potentials
+$\{\,\phi_i\,\}_{i \in V}, \phi_i: X \to [0, 1]$, and a collection of edge
+potentials $\{\,\psi_{ij}\,\}_{ij \in E}, \psi_{ij}: X\times X \to [0, 1]$.
+Intuitively, node potentials capture our priors about which states each vertex
+inclines to, while the edge potentials capture the influence the state of a
+vertex has on the state of its neighbours.\rhinline{now it's kind of fuzzy,
+saying ``potentials SOMEHOW MAGICALLY model $p$'', without really saying how.
+But I don't want to go into too much detail.}
+
+\mypar{Message passing} The belief propagation algorithm itself consists of two
+procedures: \emph{propagation} and \emph{belief calculation}.
+
+\emph{Propagation} happens for a predefined number of iterations. For each vertex $i$, and each its neighbour $j$, we compute a \emph{message} $m_{ij} : X \to \Rpos$ as follows:
+%
+$$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
+%
+Initially, all messages are set to all-ones, i.e.~$m_{ij}(\cdot) = 1$.
+
+This can be directly expressed in pseudocode:
+
+% Buggy links, so a dirty fix
+\def\lineAlgoPropagateForI{4}
+\def\lineAlgoPropagateCalcProduct{9}
+\begin{algorithm}
+\caption{One propagation step}
+\label{algo:propagate}
+\KwIn{$G = (V, E), \{\,\nodepot_i\,\}_{i \in V}, \{\,\edgepot_{ij}\,\}_{ij \in E}$}
+\KwOut{$\{\,m'_{ij}\,\}_{ij \in E}$}
+\algodefaults
+	$m_{ij}(x) \leftarrow 1\mkern 20mu\forall ij \in E, x \in X$\;
+	\For{$\text{iter} = 0, \ldots, \mathcal{I}$}{
+		Swap $m$ and $m'$.\;
+		\ShowLn\For{$i \in V$}{
+			\For{$j \in N(i)$}{
+				\For{$x_c \in X$}{
+					$m'_{ij}(x_c) \leftarrow 0$\;
+					\For{$x_d \in X$}{
+						\ShowLn$M^d_j \leftarrow \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$
+						$m'_{ij}(x_c) \pluseq \nodepot_i(x_d)\edgepot_{ij}(x_d,x_c) M^d_j$
+					}
+				}
+			}
+		}
+	}
+\end{algorithm}
+
+%Faster algo: add $\prod_{k \in N(i) \setminus j} m_{ki}(x_d)$
+
+%$$C(V, E) = 11n + 4 \cdot \sum_{v\in V} \deg(v)^2\;\ge\;11n + 4m^2 / n$$
 
 Give a short, self-contained summary of necessary
 background information on the algorithm or application that you then later optimize including a cost analysis.
