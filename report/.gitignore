@@ -9,6 +9,10 @@
 *.blg
 *.xmpi
 *.bcf
+*.fls
+*.fdb_latexmk
+*.xdv
 *.run.xml
 *.syntex.gz
+*.synctex.gz
 /*.pdf
