@@ -1,3 +1,5 @@
+# Just plot, don't recompile and remeasure, comment this out to make new measurements:
+ONLY_PLOT=true
 # because make doesn't like spaces and =, the cflags are encoded as follows:
 # " " becomes @ and "=" becomes "__" Furthermore, we want an initial @.
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
@@ -24,8 +26,10 @@ combinations_compl_bipartite = $(foreach cflags,$(interesting_cflags),$(foreach 
 
 PLOT_OPTS=-n
 PLOT=measurement_utils/plot_perf.py
+MEASURE=measurement_utils/measure_runtime.sh
+ifdef ONLY_PLOT
 MEASURE=true
-#MEASURE=measurement_utils/measure_runtime.sh
+endif
 
 all: plots
 
@@ -61,6 +65,11 @@ plots/compaction-and-vectorisation-big: $(PLOT) $(combinations_big)
 plots/end-to-end: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*__{1,3,8@-O*}@* -p "baseline [1]" "precompute products [3]" "precompute+vectorise2+save_memory [8]"
 
+ifdef ONLY_PLOT
+measurements/small/%.csv:
+measurements/big/%.csv:
+measurements/compl_bipartite/%.csv:
+else
 measurements/small/%.csv: build/% measurement_utils/measure_runtime.sh
 	@mkdir -p measurements/small
 	$(MEASURE) $< $@ small
@@ -72,6 +81,7 @@ measurements/big/%.csv: build/% measurement_utils/measure_runtime.sh
 measurements/compl_bipartite/%.csv: build/% measurement_utils/measure_runtime.sh
 	@mkdir -p measurements/compl_bipartite
 	$(MEASURE) $< $@ compl_bipartite
+endif
 
 build/from_scratch%: .FORCE
 	@mkdir -p build
@@ -93,4 +103,4 @@ distclean: clean
 
 .SECONDARY:
 .FORCE:
-.PHONY: .FORCE
+.PHONY: .FORCE plots
