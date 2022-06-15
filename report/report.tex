@@ -7,6 +7,7 @@
 \usepackage{spconf,amsmath,amssymb,graphicx,xspace,tabularx,hyperref}
 \usepackage[sort&compress,numbers,sectionbib]{natbib}
 \usepackage[ruled,noalgohanging]{algorithm2e}
+\usepackage{comment}
 \input macros/todo
 \input macros/macros
 
@@ -59,7 +60,7 @@ should write the abstract last.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
-
+\begin{comment}
 Do not start the introduction with the abstract or a slightly modified
 version. What follows is a possible structure of the introduction.
 This structure can be modified, but the content should be the same. The introduction should definitely end on the first page.
@@ -84,26 +85,21 @@ faster for some sizes than all the other ones.
 related work. For a paper like this, anywhere between 2 and 8
 references. Briefly explain what they do. In the end contrast to what
 you do to make now precisely clear what your contribution is.
+\end{comment}
 
-
-%ideas for what to write about
 \mypar{Motivation}
-\begin{itemize}
-\item use from paper: recommending things used widely, movies, online shopping...
-\item need best n recommendation, not an absolute prediction of expected rating.
-\end{itemize}
+In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like \emph{Matrix Factorization} require solving the entire problem again and impose computational limitations for large-scale deployment. \cite{BPRS} and \cite{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is calculating the marginal probability distribution of the nodes corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which also grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
+
+Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-\begin{itemize}
-\item implement optimized version
-\item up to over 500 times speedup compared to existing libraries
-\end{itemize}
+We provide a simple BP implementation based on \cite{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, unrolling + scalar replacement, decreasing memory storage usage and utilizing SIMD instructions on a single core. Our optimized version beats the baseline implementation and also the library \emph{libDAI} implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the Movielens datasets \cite{movieLens}.
 
 \mypar{Related Work}
 \begin{itemize}
-\item paper we used as basis
-\item other paper proposed?
-\item libDAI?
+\item (hardware-efficient BP) %https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5733391 
+\item (BP for decoding polar codes, early terminatation scheme based on convergence properties) %https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7517046
+\item 
 \end{itemize}
 
 
