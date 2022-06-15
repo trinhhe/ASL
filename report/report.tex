@@ -212,18 +212,89 @@ about your problem (including citations).
 
 \section{Your Proposed Method}\label{sec:yourmethod}
 
-Now comes the ``beef'' of the paper, where you explain what you
-did. Again, organize it in paragraphs with titles. As in every section
-you start with a very brief overview of the section.
+This section presents all optimization steps seen in figure TODO.
+\todo[inline]{could be worth it to give number all optimization in the order they are presented in this section}
 
-For this course, explain all the optimizations you performed. This mean, you first very briefly
-explain the baseline implementation, then go through locality and other optimizations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimize one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
+\mypar{Baseline [1]}
+This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a Factor graph.
+The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in section \ref{sec:background}. It was implemented in a way, that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
-As important as the final results is to show that you took a structured, organized approach to the optimization and that you explain why you did what you did.
+\mypar{Low-hanging fruit [2]}
+The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops explicitly. \todo[inline]{reference lines in Algorithm 1} This optimization was then used as basis for all following steps.
 
-Mention and cite any external resources including library or other code.
+Using scalar replacement for values that are accessed over pointers, should allow the compiler to use more optimization, since the possibility of aliasing is excluded and possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
+Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \st{should the reasoning of our asumptions be in this section or in results?}
 
-Good visuals or even brief code snippets to illustrate what you did are good. Pasting large amounts of code to fill the space is not good.
+
+\mypar{Precompute message products [3]}
+In the next step the algorithm was optimized, specifically the message calculation. As seen in section \ref{sec:background}, the messages get calculated according to:
+$$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
+This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. To avoid repeating the same calculations, the product was replaced with the following:
+$$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
+Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of i-loop in algorithm 1}
+
+This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$.
+
+\mypar{Unroll inner loop [4 \& 10]}
+Unrolling the inner loope, the j-loop in algorithm \ref{algo:propagate}, was done once on basis on optimization 2 and once on basis of optimization 3. I both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined this allows for more instruction level parallelism (ILP).
+The difference in the two unrolling implementations is, that thanks to optimization 2 the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
+
+
+\mypar{Unroll outer loop [9]}
+In a different implementation we examined what happens if the outer loop is unrolled. Meaning that the i-loop from algorithm \ref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2 the product of old messages was pushed to the outer loop, it was of interest to see, if unrolling this loop would allow for increased ILP. Or if, with running 4 inner loops during one unrolled iteration of the outer loop, the loss of locality would result in decreasing performance.
+
+\mypar{Graph padding}
+\begin{itemize}
+\item insert graph padding into diagram
+\item pad the graph so that each vertex starts on an address divisible by SIMD size
+\end{itemize}
+
+
+\mypar{Vectorise [6]}
+As seen in figure TODO, SIMD was introduced on basis of the message product precomputation. First, intel intrinsics for vector instructions were introduced, that very closely followed the instruction sequence of scalar computation. And 8 messages were processed together per loop iteration.
+
+In a second step, the vector instructions were optimized with some shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during 1 iteration was reduced to 4. \st{maybe I should go into more detail here}
+
+Even though, looking at the assembly compiled from optimization 2, it was visible that the compiler already introduced some vector instruction, writing them explicitly should allow for a greater use of SIMD.
+
+\mypar{Save memory [7]}
+Since it was reasonable to assume, that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.
+
+The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.
+
+In a second step, the type of indices were changed from site\_t to uint\_32. This could be done, since the size of the data structures were knwon to never need more than 4 bytes to be indexed.
+
+This compaction allowed for more values being read when loading 1 cache block. Making memory access more efficient.
+
+\mypar{Combining vectorize and save memory [8]}
+\begin{itemize}
+\item combined the two
+\item expect to work well, since with increasing computational efficiency memory accesses become a bigger bottleneck
+\end{itemize}
+
+\mypar{Unroll [13]}
+\begin{itemize}
+\item try to see what happens if unrolled more
+\item more ILP or loss of locality?
+\end{itemize}
+
+\mypar{Use \_\_restrict\_\_ [14]}
+\begin{itemize}
+\item see if compiler can make use of additional information
+\end{itemize}
+
+%Now comes the ``beef'' of the paper, where you explain what you
+%did. Again, organize it in paragraphs with titles. As in every section
+%you start with a very brief overview of the section.
+%
+%For this course, explain all the optimizations you performed. This mean, you first very briefly
+%explain the baseline implementation, then go through locality and other optimizations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimize one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
+%
+%As important as the final results is to show that you took a structured, organized approach to the optimization and that you explain why you did what you did.
+%
+%Mention and cite any external resources including library or other code.
+%
+%Good visuals or even brief code snippets to illustrate what you did are good. Pasting large amounts of code to fill the space is not good.
 
 %idea how we could structure this seciton
 \begin{itemize}
