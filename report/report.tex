@@ -93,7 +93,10 @@ In the age of digitalization a majority of the people spend their time on differ
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-We provide a simple BP implementation based on \cite{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, unrolling + scalar replacement, decreasing memory storage usage and utilizing SIMD instructions on a single core. Our optimized version beats the baseline implementation and also the library \emph{libDAI} implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the Movielens datasets \cite{movieLens}.
+\begin{itemize}
+\item implement optimised version
+\item up to over 500 times speedup compared to existing libraries
+\end{itemize}
 
 \mypar{Related Work}
 \begin{itemize}
@@ -177,7 +180,7 @@ This can be directly expressed in pseudocode:
 %$$C(V, E) = 11n + 4 \cdot \sum_{v\in V} \deg(v)^2\;\ge\;11n + 4m^2 / n$$
 
 Give a short, self-contained summary of necessary
-background information on the algorithm or application that you then later optimize including a cost analysis.
+background information on the algorithm or application that you then later optimise including a cost analysis.
 
 For example, assume you present an
 implementation of FFT algorithms. You could organize into DFT
@@ -257,10 +260,10 @@ In a second step, the vector instructions were optimized with some shuffling to 
 
 Even though, looking at the assembly compiled from optimization 2, it was visible that the compiler already introduced some vector instruction, writing them explicitly should allow for a greater use of SIMD.
 
-\mypar{Save memory [7]}
-Since it was reasonable to assume, that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.
+For this course, explain all the optimisations you performed. This mean, you first very briefly
+explain the baseline implementation, then go through locality and other optimisations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimise one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
 
-The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.
+As important as the final results is to show that you took a structured, organized approach to the optimisation and that you explain why you did what you did.
 
 In a second step, the type of indices were changed from site\_t to uint\_32. This could be done, since the size of the data structures were knwon to never need more than 4 bytes to be indexed.
 
@@ -303,26 +306,26 @@ This compaction allowed for more values being read when loading 1 cache block. M
 
 \section{Experimental Results}\label{sec:exp}
 
-%The effect of successful optimizations described in the previous section on performance and runtime are being evaluated in this section.
-This section demonstrates the incremental performance and runtime improvements achieved by successively applying succeeding optimizations.  
-We start with providing details about experimental setup first, then show the results of applying optimizations and finally show a roofline plot.
-
+%The effect of successful optimisations described in the previous section on performance and runtime are being evaluated in this section.
+This section demonstrates the incremental performance and runtime improvements achieved by successively applying succeeding optimisations.  
+We start with providing details about experimental setup first, then show the results of applying optimisations and finally show a roofline plot.
+\srinline{Maybe mention ten iterations of propagate were performed and what instructions where used to measure the cycles and how we counted flops?}
 \mypar{Platform} All the experiments were conducted on the following setup:
 \\
 \begin{tabularx}{\linewidth}{ 
 		>{\raggedright\arraybackslash}l
 		>{\raggedright\arraybackslash}X 
 	}
-	\textbf{Processor}	&	Intel(R) Core(TM) i5-7200U												\\
-	\textbf{Code name}	&	Kabylake \cite{intelSpec}												\\
-	\textbf{Cores}		&	2 \cite{intelSpec}														\\
-	\textbf{Threads}	&	4 \cite{intelSpec}														\\
-	\textbf{Frequency} 	&	2.50GHz (Turbo Boost disabled)											\\
-	\textbf{L1 cache} 	& 	2 x 32 KB 8-way set associative instruction cache \cite{cpuWorldSpec}	\\
-						&	2 x 32 KB 8-way set associative data cache \cite{cpuWorldSpec}	 		\\
-	\textbf{L2 cache}	&	2 x 256 KB 4-way set associative cache \cite{cpuWorldSpec}				\\
-	\textbf{L3 cache}	&	3 MB 12-way set associative shared cache \cite{cpuWorldSpec}			\\
-	\textbf{RAM} 		&	2 × 8 GB DDR4 2133 MT/s 												\\
+	\textbf{Processor}	&	Intel(R) Core(TM) i5-7200U														\\
+	\textbf{Code name}	&	Kabylake \cite{intelSpec}														\\
+	\textbf{Cores}		&	2 \cite{intelSpec}																\\
+	\textbf{Threads}	&	4 \cite{intelSpec}																\\
+	\textbf{Frequency} 	&	2.50GHz (Turbo Boost disabled)													\\
+	\textbf{L1 cache} 	& 	2 x 32 KB 8-way set associative instruction cache \cite{optimisationManual}		\\
+						&	2 x 32 KB 8-way set associative data cache \cite{optimisationManual}	 		\\
+	\textbf{L2 cache}	&	2 x 256 KB 4-way set associative cache \cite{optimisationManual}				\\
+	\textbf{L3 cache}	&	3 MB 12-way set associative shared cache \cite{cpuWorldSpec, intelSpec}			\\
+	\textbf{RAM} 		&	2 × 8 GB DDR4 2133 MT/s 														\\
 \end{tabularx}
 \\
 The processor specification states a maximum overall memory bandwidth of 34.1 GB/s for two channels \cite{intelSpec}.
@@ -347,18 +350,63 @@ Dividing this 15 GB/s by 2.5 GHz, results thus in an average memory bandwidth $\
 
 \mypar{Input data} Test inputs were based on the MovieLens dataset \cite{movieLens}.
 Various sizes were generated by taking the ratings of users with identifier smaller than some number for different numbers
-and then normalizing / desparsifing the user and movie identifers seperately.
+and then normalising / desparsifing the user and movie identifers seperately.
 This section's plots display the results of either a small or a big dataset composed from inputs generated this way.
-The small dataset represents graphs of 981 to 10'334 vertices and consists of inputs % 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334
+The small dataset represents graphs of 981 to 10,334 vertices and consists of inputs % 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334
 considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450 and 540 users based on the small MovieLens dataset.
-The big dataset represents graphs of 45'729 to 221'588 vertices and considers the first 16'200, 32'400 ... 162'000 (doubling the threshold everytime) users based on the full MovieLens dataset.
-\srinline{Maybe mention size in bytes of data and how it fits in cache?}
+The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 (doubling the threshold everytime) users based on the full MovieLens dataset.
+
+\mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is slower.
+For this purpose, the speedup in runtime of the different base implementations with respect to the from scratch implementation is displayed in Fig.~\ref{libSpeedupSmall} on the small dataset.
+We see that libDAI library [0] uses the most cycles compared to the others.
+Already implementing the algorithm from scratch provided slight runtime benefits (baseline [1] in Fig.~\ref{libSpeedupSmall}).
+Presumably, this came from the benefits of not using a library: less bound checks and function calls / inlining of functions.
+Another reason is that baseline [1] was implemented in a way to maximize sequential array access and used a CSR inspired format for storing all the incoming messages.
+Appling optimisation [2] unrolling the two innermost loops of Algorithm~\ref{algo:propagate} iterating over the two states to the baseline [1] gives a 4x speedup.
+A reason for this is that the product calculation at line nine of the algorithm could be reused by the outer loop iterating over states.*
+\begin{figure}\centering
+	\includegraphics[scale=0.59]{img/speedup[0][1]_small.pdf}
+	\caption{Speedup of optimisation [2] over baseline [1] and libDAI library [0] with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
+\end{figure}
+
+\mypar{Reducing computation} Optimisation [3] was applied on top of optimisation [2] and reduced floating point operations by replacing the computation of the product at line nine in Algorithm~\ref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
+How much of runtime improvement does optimisation [3] achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/mulitplications \cite{optimisationManual}?
+Fig.~\ref{precomputeSpeedupSmall} shows that a speedup of at least 20x was achieved on the small dataset by this with respect to optimisation [2].
+It seems that there were enough neighbours for each node to compute the product over.(?)*
+\begin{figure}\centering
+	\includegraphics[scale=0.58]{img/speedup[2][3]_small.pdf}
+	\caption{Speedup of optimisation [3] (precomputing the product) added on top of optimisation [2] on the small dataset. \label{precomputeSpeedupSmall}}
+\end{figure}
+\srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
+\mypar{Saving memory and vectorisation} 
+For further improvement on top of optimisation [3], one one hand optimisation [7] additionally tried to save memory and on the other hand optimisation [6] added vectorization.
+How do these optimisations impact the speedup ?
+We see in Fig.~\ref{cpctVectSpeedupSmall} that for the small dataset there is only a speedup of around 1.1x with saving memory while vectorisation yields a speedup of at most 1.6x with respect to optimisation [3].
+The speedup of the combined version of both optimisations (optimisation [8] in Fig.~\ref{cpctVectSpeedupSmall}) is greather than each of them seperately.
+\begin{figure}\centering
+	\includegraphics[scale=0.59]{img/speedup[3][6][7][8]_small.pdf}
+	\caption{Speedup of vectorisation and saving memory optimisations based on optimisation [3] (precomputing the product) on the small dataset. \label{cpctVectSpeedupSmall}}
+\end{figure}
+Since the optimisations displayed in Fig.~\ref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
+To this end, Fig.~\ref{cpctVectPerformanceBoth} shows the performances of these optimizations on the small and big dataset combined.
+We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
+The vectorised versions drop faster than the nonvectorised versions as their advantages in computation get drowned out by slow memory accesses.
+All the opimisations displayed surpass the performances of the base implementions (mentionned in Fig.~\ref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
+For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit in to cache anymore.
+\begin{figure}\centering
+	\includegraphics[scale=0.59]{img/performance[3][6][7][8]_both.pdf}
+	\caption{Speedup of vectorisation and saving memory optimisations based on optimisation [3] (precomputing the product) on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
+\end{figure}
+
+\mypar{Roofline}
+
+\mypar{End-to-end speedup}
 
 %Here you evaluate your work using experiments. You start again with a
 %very short summary of the section. The typical structure follows.
 
 %\mypar{Experimental setup} Specify the platform (processor, frequency, cache sizes)
-%as well as the compiler, version, and flags used. I strongly recommend that you play with optimization flags and consider also icc for additional potential speedup.
+%as well as the compiler, version, and flags used. I strongly recommend that you play with optimisation flags and consider also icc for additional potential speedup.
 
 %Then explain what input you used and what range of sizes. The idea is to give enough information so the experiments are reproducible by somebody else on his or her code.
 
@@ -366,7 +414,7 @@ The big dataset represents graphs of 45'729 to 221'588 vertices and considers th
 %Next divide the experiments into classes, one paragraph for each. In the simplest case you have one plot that has the size on the x-axis and the performance on the y-axis. The plot will contain several lines, one for each relevant code version. Discuss the plot and extract the overall performance gain from baseline to best code. Also state the percentage of peak performance for the best code. Note that the peak may change depending on the situation. For example, if you only do additions it would be 12 Gflop/s
 %on one core with 3 Ghz and SSE and single precision floating point.
 
-%Do not put two performance lines into the same plot if the operations count changed significantly (that's apples and oranges). In that case first perform the optimizations that reduce op count and report the runtime gain in a plot. Then continue to optimize the best version and show performance plots.
+%Do not put two performance lines into the same plot if the operations count changed significantly (that's apples and oranges). In that case first perform the optimisations that reduce op count and report the runtime gain in a plot. Then continue to optimise the best version and show performance plots.
 
 %{\bf You should}
 %\begin{itemize}
@@ -387,7 +435,7 @@ tense. Remember, now the reader has (hopefully) read the paper, so it
 is a very different situation from the abstract. Try to highlight
 important results and say the things you really want to get across
 (e.g., the results show that we are within 2x of the optimal performance ...
-Even though we only considered the DFT, our optimization
+Even though we only considered the DFT, our optimisation
 techniques should be also applicable ....) You can also formulate next
 steps if you want. Be brief.
 
@@ -449,7 +497,7 @@ In this mandatory section (which is not included in the 8 pages limit) each team
 
 Include only 
 \begin{itemize}
-	\item What relates to optimizing your chosen algorithm / application. This means writing actual code for optimization or for analysis.
+	\item What relates to optimising your chosen algorithm / application. This means writing actual code for optimisation or for analysis.
 	\item What you did before the submission of the presentation.
 \end{itemize}
 Do not include
@@ -460,7 +508,7 @@ Do not include
 
 Example and structure follows.
 
-\mypar{Marylin} Focused on non-SIMD optimization for the variant 2 of the algorithm. Cache optimization, basic block optimizations, small generator for the innermost kernel (Section 3.2). Roofline plot. Worked with Cary and Jane on the SIMD optimization of variant 1, in particular implemented the bit-masking trick discussed.
+\mypar{Marylin} Focused on non-SIMD optimisation for the variant 2 of the algorithm. Cache optimisation, basic block optimisations, small generator for the innermost kernel (Section 3.2). Roofline plot. Worked with Cary and Jane on the SIMD optimisation of variant 1, in particular implemented the bit-masking trick discussed.
 
 \mypar{Cary} ...
 
