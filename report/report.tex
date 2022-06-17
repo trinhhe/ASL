@@ -106,7 +106,7 @@ Many papers about BP focus on the algorithmic site for optimization. Our focus i
 \end{itemize}
 
 
-\section{Background on the Algorithm/Application}\label{sec:background}
+\section{Belief Propagation/Top-N Recommendation}\label{sec:background}
 
 In this section, we briefly touch upon the general idea behind belief
 propagation algorithms and formally define the variant that is at the heart of
@@ -363,19 +363,19 @@ Already implementing the algorithm from scratch provided slight runtime benefits
 Presumably, this came from the benefits of not using a library: less bound checks and function calls / inlining of functions.
 Another reason is that baseline [1] was implemented in a way to maximize sequential array access and used a CSR inspired format for storing all the incoming messages.
 Appling optimisation [2] unrolling the two innermost loops of Algorithm~\ref{algo:propagate} iterating over the two states to the baseline [1] gives a 4x speedup.
-A reason for this is that the product calculation at line nine of the algorithm could be reused by the outer loop iterating over states.*
+A reason for this is that the product calculation at line nine of the algorithm could be reused by the outer loop iterating over states. \sr{*}
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/speedup[0][1]_small.pdf}
-	\caption{Speedup of optimisation [2] over baseline [1] and libDAI library [0] with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
+	\caption{Speedup of optimisation step [2] over baseline [1] and libDAI library [0] with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
 \end{figure}
 
 \mypar{Reducing computation} Optimisation [3] was applied on top of optimisation [2] and reduced floating point operations by replacing the computation of the product at line nine in Algorithm~\ref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
-How much of runtime improvement does optimisation [3] achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/mulitplications \cite{optimisationManual}?
+How much of runtime improvement does optimisation step [3] achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/mulitplications \cite{optimisationManual}?
 Fig.~\ref{precomputeSpeedupSmall} shows that a speedup of at least 20x was achieved on the small dataset by this with respect to optimisation [2].
-It seems that there were enough neighbours for each node to compute the product over.(?)*
+It seems that there were enough neighbours for each node to compute the product over.\sr{(?)*}
 \begin{figure}\centering
 	\includegraphics[scale=0.58]{img/speedup[2][3]_small.pdf}
-	\caption{Speedup of optimisation [3] (precomputing the product) added on top of optimisation [2] on the small dataset. \label{precomputeSpeedupSmall}}
+	\caption{Speedup of optimisation step [3] (precomputing the product) added on top of optimisation [2] on the small dataset. \label{precomputeSpeedupSmall}}
 \end{figure}
 \srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
 \mypar{Saving memory and vectorisation} 
@@ -390,7 +390,7 @@ The speedup of the combined version of both optimisations (optimisation [8] in F
 Since the optimisations displayed in Fig.~\ref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
 To this end, Fig.~\ref{cpctVectPerformanceBoth} shows the performances of these optimizations on the small and big dataset combined.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
-The vectorised versions drop faster than the nonvectorised versions as their advantages in computation get drowned out by slow memory accesses.
+The vectorised versions drop faster than the nonvectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
 All the opimisations displayed surpass the performances of the base implementions (mentionned in Fig.~\ref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
 For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit in to cache anymore.
 \begin{figure}\centering
@@ -399,8 +399,27 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 \end{figure}
 
 \mypar{Roofline}
+Optimisation step [8] is the final one.
+In order to see whether it is memory or compute bound and how close it is to the optimal performance consider Fig.~\ref{rooflineEndToEndSmall}.
+It obvious from Fig.~\ref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
+The last optimisation step achieves around 16.25\% of the vectorized peak performance and 65\% of the scalar peak performance on average on the platform.  
+\begin{figure}\centering
+	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
+	\caption{Roofline plot of optimisation steps [8], [3] (precompute products) and the baseline using the small dataset.
+			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). } \label{rooflineEndToEndSmall}}
+\end{figure}
 
-\mypar{End-to-end speedup}
+\mypar{End-to-end speedup} To see the runtime gain achieved overall, Fig.~\ref{speedupEndToEndSmall} displays the speedup on the small dataset.
+The overall speedup lies between 100 to 500x for optimisation step [8].
+Since optimisation step [3] was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in Fig.~\ref{speedupEndToEndSmall}.
+\begin{figure}\centering
+	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
+	\caption{End-to-end speedup over baseline [1]. on the small dataset} \label{speedupEndToEndSmall}
+\end{figure}
+
+\srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t. across plots the same color is used?}
+\srinline{Maybe a measurement of the baseline [1] on the big dataset would be beneficial for the roofline and end-to-end speedup?}
+\srinline{What do you think?}
 
 %Here you evaluate your work using experiments. You start again with a
 %very short summary of the section. The typical structure follows.
@@ -429,15 +448,23 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 
 \section{Conclusions}
 
-Here you need to briefly summarize what you did and why this is
-important. {\em Do not take the abstract} and put it in the past
-tense. Remember, now the reader has (hopefully) read the paper, so it
-is a very different situation from the abstract. Try to highlight
-important results and say the things you really want to get across
-(e.g., the results show that we are within 2x of the optimal performance ...
-Even though we only considered the DFT, our optimisation
-techniques should be also applicable ....) You can also formulate next
-steps if you want. Be brief.
+In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
+Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
+We achieved a 100 to 500x speedup on an Intel(R) Core(TM) i5-7200U and up to 16.25\% vectorized peak performance on a small dataset which fits into cache.
+On a bigger dataset not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
+Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
+Out off all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}
+There might be ways to further improve the performance our implementation since it is compute-bound and did not hit peak performance.\sr{*}
+%Here you need to briefly summarize what you did and why this is
+%important. {\em Do not take the abstract} and put it in the past
+%tense. Remember, now the reader has (hopefully) read the paper, so it
+%is a very different situation from the abstract. Try to highlight
+%important results and say the things you really want to get across
+%(e.g., the results show that we are within 2x of the optimal performance ...
+%Even though we only considered the DFT, our optimisation
+%techniques should be also applicable ....) You can also formulate next
+%steps if you want. Be brief.
+
 
 \section{Further comments}
 
@@ -491,31 +518,32 @@ Fig.~\ref{fftperf} is an example plot that I used in a lecture. Note that the fo
 \bigskip
 {\bf Up to here you have 8 pages.}
 
-\section{Contributions of Team Members (Mandatory)}
+\section{Contributions}% of Team Members (Mandatory)
 
-In this mandatory section (which is not included in the 8 pages limit) each team member should very briefly (telegram style is welcome) explain what she/he did for the project. I imagine this section to be between one column and one page (absolute maximum).
+%In this mandatory section (which is not included in the 8 pages limit) each team member should very briefly (telegram style is welcome) explain what she/he did for the project. I imagine this section to be between one column and one page (absolute maximum).
 
-Include only 
-\begin{itemize}
-	\item What relates to optimising your chosen algorithm / application. This means writing actual code for optimisation or for analysis.
-	\item What you did before the submission of the presentation.
-\end{itemize}
-Do not include
-\begin{itemize}
-	\item Work on infrastructure and testing.
-	\item Work done after the presentation took place.
-\end{itemize}
+%Include only 
+%\begin{itemize}
+%	\item What relates to optimising your chosen algorithm / application. This means writing actual code for optimisation or for analysis.
+%	\item What you did before the submission of the presentation.
+%\end{itemize}
+%Do not include
+%\begin{itemize}
+%	\item Work on infrastructure and testing.
+%	\item Work done after the presentation took place.
+%\end{itemize}
 
-Example and structure follows.
+%Example and structure follows.
 
-\mypar{Marylin} Focused on non-SIMD optimisation for the variant 2 of the algorithm. Cache optimisation, basic block optimisations, small generator for the innermost kernel (Section 3.2). Roofline plot. Worked with Cary and Jane on the SIMD optimisation of variant 1, in particular implemented the bit-masking trick discussed.
+\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost 2x2 loops over states and scalar replacement. Implemented precomputation of product optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
-\mypar{Cary} ...
+\mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Tried out log-domain opimisation turning products into summations. Extended flop counting with e.g. byte counting. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
 
-\mypar{Gregory} ...
+\mypar{Sarah} Implemented flop counting in code of both algorithms together with Henry. Improved library flop counting. Performed unrolling optimisation of inner loop over neighbours of a node. Mostly prepared the slides on optimisations for the presentation.
 
-\mypar{Jane} ...
+\mypar{Stephanie} Did the base implementation using the libDAI library. Vectorized loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
 
+\srinline{Just wrote down what came into my mind so far. Most likely the description is incomplete and some points are wrong. Fix it.}
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
 % style file from IEEE produces unsorted bibliography list.
