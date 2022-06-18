@@ -88,22 +88,19 @@ you do to make now precisely clear what your contribution is.
 \end{comment}
 
 \mypar{Motivation}
-In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like \emph{Matrix Factorization} require solving the entire problem again and impose computational limitations for large-scale deployment. \cite{BPRS} and \cite{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is calculating the marginal probability distribution of the nodes corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which also grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
+In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like \emph{Matrix Factorization} require solving the entire problem again and impose computational limitations for large-scale deployment. \citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is calculating the marginal probability distribution of the nodes corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which also grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
 
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-\begin{itemize}
-\item implement optimised version
-\item up to over 500 times speedup compared to existing libraries
-\end{itemize}
+We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory storage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the Movielens datasets \cite{movieLens}.
 
 \mypar{Related Work}
-\begin{itemize}
-\item (hardware-efficient BP) %https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5733391 
-\item (BP for decoding polar codes, early terminatation scheme based on convergence properties) %https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7517046
-\item 
-\end{itemize}
+BP also have usage as decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iteartions by 72.6\%.
+
+There are also works that focus on parallelization. \citet{related2} show one of the first parallel design for BP with the Message Passing Interface paradigm or \citet{related3} with novel approaches to parallel message computation in BP using GPU parallelization.
+
+In this paper, we focus on single core performance where we do not concern with the convergence properties of BP and only consider the algorithm running a fixed number of iterations.
 
 
 \section{Belief Propagation/Top-N Recommendation}\label{sec:background}
@@ -226,7 +223,8 @@ The second baseline, and basis for all optimization, was implemented from scratc
 The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops explicitly. \todo[inline]{reference lines in Algorithm 1} This optimization was then used as basis for all following steps.
 
 Using scalar replacement for values that are accessed over pointers, should allow the compiler to use more optimization, since the possibility of aliasing is excluded and possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \st{should the reasoning of our asumptions be in this section or in results?}
+Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \st{should the reasoning of our asumptions be in this section or in results?}. 
+\HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimization. In the result, we'll have our plots that should validate those assumptions}
 
 
 \mypar{Precompute message products [3]}
@@ -239,7 +237,7 @@ Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node a
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$.
 
 \mypar{Unroll inner loop [4 \& 10]}
-Unrolling the inner loope, the j-loop in algorithm \ref{algo:propagate}, was done once on basis on optimization 2 and once on basis of optimization 3. I both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined this allows for more instruction level parallelism (ILP).
+Unrolling the inner loop, the j-loop in algorithm \ref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined this allows for more instruction level parallelism (ILP).
 The difference in the two unrolling implementations is, that thanks to optimization 2 the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
 
 
@@ -259,11 +257,12 @@ As seen in figure TODO, SIMD was introduced on basis of the message product prec
 In a second step, the vector instructions were optimized with some shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during 1 iteration was reduced to 4. \st{maybe I should go into more detail here}
 
 Even though, looking at the assembly compiled from optimization 2, it was visible that the compiler already introduced some vector instruction, writing them explicitly should allow for a greater use of SIMD.
-
+\begin{comment}
 For this course, explain all the optimisations you performed. This mean, you first very briefly
 explain the baseline implementation, then go through locality and other optimisations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimise one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
 
 As important as the final results is to show that you took a structured, organized approach to the optimisation and that you explain why you did what you did.
+\end{comment}
 
 In a second step, the type of indices were changed from site\_t to uint\_32. This could be done, since the size of the data structures were knwon to never need more than 4 bytes to be indexed.
 
@@ -310,6 +309,7 @@ This compaction allowed for more values being read when loading 1 cache block. M
 This section demonstrates the incremental performance and runtime improvements achieved by successively applying succeeding optimisations.  
 We start with providing details about experimental setup first, then show the results of applying optimisations and finally show a roofline plot.
 \srinline{Maybe mention ten iterations of propagate were performed and what instructions where used to measure the cycles and how we counted flops?}
+\HTinline{Yeah, I would mention those things(added them at the end of experimental setup part)}
 \mypar{Platform} All the experiments were conducted on the following setup:
 \\
 \begin{tabularx}{\linewidth}{ 
@@ -344,7 +344,9 @@ In contrast, measuring the memory throughput of this platform for a single core 
 \end{tabularx}
 \\
 Taking the average over all functions gives 15'054.4 MB/s which is around 15 GB/s.
-Dividing this 15 GB/s by 2.5 GHz, results thus in an average memory bandwidth $\beta=6$.
+Dividing this 15 GB/s by 2.5 GHz, results thus in an average memory bandwidth $\beta=6$ bytes/cycle.
+
+Further we use the \emph{RDTSC} instruction to measure the number of cycles. For the number of flops, we wrote a small code that counts the number of flops. In addition we let BP run for fixed amount of iterations, namely 10. \HT{maybe move 10 iterations somewhere else}
 
 \mypar{Compiler} The program was compiled usig GCC 12.1.0 with 'g++ -Ofast -march=native'.
 
@@ -378,6 +380,7 @@ It seems that there were enough neighbours for each node to compute the product 
 	\caption{Speedup of optimisation step [3] (precomputing the product) added on top of optimisation [2] on the small dataset. \label{precomputeSpeedupSmall}}
 \end{figure}
 \srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
+\HRinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation [3], one one hand optimisation [7] additionally tried to save memory and on the other hand optimisation [6] added vectorization.
 How do these optimisations impact the speedup ?
@@ -418,7 +421,9 @@ Since optimisation step [3] was the last to have performed a major algorithmic o
 \end{figure}
 
 \srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t. across plots the same color is used?}
+\HRinline{good idea}
 \srinline{Maybe a measurement of the baseline [1] on the big dataset would be beneficial for the roofline and end-to-end speedup?}
+\HRinline{I think we should do it on big and small dataset for roofline + end-to=end speedup}
 \srinline{What do you think?}
 
 %Here you evaluate your work using experiments. You start again with a
