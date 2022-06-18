@@ -380,7 +380,7 @@ It seems that there were enough neighbours for each node to compute the product 
 	\caption{Speedup of optimisation step [3] (precomputing the product) added on top of optimisation [2] on the small dataset. \label{precomputeSpeedupSmall}}
 \end{figure}
 \srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
-\HRinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
+\HTinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation [3], one one hand optimisation [7] additionally tried to save memory and on the other hand optimisation [6] added vectorization.
 How do these optimisations impact the speedup ?
@@ -421,9 +421,9 @@ Since optimisation step [3] was the last to have performed a major algorithmic o
 \end{figure}
 
 \srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t. across plots the same color is used?}
-\HRinline{good idea}
+\HTinline{good idea}
 \srinline{Maybe a measurement of the baseline [1] on the big dataset would be beneficial for the roofline and end-to-end speedup?}
-\HRinline{I think we should do it on big and small dataset for roofline + end-to=end speedup}
+\HTinline{I think we should do it on big and small dataset for roofline + end-to=end speedup}
 \srinline{What do you think?}
 
 %Here you evaluate your work using experiments. You start again with a
