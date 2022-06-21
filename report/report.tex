@@ -89,20 +89,22 @@ you do to make now precisely clear what your contribution is.
 \end{comment}
 
 \mypar{Motivation}
-In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like \emph{Matrix Factorization}\rh{would not capitalise} require solving the entire problem again and impose computational limitations for large-scale deployment.\rh{paragraph break here?} \citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is to calculate the marginal probability distribution of the nodes which corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which also\rh{why also?} grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
+In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like Matrix Factorization require solving the entire problem again and impose computational limitations for large-scale deployment.
+
+\citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is to calculate the marginal probability distribution of the nodes which corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
 
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory storage\rh{memory usage/footprint sounds better to me} and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
+We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
-BP also have usage\rh{awkward phrasing IMO, ``BP is also used in decoders''?} as decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations by 72.6\%.\rh{don't understand. now I read this as ``so they use 30 iteration, which is 72.6\% less than before``, is that right?}
+BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations.\rh{don't understand. now I read this as ``so they use 30 iteration, which is 72.6\% less than before``, is that right?}
+\HTinline{No, I meant 30 - 0.726*30. I mention now explicitly \# iterations instead of percentage.}
 
 There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations.
-
+In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10.
 
 \section{Belief Propagation/Top-N Recommendation}\label{sec:background}
 
@@ -212,12 +214,17 @@ about your problem (including citations).
 
 
 \section{Your Proposed Method}\label{sec:yourmethod}
+\begin{figure}\centering
+	\includegraphics[width = 0.48 \textwidth]{img/OptimizationDiagram.png}
+	\caption{Diagram of optimisation steps \label{OptDiagram}}
+\end{figure}
+\stinline{going to make the screen shot of the diagram prettier}
 
 This section presents all optimization steps seen in figure TODO.
 \todo[inline]{could be worth it to give number all optimization in the order they are presented in this section}
 
 \mypar{Baseline \opt{1}}
-This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a Factor\rh{would drop the capitalisation} graph.
+This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor\rh{would drop the capitalisation} graph.
 The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit \opt{2}}
@@ -231,32 +238,29 @@ Writing out the inner 2 by 2 loop saves on control flow instructions and besides
 
 \mypar{Precompute message products \opt{3}}
 \rhinline{I plan on describing some of this in \cref{sec:background}, so I'll maybe move some of this there after I get to it.}
+\stinline{good idea, then we can reference the theory like I did in the previous section}
 In the next step the algorithm was optimized, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
 This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. To avoid repeating the same calculations, the product was replaced with the following:
 $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
 Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of $i$-loop in algorithm 1}
 
-This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$.
+This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
+
+\mypar{Graph padding}
+In anticipation of unrolling and SIMD optional graph padding was added to optimization 3 and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
+
+
 \mypar{Unroll inner loop \opt{4 \& 10}}
-Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined\rh{don't understand the ``combined'' here} this allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
+Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing 4 iterations at once\rh{don't understand the ``combined'' here} \st{is it clearer now?} allows for more instruction level parallelism (ILP).
+The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
 
 
 \mypar{Unroll outer loop \opt{9}}
 In a different implementation\rh{would maybe mention that it's based on 3? but maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
-\mypar{Graph padding}
-\begin{itemize}
-\item insert graph padding into diagram
-\item pad the graph so that each vertex starts on an address divisible by SIMD size
-\item why maybe better: can use aligned loads and stores for SIMD, don't have to have a leftover loop
-\item why maybe worse: up to $4/8\times$ increase in size (if nodes only have 1 neighbour)
-\end{itemize}
-
-
 \mypar{Vectorise \opt{6}}
-As seen in figure TODO, SIMD was introduced on basis of the message product precomputation.\rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel\rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
+As seen in figure \ref{OptDiagram}, SIMD was introduced on basis of the message product precomputation.\rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel\rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
 In a second step, the vector instructions were optimized with some\rh{leave out ``some''?} shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}
 
@@ -269,7 +273,10 @@ As important as the final results is to show that you took a structured, organiz
 \end{comment}
 
 \mypar{Save memory \opt{7}}
-\rhinline{I guess this is WIP, I would definitely mention the ``save only one state, $p(\text{DISLIKE}) = 1 - p(\text{LIKE})$'' trick.}
+Since it was reasonable to assume, that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.
+
+The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.
+
 In a second step, the type of indices was changed from \verb@size_t@ to \verb@uint32_t@. This could be done, since the size of the data structures were known to never need more than 4 bytes to be indexed.
 \rhinline{I calculated it, indexing $0, \ldots, m - 1$ is the bottleneck, and for a given $m$, we allocate $\ge 3m \cdot 4$ bytes of memory (for G.in, G.in\_old and G.out). So, if we cannot index, this means $m > 2^{32} = 4$ GB, which means we use $>48$ GB of memory. So, I'd say (instead of ``This could be done [\dots]''):
 
