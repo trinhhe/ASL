@@ -368,7 +368,7 @@ A reason for this is that the product calculation at \cref{line:product-calculat
 	\caption{Speedup of optimisation step \opt{2} over baseline \opt{1} and libDAI library \opt{0} with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
 \end{figure}
 
-\mypar{Reducing computation} Optimisation \opt{3} was applied on top of optimisation \opt{2} and reduced floating point operations by replacing the computation of the product at line nine in \cref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
+\mypar{Reducing computation} Optimisation \opt{3} was applied on top of optimisation \opt{2} and reduced floating point operations by replacing the computation of the product at \cref{line:product-calculation} in \cref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
 How much of runtime improvement does optimisation step \opt{3} achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/mulitplications \cite{optimisationManual}?
 \cref{precomputeSpeedupSmall} shows that a speedup of at least 20x was achieved on the small dataset by this with respect to optimisation \opt{2}.
 It seems that there were enough neighbours for each node to compute the product over.\sr{(?)*}
@@ -498,6 +498,15 @@ There might be ways to further improve the performance our implementation since 
 \section{Global TODOs}
 
 \rhinline{just a list of TODOs we should tackle before submitting, feel free to add/disagree}
+
+\subsection{Plots}
+
+\rhinline{roofline: I would add an L3 memory bound (and maybe L1 and L2?) as some of our inputs fit into L1/L2/L3}
+
+\rhinline{the supervisor seemed like he wanted to see more of big dataset plots? it kind of makes sense given that the small plots don't even overflow to RAM.}
+
+\subsection{Typography/language/details}
+
 \todo[inline]{BrE vs AmE (RH has a script somewhere)}
 \todo[inline]{spellcheck}
 \todo[inline]{check there are no more TODOs hiding}
