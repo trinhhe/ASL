@@ -23,6 +23,7 @@ variants_small_only = \
 combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants) $(variants_small_only),measurements/small/$(var)$(cflags).csv))
 combinations_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/big/$(var)$(cflags).csv))
 combinations_compl_bipartite = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/compl_bipartite/$(var)$(cflags).csv))
+combinations_small_and_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/small_and_big/$(var)$(cflags).csv))
 
 PLOT_OPTS=-n
 PLOT=measurement_utils/plot_perf.py
@@ -33,13 +34,13 @@ endif
 
 all: plots
 
-plots: $(combinations_small) plots/slow-comparison plots/slow-vs-fast plots/vectorisation plots/compaction-and-vectorisation plots/compaction-and-vectorisation plots/end-to-end plots/compaction-and-vectorisation-big
+plots: $(combinations_big) $(combinations_small) plots/small plots/big plots/slow-comparison plots/slow-vs-fast plots/vectorisation plots/compaction-and-vectorisation plots/compaction-and-vectorisation plots/end-to-end plots/end-to-end-big plots/compaction-and-vectorisation-big
 
 plots/small: $(PLOT) $(combinations_small)
-	$^ $(PLOT_OPTS) -o $@
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_8@-O* measurements/small/*
 
-plots/big: $(PLOT) $(combinations_big)
-	$^ $(PLOT_OPTS) -o $@
+plots/big: $(PLOT) $(combinations_small_big)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small_and_big/*_8@-O* measurements/small_and_big/*
 
 plots/compl_bipartite: $(PLOT) $(combinations_compl_bipartite)
 	$^ $(PLOT_OPTS) -o $@
@@ -59,12 +60,14 @@ plots/compaction-and-vectorisation: $(PLOT) $(combinations_small)
 plots/compaction-and-vectorisation2: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_8@-O*@* measurements/small/*__{3,6@-DVEC2,7,8@-O*}@*
 
-plots/compaction-and-vectorisation-big: $(PLOT) $(combinations_big)
+plots/compaction-and-vectorisation-big: $(PLOT) $(combinations_small_and_big)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small_and_big/*_3@* measurements/small_and_big/*__{3,6@-DVEC2,7,8@-O*}@* -p "precompute [3]" "precompute+vectorise2 [6 -DVEC2]" "precompute+save_memory [7]" "precompute+vectorise2+save_memory [8]"
 
 plots/end-to-end: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*__{1,3,8@-O*}@* -p "baseline [1]" "precompute products [3]" "precompute+vectorise2+save_memory [8]"
 
+plots/end-to-end-big: $(PLOT) $(combinations_small_and_big)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small_and_big/*_1@* measurements/small_and_big/*__{1,3,8@-O*}@* -p "baseline [1]" "precompute products [3]" "precompute+vectorise2+save_memory [8]"
 ifdef ONLY_PLOT
 measurements/small/%.csv:
 measurements/big/%.csv:
@@ -82,6 +85,10 @@ measurements/compl_bipartite/%.csv: build/% measurement_utils/measure_runtime.sh
 	@mkdir -p measurements/compl_bipartite
 	$(MEASURE) $< $@ compl_bipartite
 endif
+measurements/small_and_big/%.csv: measurements/small/%.csv measurements/big/%.csv
+	@mkdir -p measurements/small_and_big
+	cp measurements/small/$*.csv $@
+	tail -n+2 measurements/big/$*.csv >> $@
 
 build/from_scratch%: .FORCE
 	@mkdir -p build

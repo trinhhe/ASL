@@ -6,6 +6,7 @@
 #include "../../measurement_utils/tsc_x86.h"
 
 //#define JUST_METADATA
+#define OVERNIGHT_MEASUREMENT
 #ifdef OVERNIGHT_MEASUREMENT
 int REP = 2;
 const long long MIN_CYCLES = 50000000000LL;
@@ -210,7 +211,7 @@ int main(int argc, const char **argv)
 	graph_destroy(&G);
 	// dump_graph(&G);
     // n (number of vertices), total_cycle, total_flops, gbuild_cycle, prop_cycle, gbuild_flops, prop_flops, bel_flops\n
-    printf("%u, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu, %llu\n", (int)G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, data_bytes.contiguous, data_bytes.random);
+    printf("%u, %f, %llu, %f, %f, %f, %llu, %llu, %llu, %d, %llu, %llu, %llu, %llu, %llu, %d\n", (int)G.n, total, flops_new.total, total_gbuild, total_prop, total_belief, flops_gbuild, flops_new.prop, flops_new.belief, iterations, flops_old.prop, flops_old.belief, flops_old.total, data_bytes.contiguous, data_bytes.random, (int)sizeof(idx_t));
 
     free(ratings);
 }
