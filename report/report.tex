@@ -14,6 +14,7 @@
 \usepackage{comment}
 \input macros/todo
 \input macros/macros
+\overfullrule=2mm % black slugs on overfull lines, disable when submitting
 
 % bold paragraph titles
 \newcommand{\mypar}[1]{{\bf #1.}}
@@ -89,9 +90,9 @@ you do to make now precisely clear what your contribution is.
 \end{comment}
 
 \mypar{Motivation}
-In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like Matrix Factorization require solving the entire problem again and impose computational limitations for large-scale deployment.
+In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfil with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like Matrix Factorization require solving the entire problem again and impose computational limitations for large-scale deployment.
 
-\citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is to calculate the marginal probability distribution of the nodes which corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
+\citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is to calculate the marginal probability distribution of the nodes which corresponds to predicting the ratings of the items for users. Since computing the marginal probability is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
 
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
@@ -99,7 +100,7 @@ Many papers about BP focus on the algorithmic site for optimization. Our focus i
 We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
-BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations.\rh{don't understand. now I read this as ``so they use 30 iteration, which is 72.6\% less than before``, is that right?}
+BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations.\rh{don't understand. Now I read this as ``so they use 30 iteration, which is 72.6\% less than before``, is that right?}
 \HTinline{No, I meant 30 - 0.726*30. I mention now explicitly \# iterations instead of percentage.}
 
 There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
@@ -120,7 +121,7 @@ propagation} to refer to the algorithm of \citet[Section
 
 The input of the algorithm is a bipartite\rh{it is, but it isn't important to
 the algorithm} undirected graph $G = (V, E)$. Each of the vertices $v\in V$ can
-be in one of $S$ \emph{states}, labeled $x_1, \ldots, x_S \in X$. There is a
+be in one of $S$ \emph{states}, labelled $x_1, \ldots, x_S \in X$. There is a
 joint probability mass function $p: X^V \to [0, 1]$ (assumed intractable and
 inaccessible to us) that captures the probability of each possible assignment of
 states to vertices. The goal of the algorithm is, for each vertex $v_i$, to
@@ -193,7 +194,7 @@ This can be directly expressed in pseudocode:
 	\caption{Diagram of optimisation steps \label{OptDiagram}}
 \end{figure}
 \stinline{going to make the screen shot of the diagram prettier}
-\rhinline{I'd definitely aim for a figure that spans both columns, this is simly too small}
+\rhinline{I'd definitely aim for a figure that spans both columns, this is simply too small}
 
 This section presents all optimization steps seen in figure TODO.
 \todo[inline]{could be worth it to give number all optimization in the order they are presented in this section}
@@ -206,7 +207,7 @@ The second baseline, and basis for all optimization, was implemented from scratc
 The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops explicitly. \todo[inline]{reference lines in Algorithm 1} This optimization was then used as basis for all following steps.
 
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimizations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our asumptions be in this section or in results?}
+Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
 \HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimization. In the result, we'll have our plots that should validate those assumptions}
 \rhinline{agree, although other way around it also kind of makes sense}
 
@@ -232,7 +233,7 @@ The difference in the two unrolling implementations is that thanks to optimizati
 
 
 \mypar{Unroll outer loop \opt{9}}
-In a different implementation\rh{would maybe mention that it's based on 3? but maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
+In a different implementation\rh{would maybe mention that it's based on 3? But maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
 As seen in figure \ref{OptDiagram}, SIMD was introduced on basis of the message product precomputation.\rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel\rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
@@ -302,7 +303,7 @@ We start with providing details about experimental setup first, then show the re
 \rhinline{maybe add a subsection, ``Setup''?}
 \srinline{Maybe mention ten iterations of propagate were performed and what instructions where used to measure the cycles and how we counted flops?}
 \HTinline{Yeah, I would mention those things(added them at the end of experimental setup part)}
-\rhinline{the table spacing seems kinda weird. maybe we can get rid of the left and right margin and align it with the rest of the text? (see for yourself by uncommenting below). and also maybe it's a figure?}
+\rhinline{the table spacing seems kinda weird. Maybe we can get rid of the left and right margin and align it with the rest of the text? (see for yourself by uncommenting below). And also maybe it's a figure?}
 \mypar{Platform} All the experiments were conducted on the following setup:
 \\
 \begin{tabularx}{\linewidth}{ 
@@ -312,7 +313,7 @@ We start with providing details about experimental setup first, then show the re
 %		@{} % <-- the same for the right space
 	}
 	\textbf{Processor}	&	Intel(R) Core(TM) i5-7200U														\\
-	\textbf{Code name}	&	Kabylake \cite{intelSpec}														\\
+	\textbf{Code name}	&	Kaby Lake \cite{intelSpec}														\\
 	\textbf{Cores}		&	2 \cite{intelSpec}																\\
 	\textbf{Threads}	&	4 \cite{intelSpec}																\\
 	\textbf{Frequency} 	&	2.50GHz (Turbo Boost disabled)													\\
@@ -347,11 +348,11 @@ Further\rh{omit} we use the \verb@RDTSC@ instruction to measure the number of cy
 
 \mypar{Input data} Test inputs were based on the MovieLens dataset \cite{movieLens}.
 Various sizes were generated by taking the ratings of users with identifier smaller than some number for different numbers
-and then normalising / desparsifing the user and movie identifers seperately.
+and then normalising / desparsifying the user and movie identifiers separately.
 This section's plots display the results of either a small or a big dataset composed from inputs generated this way.
 The small dataset represents graphs of 981 to 10,334 vertices and consists of inputs % 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334
 considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450 and 540 users based on the MovieLens Latest Small dataset \cite{movieLensSmall}.
-The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 (doubling the threshold everytime\rh{I thought it was just $16,200k$ for $k \in \{1, \ldots, 10\}$, not doubling?}) users based on the MovieLens 25M dataset \cite{movieLensBig}.
+The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 (doubling the threshold every time\rh{I thought it was just $16,200k$ for $k \in \{1, \ldots, 10\}$, not doubling?}) users based on the MovieLens 25M dataset \cite{movieLensBig}.
 
 \rhinline{maybe add a subsection, ``Results''?}
 
@@ -361,37 +362,45 @@ We see that libDAI library \opt{0} uses the most cycles compared to the others.
 Already implementing the algorithm from scratch provided slight runtime benefits (baseline \opt{1} in \cref{libSpeedupSmall}).
 Presumably, this came from the benefits of not using a library: less bound checks and function calls, and inlining of functions.
 Another reason is that baseline \opt{1} was implemented in a way to maximize sequential array access and used a CSR inspired format for storing all the incoming messages.
-Appling optimisation \opt{2} that unrolls the two innermost loops of \cref{algo:propagate} \rh{would comment this part out, too complicated sentence: iterating over the two states} to the baseline \opt{1} gives a 4$\times$ speedup.
+Applying optimisation \opt{2} that unrolls the two innermost loops of \cref{algo:propagate} \rh{would comment this part out, too complicated sentence: iterating over the two states} to the baseline \opt{1} gives a 4$\times$ speedup.
 A reason for this is that the product calculation at \cref{line:product-calculation} of the algorithm could be reused by the outer loop iterating over states. \rh{I think the main reason for the speed up is scalar replacement, basically we get rid of a lot of pointer dereferences.}\sr{*}
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/speedup[0][1]_small.pdf}
-	\caption{Speedup of optimisation step \opt{2} over baseline \opt{1} and libDAI library \opt{0} with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
+	%\caption{Speedup of optimisation step \opt{2} over baseline \opt{1} and libDAI library \opt{0} with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
+	% RH: tried rewording this, but don't know if it's better (I think the speedup should always be with respect to / over the thing that has speedup 1× in the picture, so baseline in this case)
+	\caption{Relative speedup of optimisation step \opt{2} and the libDAI library \opt{0} over the baseline \opt{1} on the small dataset. \label{libSpeedupSmall}}
 \end{figure}
 
 \mypar{Reducing computation} Optimisation \opt{3} was applied on top of optimisation \opt{2} and reduced floating point operations by replacing the computation of the product at \cref{line:product-calculation} in \cref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
-How much of runtime improvement does optimisation step \opt{3} achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/mulitplications \cite{optimisationManual}?
-\cref{precomputeSpeedupSmall} shows that a speedup of at least 20x was achieved on the small dataset by this with respect to optimisation \opt{2}.
-It seems that there were enough neighbours for each node to compute the product over.\sr{(?)*}
+How much of runtime improvement does optimisation step \opt{3} achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/multiplications \cite{optimisationManual}?\rh{I'd rephrase this to emphasize the contrast between why it could be faster (improved asymptotics) and why it could be slower (now we need division). Like (schematically), ``optimisation \opt{3} reduced floating point operations [...], but it also introduced the need for division, which is bad because [...].'' and only then maybe ask the rhetorical question (although I think we don't need it)}
+\cref{precomputeSpeedupSmall} shows that on the small dataset, this achieves a speedup of at least $20\times$ with respect to optimisation \opt{2}.
+It seems\rh{I'd drop the ``seems'', we can be more confident here} that there were enough neighbours for each node to compute the product over.\sr{(?)*}\rh{yeah that's the reason.}
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/speedup[2][3]_small.pdf}
-	\caption{Speedup of optimisation step \opt{3} (precomputing the product) added on top of optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
+	\caption{Speedup of optimisation step \opt{3} (precomputing the product)\rh{the paren is redundant?} added on top of optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
 \end{figure}
 \srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
 \HTinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
+\rhinline{also agree. Would also mention that unaligned and aligned load was roughly the same speed which defeats the single selling point of graph padding}
 \mypar{Saving memory and vectorisation} 
-For further improvement on top of optimisation \opt{3}, one one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
-How do these optimisations impact the speedup ?
+For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
+How do these optimisations impact the speedup?\rh{the rhetorical question is probably redundant here}
 We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a speedup of around 1.1x with saving memory while vectorisation yields a speedup of at most 1.6x with respect to optimisation \opt{3}.
-The speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greather than each of them seperately.
+The speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately.
+
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/speedup[3][6][7][8]_small.pdf}
 	\caption{Speedup of vectorisation and saving memory optimisations based on optimisation \opt{3} (precomputing the product) on the small dataset. \label{cpctVectSpeedupSmall}}
 \end{figure}
+
+\rhinline{at this point, I would definitely mention and plot the optimizations that didn't work (i.e. unrolling and padding). Or at least mention if plotting is cumbersome.}
+
+\rhinline{maybe add another mypar? ``big inputs'' or some such}
 Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
 To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimizations on the small and big dataset combined.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
-The vectorised versions drop faster than the nonvectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
-All the opimisations displayed surpass the performances of the base implementions (mentionned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
+The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
+All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
 For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit in to cache anymore.
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/performance[3][6][7][8]_both.pdf}
@@ -414,10 +423,10 @@ The overall speedup lies between 100 to 500x for optimisation step \opt{8}.
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
 \begin{figure}\centering
 	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
-	\caption{End-to-end speedup over baseline \opt{1}. on the small dataset} \label{speedupEndToEndSmall}
+	\caption{End-to-end speedup over baseline \opt{1} on the small dataset} \label{speedupEndToEndSmall}
 \end{figure}
 
-\srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t. across plots the same color is used?}
+\srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t.~across plots the same color is used?}
 \HTinline{good idea}
 \srinline{Maybe a measurement of the baseline \opt{1} on the big dataset would be beneficial for the roofline and end-to-end speedup?}
 \HTinline{I think we should do it on big and small dataset for roofline + end-to=end speedup}
@@ -485,9 +494,9 @@ There might be ways to further improve the performance our implementation since 
 
 %Example and structure follows.
 
-\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost 2x2 loops over states and scalar replacement. Implemented precomputation of product optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
+\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
-\mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Tried out log-domain opimisation turning products into summations. Extended flop counting with e.g. byte counting. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
+\mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Tried out log-domain optimisation turning products into summations. Extended flop counting with e.g. byte counting. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
 
 \mypar{Sarah} Implemented flop counting in code of both algorithms together with Henry. Improved library flop counting. Performed unrolling optimisation of inner loop over neighbours of a node. Mostly prepared the slides on optimisations for the presentation.
 
@@ -499,19 +508,26 @@ There might be ways to further improve the performance our implementation since 
 
 \rhinline{just a list of TODOs we should tackle before submitting, feel free to add/disagree}
 
+\subsection{New measurements}
+
+\rhinline{after new measurements arrive (should be 2022-06-22 morning), there is lot to do:}
+\todo[inline]{change the concrete speedup numbers in the text (should not affect small dataset, but let's see first)}
+\todo[inline]{update all plots}
+
 \subsection{Plots}
 
 \rhinline{roofline: I would add an L3 memory bound (and maybe L1 and L2?) as some of our inputs fit into L1/L2/L3}
 
-\rhinline{the supervisor seemed like he wanted to see more of big dataset plots? it kind of makes sense given that the small plots don't even overflow to RAM.}
+\rhinline{the supervisor seemed like he wanted to see more of big dataset plots? It kind of makes sense given that the small plots don't even overflow to RAM.}
 
 \subsection{Typography/language/details}
 
+\todo[inline]{disable slugs}
 \todo[inline]{BrE vs AmE (RH has a script somewhere)}
 \todo[inline]{spellcheck}
 \todo[inline]{check there are no more TODOs hiding}
 \todo[inline]{generally check the title, abstract, section titles, that we have no more template text somewhere}
-\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{xxx} instead of `xxx`, \opt{x} instead of [] etc.}
+\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [] etc.}
 \todo[inline]{citations: don't use just plain URL when possible (usually everyone has a ``how to cite us'' section}
 
 % References should be produced using the bibtex program from suitable
