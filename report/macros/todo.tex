@@ -1,12 +1,17 @@
 \usepackage[textwidth=20mm,obeyFinal,colorinlistoftodos]{todonotes}
 \newcommand{\mytodo}[2]{\todo[size=\tiny, color=#1!50!white]{#2}\xspace}
 \newcommand{\myinlinetodo}[2]{\todo[size=\small, color=#1!50!white, inline]{#2}\xspace}
-\newcommand{\rh}[1]{\mytodo{green}{RH: #1}}
-\newcommand{\rhinline}[1]{\myinlinetodo{green}{RH: #1}}
-\newcommand{\sr}[1]{\mytodo{green}{SR: #1}}
-\newcommand{\srinline}[1]{\myinlinetodo{green}{SR: #1}}
-\newcommand{\st}[1]{\mytodo{green}{ST: #1}}
-\newcommand{\stinline}[1]{\myinlinetodo{green}{ST: #1}}
-\newcommand{\HT}[1]{\mytodo{green}{HT: #1}}
-\newcommand{\HTinline}[1]{\myinlinetodo{green}{HT: #1}}
+% RH: IDK, I'm just drawing four arbitrary colours to distinguish us from each other
+\def\colrh{yellow}
+\def\colsr{cyan}
+\def\colst{violet}
+\def\colHT{green}
+\newcommand{\rh}[1]{\mytodo{\colrh}{RH: #1}}
+\newcommand{\rhinline}[1]{\myinlinetodo{\colrh}{RH: #1}}
+\newcommand{\sr}[1]{\mytodo{\colsr}{SR: #1}}
+\newcommand{\srinline}[1]{\myinlinetodo{\colsr}{SR: #1}}
+\newcommand{\st}[1]{\mytodo{\colst}{ST: #1}}
+\newcommand{\stinline}[1]{\myinlinetodo{\colst}{ST: #1}}
+\newcommand{\HT}[1]{\mytodo{\colHT}{HT: #1}}
+\newcommand{\HTinline}[1]{\myinlinetodo{\colHT}{HT: #1}}
 

@@ -5,6 +5,10 @@
 
 \documentclass[letterpaper]{article}
 \usepackage{spconf,amsmath,amssymb,graphicx,xspace,tabularx,hyperref}
+\usepackage{cleveref}
+\let\cref=\Cref % Capitalise `Section 3` etc. when referencing
+\crefname{figure}{fig.}{figs.}
+\crefname{algocf}{algorithm}{algorithms}
 \usepackage[sort&compress,numbers,sectionbib]{natbib}
 \usepackage[ruled,noalgohanging]{algorithm2e}
 \usepackage{comment}
@@ -49,14 +53,11 @@
 \maketitle
 %
 
-The hard page limit is 8 pages in this style. This excludes references and excluding the short, mandatory part on individual contributions (see end). Do not reduce font size
-or use other tricks to squeeze. This pdf is formatted in the American letter format, so may look a bit strange when printed out (and there is no real reason to do this).
-
 \begin{abstract}
-Describe in concise words what you do, why you do it (not necessarily
+	\templatecomment{Describe in concise words what you do, why you do it (not necessarily
 in this order), and the main result. The abstract has to be
 self-contained and readable for a person in the general area. You
-should write the abstract last.
+	should write the abstract last.}
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -88,19 +89,19 @@ you do to make now precisely clear what your contribution is.
 \end{comment}
 
 \mypar{Motivation}
-In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like \emph{Matrix Factorization} require solving the entire problem again and impose computational limitations for large-scale deployment. \citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is calculating the marginal probability distribution of the nodes corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which also grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
+In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfill with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like \emph{Matrix Factorization}\rh{would not capitalise} require solving the entire problem again and impose computational limitations for large-scale deployment.\rh{paragraph break here?} \citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is to calculate the marginal probability distribution of the nodes which corresponds to predicting the ratings of the items for users. Since computing the marginal probablity is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which also\rh{why also?} grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
 
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory storage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the Movielens datasets \cite{movieLens}.
+We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory storage\rh{memory usage/footprint sounds better to me} and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
-BP also have usage as decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iteartions by 72.6\%.
+BP also have usage\rh{awkward phrasing IMO, ``BP is also used in decoders''?} as decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations by 72.6\%.\rh{don't understand. now I read this as ``so they use 30 iteration, which is 72.6\% less than before``, is that right?}
 
-There are also works that focus on parallelization. \citet{related2} show one of the first parallel design for BP with the Message Passing Interface paradigm or \citet{related3} with novel approaches to parallel message computation in BP using GPU parallelization.
+There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single core performance where we do not concern with the convergence properties of BP and only consider the algorithm running a fixed number of iterations.
+In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations.
 
 
 \section{Belief Propagation/Top-N Recommendation}\label{sec:background}
@@ -216,33 +217,34 @@ This section presents all optimization steps seen in figure TODO.
 \todo[inline]{could be worth it to give number all optimization in the order they are presented in this section}
 
 \mypar{Baseline [1]}
-This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a Factor graph.
-The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in section \ref{sec:background}. It was implemented in a way, that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
+This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a Factor\rh{would drop the capitalisation} graph.
+The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit [2]}
 The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops explicitly. \todo[inline]{reference lines in Algorithm 1} This optimization was then used as basis for all following steps.
 
-Using scalar replacement for values that are accessed over pointers, should allow the compiler to use more optimization, since the possibility of aliasing is excluded and possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \st{should the reasoning of our asumptions be in this section or in results?}. 
+Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimizations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
+Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our asumptions be in this section or in results?}
 \HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimization. In the result, we'll have our plots that should validate those assumptions}
+\rhinline{agree, although other way around it also kind of makes sense}
 
 
 \mypar{Precompute message products [3]}
-In the next step the algorithm was optimized, specifically the message calculation. As seen in section \ref{sec:background}, the messages get calculated according to:
+\rhinline{I plan on describing some of this in \cref{sec:background}, so I'll maybe move some of this there after I get to it.}
+In the next step the algorithm was optimized, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
 This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. To avoid repeating the same calculations, the product was replaced with the following:
 $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
-Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of i-loop in algorithm 1}
+Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of $i$-loop in algorithm 1}
 
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$.
-
 \mypar{Unroll inner loop [4 \& 10]}
-Unrolling the inner loop, the j-loop in algorithm \ref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined this allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is, that thanks to optimization 2 the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
+Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined\rh{don't understand the ``combined'' here} this allows for more instruction level parallelism (ILP).
+The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
 
 
 \mypar{Unroll outer loop [9]}
-In a different implementation we examined what happens if the outer loop is unrolled. Meaning that the i-loop from algorithm \ref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2 the product of old messages was pushed to the outer loop, it was of interest to see, if unrolling this loop would allow for increased ILP. Or if, with running 4 inner loops during one unrolled iteration of the outer loop, the loss of locality would result in decreasing performance.
+In a different implementation\rh{would maybe mention that it's based on 2? but maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2 the product of old messages was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Graph padding}
 \begin{itemize}
@@ -359,21 +361,21 @@ considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450 and 
 The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 (doubling the threshold everytime) users based on the full MovieLens dataset.
 
 \mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is slower.
-For this purpose, the speedup in runtime of the different base implementations with respect to the from scratch implementation is displayed in Fig.~\ref{libSpeedupSmall} on the small dataset.
+For this purpose, the speedup in runtime of the different base implementations with respect to the from scratch implementation is displayed in \cref{libSpeedupSmall} on the small dataset.
 We see that libDAI library [0] uses the most cycles compared to the others.
-Already implementing the algorithm from scratch provided slight runtime benefits (baseline [1] in Fig.~\ref{libSpeedupSmall}).
+Already implementing the algorithm from scratch provided slight runtime benefits (baseline [1] in \cref{libSpeedupSmall}).
 Presumably, this came from the benefits of not using a library: less bound checks and function calls / inlining of functions.
 Another reason is that baseline [1] was implemented in a way to maximize sequential array access and used a CSR inspired format for storing all the incoming messages.
-Appling optimisation [2] unrolling the two innermost loops of Algorithm~\ref{algo:propagate} iterating over the two states to the baseline [1] gives a 4x speedup.
+Appling optimisation [2] unrolling the two innermost loops of \cref{algo:propagate} iterating over the two states to the baseline [1] gives a 4x speedup.
 A reason for this is that the product calculation at line nine of the algorithm could be reused by the outer loop iterating over states. \sr{*}
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/speedup[0][1]_small.pdf}
 	\caption{Speedup of optimisation step [2] over baseline [1] and libDAI library [0] with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
 \end{figure}
 
-\mypar{Reducing computation} Optimisation [3] was applied on top of optimisation [2] and reduced floating point operations by replacing the computation of the product at line nine in Algorithm~\ref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
+\mypar{Reducing computation} Optimisation [3] was applied on top of optimisation [2] and reduced floating point operations by replacing the computation of the product at line nine in \cref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
 How much of runtime improvement does optimisation step [3] achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/mulitplications \cite{optimisationManual}?
-Fig.~\ref{precomputeSpeedupSmall} shows that a speedup of at least 20x was achieved on the small dataset by this with respect to optimisation [2].
+\cref{precomputeSpeedupSmall} shows that a speedup of at least 20x was achieved on the small dataset by this with respect to optimisation [2].
 It seems that there were enough neighbours for each node to compute the product over.\sr{(?)*}
 \begin{figure}\centering
 	\includegraphics[scale=0.58]{img/speedup[2][3]_small.pdf}
@@ -384,17 +386,17 @@ It seems that there were enough neighbours for each node to compute the product 
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation [3], one one hand optimisation [7] additionally tried to save memory and on the other hand optimisation [6] added vectorization.
 How do these optimisations impact the speedup ?
-We see in Fig.~\ref{cpctVectSpeedupSmall} that for the small dataset there is only a speedup of around 1.1x with saving memory while vectorisation yields a speedup of at most 1.6x with respect to optimisation [3].
-The speedup of the combined version of both optimisations (optimisation [8] in Fig.~\ref{cpctVectSpeedupSmall}) is greather than each of them seperately.
+We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a speedup of around 1.1x with saving memory while vectorisation yields a speedup of at most 1.6x with respect to optimisation [3].
+The speedup of the combined version of both optimisations (optimisation [8] in \cref{cpctVectSpeedupSmall}) is greather than each of them seperately.
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/speedup[3][6][7][8]_small.pdf}
 	\caption{Speedup of vectorisation and saving memory optimisations based on optimisation [3] (precomputing the product) on the small dataset. \label{cpctVectSpeedupSmall}}
 \end{figure}
-Since the optimisations displayed in Fig.~\ref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
-To this end, Fig.~\ref{cpctVectPerformanceBoth} shows the performances of these optimizations on the small and big dataset combined.
+Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
+To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimizations on the small and big dataset combined.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
 The vectorised versions drop faster than the nonvectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
-All the opimisations displayed surpass the performances of the base implementions (mentionned in Fig.~\ref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
+All the opimisations displayed surpass the performances of the base implementions (mentionned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
 For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit in to cache anymore.
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/performance[3][6][7][8]_both.pdf}
@@ -403,8 +405,8 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 
 \mypar{Roofline}
 Optimisation step [8] is the final one.
-In order to see whether it is memory or compute bound and how close it is to the optimal performance consider Fig.~\ref{rooflineEndToEndSmall}.
-It obvious from Fig.~\ref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
+In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEndSmall}.
+It obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
 The last optimisation step achieves around 16.25\% of the vectorized peak performance and 65\% of the scalar peak performance on average on the platform.  
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
@@ -412,9 +414,9 @@ The last optimisation step achieves around 16.25\% of the vectorized peak perfor
 			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). } \label{rooflineEndToEndSmall}}
 \end{figure}
 
-\mypar{End-to-end speedup} To see the runtime gain achieved overall, Fig.~\ref{speedupEndToEndSmall} displays the speedup on the small dataset.
+\mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the speedup on the small dataset.
 The overall speedup lies between 100 to 500x for optimisation step [8].
-Since optimisation step [3] was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in Fig.~\ref{speedupEndToEndSmall}.
+Since optimisation step [3] was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
 \begin{figure}\centering
 	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
 	\caption{End-to-end speedup over baseline [1]. on the small dataset} \label{speedupEndToEndSmall}
@@ -511,7 +513,7 @@ jpeg, gif, bmp, tif. Use eps, which means encapsulate postscript, or pdf. This w
 scalable since it is a vector graphic description of your graph. E.g.,
 from Matlab, you can export to eps or pdf.
 
-Fig.~\ref{fftperf} is an example plot that I used in a lecture. Note that the fontsize in the plot should not be any smaller. On the other hand it is also a good rule that the font size in the plot is not larger than the one in the caption (otherwise it looks ugly).
+\Cref{fftperf} is an example plot that I used in a lecture. Note that the fontsize in the plot should not be any smaller. On the other hand it is also a good rule that the font size in the plot is not larger than the one in the caption (otherwise it looks ugly).
 
 \begin{figure}\centering
   \includegraphics[scale=0.33]{img/dft-performance.pdf}
@@ -549,6 +551,16 @@ Fig.~\ref{fftperf} is an example plot that I used in a lecture. Note that the fo
 \mypar{Stephanie} Did the base implementation using the libDAI library. Vectorized loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
 
 \srinline{Just wrote down what came into my mind so far. Most likely the description is incomplete and some points are wrong. Fix it.}
+
+\section{Global TODOs}
+
+\rhinline{just a list of TODOs we should tackle before submitting, feel free to add/disagree}
+\todo[inline]{BrE vs AmE (RH has a script somewhere)}
+\todo[inline]{spellcheck}
+\todo[inline]{check there are no more TODOs hiding}
+\todo[inline]{generally check the title, abstract, that we have no more template text somewhere}
+\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{xxx} instead of `xxx` etc.}
+
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
 % style file from IEEE produces unsorted bibliography list.
