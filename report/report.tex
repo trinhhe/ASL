@@ -212,12 +212,17 @@ about your problem (including citations).
 
 
 \section{Your Proposed Method}\label{sec:yourmethod}
+\begin{figure}\centering
+	\includegraphics[width = 0.48 \textwidth]{img/OptimizationDiagram.png}
+	\caption{Diagram of optimisation steps \label{OptDiagram}}
+\end{figure}
+\stinline{going to make the screen shot of the diagram prettier}
 
 This section presents all optimization steps seen in figure TODO.
 \todo[inline]{could be worth it to give number all optimization in the order they are presented in this section}
 
 \mypar{Baseline [1]}
-This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a Factor\rh{would drop the capitalisation} graph.
+This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor\rh{would drop the capitalisation} graph.
 The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit [2]}
@@ -231,30 +236,28 @@ Writing out the inner 2 by 2 loop saves on control flow instructions and besides
 
 \mypar{Precompute message products [3]}
 \rhinline{I plan on describing some of this in \cref{sec:background}, so I'll maybe move some of this there after I get to it.}
+\stinline{good idea, then we can reference the theory like I did in the previous section}
 In the next step the algorithm was optimized, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
 This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. To avoid repeating the same calculations, the product was replaced with the following:
 $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
 Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of $i$-loop in algorithm 1}
 
-This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$.
+This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
 \mypar{Unroll inner loop [4 \& 10]}
-Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, combined\rh{don't understand the ``combined'' here} this allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
+Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing 4 iterations at once\rh{don't understand the ``combined'' here} \st{is it clearer now?} allows for more instruction level parallelism (ILP).
+The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
 
 
 \mypar{Unroll outer loop [9]}
 In a different implementation\rh{would maybe mention that it's based on 2? but maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2 the product of old messages was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Graph padding}
-\begin{itemize}
-\item insert graph padding into diagram
-\item pad the graph so that each vertex starts on an address divisible by SIMD size
-\end{itemize}
+In anticipation of unrolling and SIMD optional graph padding was added to optimization 3 and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
 
 
 \mypar{Vectorise [6]}
-As seen in figure TODO, SIMD was introduced on basis of the message product precomputation. First, intel intrinsics for vector instructions were introduced, that very closely followed the instruction sequence of scalar computation. And 8 messages were processed together per loop iteration.
+As seen in figure \ref{OptDiagram}, SIMD was introduced on basis of the message product precomputation. First, intel intrinsics for vector instructions were introduced, that very closely followed the instruction sequence of scalar computation. And 8 messages were processed together per loop iteration.
 
 In a second step, the vector instructions were optimized with some shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during 1 iteration was reduced to 4. \st{maybe I should go into more detail here}
 
