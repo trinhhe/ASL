@@ -14,6 +14,8 @@ const long long MIN_CYCLES = 50000000000LL;
 int REP = 5;
 const long long MIN_CYCLES = 2000000000LL;
 #endif
+int REP_BUILD = 10;
+const long long MIN_CYCLES_BUILD = 5000000000LL;
 
 using ull = unsigned long long;
 
@@ -158,13 +160,21 @@ int main(int argc, const char **argv)
 #ifdef JUST_METADATA
 	graph_from_edge_list(ratings, target_uid, &G);
 #else
-    for (int i = 0; i < REP; i++) {
+    for (int i = 0; i < REP_BUILD; i++) {
         start_gbuild = start_tsc();
         graph_from_edge_list(ratings, target_uid, &G);
         end_gbuild = stop_tsc(start_gbuild);
 		if (i)
 			total_gbuild += (double) end_gbuild;
-        
+		if (i == REP_BUILD-1 && total_gbuild <= MIN_CYCLES_BUILD)
+			REP_BUILD++;
+	
+        if (i != REP_BUILD-1)
+			graph_destroy(&G);
+	}
+    total_gbuild /= REP_BUILD-1;
+
+    for (int i = 0; i < REP; i++) {
         start_prop = start_tsc();
         for (int it = 0; it < iterations; it++)
 		    propagate(&G);
@@ -180,16 +190,12 @@ int main(int argc, const char **argv)
 
 		if (i == REP-1 && total_prop + total_gbuild <= MIN_CYCLES)
 			REP++;
-        if (i != REP-1) {
-			graph_destroy(&G);
-        }
     }
 #endif
 
 #ifdef DEBUG
 	dump_graph(&G);
 #endif
-    total_gbuild /= REP-1;
     total_prop /= REP-1;
     total_belief /= REP-1;
     total = total_gbuild + total_prop + total_belief;

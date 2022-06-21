@@ -202,12 +202,13 @@ void graph_destroy(graph_t *G) {
 	// "remember" about the scratch space right before the pointers we introduced previously
 	G->in -= GRAPH_IN_ALIGN_NMEMB;
 	G->in_old -= GRAPH_IN_ALIGN_NMEMB;
-	free(G->in_old);
-	free(G->in);
-	free(G->eix);
-	free(G->out);
-	free(G->belief);
 	free(G->off);
+	free(G->in);
+	free(G->in_old);
+	free(G->out);
+	free(G->node_pot);
+	free(G->belief);
+	free(G->eix);
 }
 
 void dump_beliefs(graph_t *G) {

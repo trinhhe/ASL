@@ -47,7 +47,10 @@ run-%: build/%
 run-debug-%: build/%
 	valgrind $< $(TEST_INPUT_hard)
 
-$(MAIN)%.d:	$(MAIN)%
+$(MAIN)%.d:
+	@true
+
+$(TEST)%.d:
 	@true
 
 $(MAIN)%: src/main_timer.cpp
