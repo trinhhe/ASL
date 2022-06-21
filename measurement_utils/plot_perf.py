@@ -30,6 +30,7 @@ args = parser.parse_args()
 DPI=300
 TITLE = "Belief Propagation [Intel i5-7200U 2.5 GHz, g++ -Ofast -march=native]"
 LEGEND_SIZE = 10
+ITERATIONS_NORMALISE = 10
 
 peak_perf_scalar = 2
 peak_perf_vec = 8
@@ -87,7 +88,9 @@ if args.ref:
 
 for file, pretty_name in fileNames:
     table = read_csv(file)
-    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, interations, _, _, _, databytes_contiguous, databytes_random, sizeof_random = split_to_cols(table)
+    input_sizes, total_cycles, total_flops, gbuild_cycles, prop_cycles, bel_cycles, gbuild_flops, prop_flops, bel_flops, iterations, _, _, _, databytes_contiguous, databytes_random, sizeof_random = split_to_cols(table)
+    prop_flops *= ITERATIONS_NORMALISE / iterations
+    prop_cycles *= ITERATIONS_NORMALISE / iterations
     if just_prop:
         total_flops = prop_flops
         total_cycles = prop_cycles
@@ -102,7 +105,7 @@ for file, pretty_name in fileNames:
     ax2.plot(input_sizes, total_cycles, label = pretty_name, marker=marker)
     ax3.plot(total_cycles, total_flops, label = pretty_name, marker=marker)
 
-    pcyclesPerIt = (prop_cycles + bel_cycles)/ interations
+    pcyclesPerIt = (prop_cycles + bel_cycles)/ iterations
     ax4.plot(input_sizes, pcyclesPerIt, label = pretty_name, marker=marker)
 
     if args.ref:
