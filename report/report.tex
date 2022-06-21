@@ -244,6 +244,11 @@ $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod
 Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of $i$-loop in algorithm 1}
 
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
+
+\mypar{Graph padding}
+In anticipation of unrolling and SIMD optional graph padding was added to optimization 3 and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
+
+
 \mypar{Unroll inner loop [4 \& 10]}
 Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing 4 iterations at once\rh{don't understand the ``combined'' here} \st{is it clearer now?} allows for more instruction level parallelism (ILP).
 The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
@@ -251,9 +256,6 @@ The difference in the two unrolling implementations is that thanks to optimizati
 
 \mypar{Unroll outer loop [9]}
 In a different implementation\rh{would maybe mention that it's based on 2? but maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2 the product of old messages was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
-
-\mypar{Graph padding}
-In anticipation of unrolling and SIMD optional graph padding was added to optimization 3 and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
 
 
 \mypar{Vectorise [6]}
@@ -268,6 +270,12 @@ explain the baseline implementation, then go through locality and other optimisa
 
 As important as the final results is to show that you took a structured, organized approach to the optimisation and that you explain why you did what you did.
 \end{comment}
+
+
+\mypar{Save memory [7]}
+Since it was reasonable to assume, that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.
+
+The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.
 
 In a second step, the type of indices were changed from site\_t to uint\_32. This could be done, since the size of the data structures were knwon to never need more than 4 bytes to be indexed.
 
