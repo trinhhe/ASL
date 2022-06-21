@@ -320,16 +320,64 @@ series = {RecSys '09}
     url       = "http://www.jmlr.org/papers/volume11/mooij10a/mooij10a.pdf"
   }
 
-@misc{movieLens,
-  title = {{MovieLens} Dataset},
-  howpublished = {\url{https://grouplens.org/datasets/movielens/}},
+@article{movieLens,
+  author    = {F. Maxwell Harper and
+               Joseph A. Konstan},
+  title     = {The MovieLens Datasets: History and Context},
+  journal   = {{ACM} Trans. Interact. Intell. Syst.},
+  volume    = {5},
+  number    = {4},
+  pages     = {19:1--19:19},
+  year      = {2016},
+  url       = {https://doi.org/10.1145/2827872},
+  doi       = {10.1145/2827872},
+  timestamp = {Mon, 15 Jun 2020 16:49:42 +0200},
+  biburl    = {https://dblp.org/rec/journals/tiis/HarperK16.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{movieLensBig,
+  title = {{MovieLens} 25M Dataset},
+  howpublished = {\url{https://grouplens.org/datasets/movielens/25m/}},
+  note = {{R}eleased: 12/2019. {A}ccessed: 2022-06-13}
+}
+
+@misc{movieLensSmall,
+  title = {{MovieLens} Latest Datasets},
+  howpublished = {\url{https://grouplens.org/datasets/movielens/latest/}},
   note = {{D}ataset version: 9/2018. {A}ccessed: 2022-06-13}
 }
 
-@misc{streamBenchmark,
-  title = {{STREAM} memory benchmark},
-  howpublished = {\url{https://www.cs.virginia.edu/stream/}},
-  note = {{A}ccessed: 2022-06-13}
+@ARTICLE{streamBenchmark1,
+  author = {John D. McCalpin},
+  title = {Memory Bandwidth and Machine Balance in Current High Performance
+	Computers},
+  journal = {IEEE Computer Society Technical Committee on Computer Architecture
+	(TCCA) Newsletter},
+  year = {1995},
+  pages = {19--25},
+  month = dec,
+  abstract = {The ratio of cpu speed to memory speed in current high-performance
+	computers is growing rapidly, with significant implications for the
+	design and implementation of algorithms in scientific computing.
+	I present the results of a broad survey of memory bandwidth and machine
+	balance for a large variety of current computers, including uniprocessors,
+	vector processors, shared-memory systems, and districuted-memory
+	systems. The results are analyzed in terms of the sustainable data
+	transfer rates for uncached unit-stride vector operation for each
+	machine, and for each class.},
+  pdf = {http://tab.computer.org/tcca/NEWS/DEC95/dec95_mccalpin.ps}
+}
+
+@TECHREPORT{streamBenchmark2,
+  author = {John D. McCalpin},
+  title = {STREAM: Sustainable Memory Bandwidth in High Performance Computers},
+  institution = {University of Virginia},
+  year = {1991-2007},
+  address = {Charlottesville, Virginia},
+  note = {A continually updated technical report.
+http://www.cs.virginia.edu/stream/},
+  url = {http://www.cs.virginia.edu/stream/}
 }
 
 @misc{cpuWorldSpec,
