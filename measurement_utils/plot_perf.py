@@ -17,6 +17,7 @@ import itertools
 import sys
 from matplotlib.ticker import ScalarFormatter
 import numpy as np
+from scipy import ndimage
 
 ROOT = os.path.join(os.path.dirname(__file__), '../')
 parser = argparse.ArgumentParser()
@@ -39,6 +40,18 @@ I_s = peak_perf_scalar/beta
 I_v = peak_perf_vec/beta
 intercept_s = peak_perf_scalar - beta*I_s
 intercept_v = peak_perf_vec - beta*I_v
+L1_beta = 81
+I_s_L1 = peak_perf_scalar/L1_beta
+I_v_L1 = peak_perf_vec/L1_beta
+
+#bw from https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
+mem_bottlenecks = [
+    {"name" : 'mem ' + r'$\beta$', "bw": 6},
+    {"name" : 'L3 ' + r'$\beta$', "bw": 18},
+    {"name" : 'L2 ' + r'$\beta$', "bw": 29},
+    {"name" : 'L1 ' + r'$\beta$', "bw": 81},
+]
+
 just_prop = True
 
 def cycle_markers(iterable,n):
@@ -66,7 +79,7 @@ args.pretty += [None] * (len(args.measurements) - len(args.pretty))
 fileNames = sorted(zip(args.measurements, args.pretty))
 
 perf_limits = [.5, 8]
-intensity_limits = [.2, 2]
+intensity_limits = [.01, 2]
 
 perfFigure = plt.figure(1)
 ax1 = perfFigure.gca()
@@ -123,6 +136,8 @@ for file, pretty_name in fileNames:
     perf_limits[1] = max(perf_limits[1], max(final_perf))
     intensity_limits[0] = min(intensity_limits[0], min(operational_intensity))
     intensity_limits[1] = max(intensity_limits[1], max(operational_intensity))
+    #plot first point/smallest n with different color
+    ax6.plot(operational_intensity[0], final_perf[0], marker=marker, markersize=2, color='black', linewidth=1)
 
 try:
     os.mkdir(OUT)
@@ -138,7 +153,7 @@ ax1.set_ylabel('flops/cycle')
 ax1.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 ax1.grid(visible=True, which='major', color='w', linewidth=1.0)
 ax1.grid(visible=True, which='minor', color='w', linewidth=0.5)
-#labelLines(ax1.get_lines(), 
+# labelLines(ax1.get_lines(), 
 #            yoffsets=0.022, 
 #            fontsize=10, 
 #            align=False,
@@ -180,7 +195,7 @@ ax3.set_ylabel('flops')
 ax3.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 ax3.grid(visible=True, which='major', color='w', linewidth=1.0)
 ax3.grid(visible=True, which='minor', color='w', linewidth=0.5)
-#labelLines(ax3.get_lines(), 
+# labelLines(ax3.get_lines(), 
 #            yoffsets=0.022, 
 #            fontsize=10, 
 #            align=False, 
@@ -224,13 +239,35 @@ if args.ref:
     ### Generate the plot
     cyclesVsReference.savefig(f'{OUT}/cyclesVsReference_plot.{args.ext}', dpi=DPI)
 
+intensity_limits[0] /= 2
+intensity_limits[1] *= 2
+xlogsize = float(np.log10(intensity_limits[1]/intensity_limits[0]))
+ylogsize = float(np.log10(perf_limits[1]/perf_limits[0]))
+m = xlogsize/ylogsize
 
-#scalar roofline
-ax6.plot((0, I_s), (intercept_s,peak_perf_scalar), color='black', label = 'Scalar Roofline')
-ax6.plot((I_s, I_s + 100), (peak_perf_scalar, peak_perf_scalar), color='black')
-#vector roofline
-ax6.plot((0,I_v), (intercept_v, peak_perf_vec),'--', color='black', label = 'Vector Roofline')
-ax6.plot((I_v, I_v + 100), (peak_perf_vec, peak_perf_vec), '--', color='black')
+# draw rooflines
+ax6.plot((I_s_L1, I_s + 100), (peak_perf_scalar, peak_perf_scalar),'--', color='black', linewidth=0.5)
+ax6.plot((I_v_L1, I_v + 100), (peak_perf_vec, peak_perf_vec), '--', color='black', linewidth=0.5)
+ax6.text( intensity_limits[1]/(10**(xlogsize*0.01)), peak_perf_scalar*(10**(ylogsize*0.03)),'Scalar Roofline', ha='right', fontsize=5, color='black')
+ax6.text( intensity_limits[1]/(10**(xlogsize*0.01)), peak_perf_vec*(10**(ylogsize*0.03)),'Vector Roofline', ha='right', fontsize=5, color='black')
+
+# draw slopes
+for slope in mem_bottlenecks:
+    y_s = [0,peak_perf_vec]
+    x_s = [float(y)/slope["bw"] for y in y_s]
+    ax6.plot(x_s, y_s, '--',color='black', linewidth=0.5)
+    #label
+    xpos = intensity_limits[0]*(10**(xlogsize*0.04))
+    ypos = xpos*slope['bw']
+    if ypos<perf_limits[0]:
+        ypos =  perf_limits[0]*(10**(ylogsize*0.02))
+        xpos =  ypos/slope['bw']
+    pos = (xpos,ypos)
+    ax6.annotate(slope['name'] + ': ' + str(slope['bw']) + " B/c", pos, rotation=np.arctan(m/2)*180/np.pi, rotation_mode="anchor",
+    fontsize=5,
+    ha="left", va='bottom',
+    color='black')
+
 ax6.set_title(TITLE)
 ax6.set_xlabel('I(n) [flops/byte]')
 ax6.set_ylabel('P(n) [flops/cycle]')
@@ -238,6 +275,12 @@ ax6.set_ylim(ymin=0)
 ax6.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
 ax6.grid(visible=True, which='major', color='w', linewidth=1.0)
 ax6.grid(visible=True, which='minor', color='w', linewidth=0.5)
+# labelLines(ax6.get_lines(), 
+#            yoffsets=0.022, 
+#            fontsize=10, 
+#            align=False, 
+#            outline_color=None, 
+#            outline_width=0)
 box = ax6.get_position()
 ax6.set_position([box.x0, box.y0 + box.height * 0.3,
                      box.width, box.height * 0.7])
@@ -248,10 +291,6 @@ yticks = [2,8]
 ax6.set_yticks(yticks)
 ax6.xaxis.set_major_formatter(ScalarFormatter())
 ax6.yaxis.set_major_formatter(ScalarFormatter())
-#ax6.set_xlim([0.1,100])
-#ax6.set_ylim([0.1,16])
-intensity_limits[0] /= 2
-intensity_limits[1] *= 2
 perf_limits[0] /= 2
 perf_limits[1] *= 2
 ax6.set_xlim(intensity_limits)
