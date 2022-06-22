@@ -18,6 +18,7 @@
 
 % bold paragraph titles
 \newcommand{\mypar}[1]{{\bf #1.}}
+\newcommand{\myparcont}[1]{{\bf #1}}
 
 % Title.
 % ------
@@ -108,54 +109,68 @@ There are also works that focus on parallelization. \citet{related2} show one of
 
 In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10.
 
-\section{Belief Propagation/Top-N Recommendation}\label{sec:background}
+\section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
-In this section, we briefly touch upon the general idea behind belief
-propagation algorithms and formally define the variant that is at the heart of
-our algorithm.
+In this section, we start by formulating belief propagation in the form that we
+use in our algorithm. Then we describe what role it plays in top-N
+recommendation.
 
-\todo[inline]{one paragraph about general belief propagation}
+\rhinline{I'm omitting general description of belief propagation because it
+just doesn't add any value IMO}
 
-\mypar{Belief propagation} For the purpose of this article, we use \emph{belief
-propagation} to refer to the algorithm of \citet[Section
-2.1]{top-n-recommendation}, which we describe in the following paragraphs.
+\subsection{Belief propagation} \label{subsec:bp}
 
-The input of the algorithm is a bipartite\rh{it is, but it isn't important to
-the algorithm} undirected graph $G = (V, E)$. Each of the vertices $v\in V$ can
-be in one of $S$ \emph{states}, labelled $x_1, \ldots, x_S \in X$. There is a
-joint probability mass function $p: X^V \to [0, 1]$ (assumed intractable and
-inaccessible to us) that captures the probability of each possible assignment of
-states to vertices. The goal of the algorithm is, for each vertex $v_i$, to
-calculate its marginal distribution $p_i: X \to [0, 1]$, i.e.:
+Belief propagation is a general method for performing inference on
+graphical models that comes in many flavours and shapes. For the purpose of
+this article, we use \emph{belief propagation} (BP) solely to refer to the algorithm
+of \citet[Section 2.1]{top-n-recommendation}, which we describe in the
+following paragraphs.
+
+The input of BP is a bipartite undirected graph $G = (V, E)$. Each of the
+vertices $v\in V$ can be in one of $S$ \emph{states}, labelled $x_1, \ldots,
+x_S \in X$. There is a joint probability mass function $p: X^V \to [0, 1]$
+(assumed intractable and inaccessible to us) that captures the probability of
+each possible assignment of states to vertices.\footnote{We use the notation
+$X^V$ to denote the space of all $|V|$-dimensional vectors $\vex$ indexed by
+elements of $V$ where each component $x_v$ is $\in X$. Given $v_i \in V$, we
+also sometimes write $x_i$ instead of $x_{v_i}$ for brevity.} The goal of the
+algorithm is, for each vertex $v_i$, to calculate its marginal distribution
+$p_i: X \to [0, 1]$:
 %
 $$p_i(x_j) = \sum_{\ves \in X^V: s_i = x_j} p(\ves) = \Pr_p[s_i = x_j]$$
 %
 % In other words, we want to know how probable it is that $v_i$ ends up in the respective states $\in X$.
 To model $p$, the algorithm is also given a collection of node potentials
-$\{\,\phi_i\,\}_{i \in V}, \phi_i: X \to [0, 1]$, and a collection of edge
-potentials $\{\,\psi_{ij}\,\}_{ij \in E}, \psi_{ij}: X\times X \to [0, 1]$.
+$\{\,\phi_i\,\}_{i \in V}$, with $\phi_i: X \to [0, 1]$, and a collection of edge
+potentials $\{\,\psi_{ij}\,\}_{ij \in E}$, with $\psi_{ij}: X\times X \to [0, 1]$.
 Intuitively, node potentials capture our priors about which states each vertex
 inclines to, while the edge potentials capture the influence the state of a
-vertex has on the state of its neighbours.\rhinline{now it's kind of fuzzy,
+vertex has on the state of its neighbours.
+
+\rhinline{now it's kind of fuzzy,
 saying ``potentials SOMEHOW MAGICALLY model $p$'', without really saying how.
-But I don't want to go into too much detail.}
+But I don't want to go into too much detail. This is my try at sweeping it under the rug:
+
+In classical BP, it is assumed that we can explicitly express $p$ in terms of
+$\phi_i$ and $\psi_{ij}$.  WIP
+}
 
 \mypar{Message passing} The belief propagation algorithm itself consists of two
 procedures: \emph{propagation} and \emph{belief calculation}.
 
-\emph{Propagation} happens for a predefined number of iterations. For each vertex $i$, and each its neighbour $j$, we compute a \emph{message} $m_{ij} : X \to \Rpos$ as follows:
+\myparcont{Propagation} happens for a predefined number of iterations. For each vertex $i$, and each its neighbour $j$, we compute a \emph{message} $m_{ij} : X \to \Rpos$ as follows:
 %
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
 %
-Initially, all messages are set to all-ones, i.e.~$m_{ij}(\cdot) = 1$.
+In the actual algorithm, we then also normalise $m_{ij}$ so that $\sum_{x_c}
+m_{ij}(x_c) = 1$. It can be shown that this does not change the output, but can
+help with precision issues. Initially, all messages are set to all-ones,
+i.e.~$m_{ij}(\cdot) = 1$.
 
-This can be directly expressed in pseudocode:
+\Cref{algo:propagate} contains the pseudocode of the propagation procedure.
 
-% Buggy links, so a dirty fix
-\def\lineAlgoPropagateForI{4}
-\def\lineAlgoPropagateCalcProduct{9}
 \begin{algorithm}
-\caption{One propagation step}
+\caption{Vanilla belief propagation}
 \label{algo:propagate}
 \KwIn{$G = (V, E), \{\,\nodepot_i\,\}_{i \in V}, \{\,\edgepot_{ij}\,\}_{ij \in E}$}
 \KwOut{$\{\,m'_{ij}\,\}_{ij \in E}$}
@@ -168,14 +183,74 @@ This can be directly expressed in pseudocode:
 				\For{$x_c \in X$}{
 					$m'_{ij}(x_c) \leftarrow 0$\;
 					\For{$x_d \in X$}{
-						\ShowLn$M^d_j \leftarrow \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$
-						$m'_{ij}(x_c) \pluseq \nodepot_i(x_d)\edgepot_{ij}(x_d,x_c) M^d_j$
+						\ShowLn$M^d_j \leftarrow \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$\;
+						$m'_{ij}(x_c) \pluseq \nodepot_i(x_d)\edgepot_{ij}(x_d,x_c) M^d_j$\;
 					}
 				}
+				$m'_{ij} \leftarrow m'_{ij} / \|m'_{ij}\|_1$\;
 			}
 		}
 	}
 \end{algorithm}
+
+\myparcont{Belief calculation} happens at the end of the algorithm. For each
+vertex $i$, we compute its \emph{belief vector} $b_i: X \to [0, 1]$ as follows:
+%
+\begin{align*}
+	b'_i(x_c) &= \prod_{j \in N(i)} m_{ji}(x_c) \\
+	b_i &= b'_{i} / \|b'_i\|_1
+\end{align*}
+%
+Again, we have normalized each $b_i$ so that $\sum_{x_c} b_i(x_c) = 1$.
+
+Finally, the algorithm outputs $b_i$ as the approximation of the sought
+marginal probability distribution $p_i$.
+
+\subsection{Top-N recommendation} \label{subsec:topn}
+
+Now we describe the end-to-end goal of the algorithm we implement and what role
+BP plays there.
+
+\mypar{Problem statement} The task of top-N recommendation is as follows: we
+are given a list of triplets of the form $(\text{userID}, \text{itemID},
+\text{rating})$, as well as an integer $r\in\N$ and a special user ID $t$ (the
+so-called \emph{target} user). Based on that, we want to recommend $r$ items to
+user $t$ such that $t$ is as likely as possible to like those items.
+
+In our concrete instantiation, items are actually movies and ratings are
+integers in $\{1, \ldots, 5\}$.
+
+\mypar{Algorithm} As already mentioned, we implement the algorithm described by
+\citet{top-n-recommendation}. As the parts not concerning the actual belief
+propagation are not a focus of our work, we will describe them in little detail
+and refer the reader to the original article.
+
+The algorithm represents the ratings as a bipartite graph, with users and
+movies as vertices and ratings as edges. Only ratings satisfying a certain
+threshold are considered (different thresholding methods are described in the
+paper). We use BP to model the probability that user $t$ likes a vertex. Thus,
+we have $X = \{\text{LIKE}, \text{DISLIKE}\} = \{L, D\}$. (Note that we also
+model user vertices although in the end we are only interested in movie
+vertices.)
+
+The algorithm sets $\nodepot_i$ depending on target users's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
+$\edgepot_{ij}(L, L) = \edgepot_{ij}(D, D) = 0.5 + \alpha$, $\edgepot_{ij}(L,
+D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
+$\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
+
+After running BP on the graph, we sort the movie vertices and output the $r$
+vertices with the largest $b_i(\text{LIKE})$.
+
+In the rest of this paper, we only focus on the propagation procedure (as
+described in \cref{algo:propagate}), as it is by far the largest bottleneck.
+This means for example that we analyze the runtime in terms of the size of the
+constructed factor graph $G$.
+
+\mypar{Cost analysis} we have chosen the number of flops as the cost measure. analyzing \cref{algo:propagate} gives us $\deg(v)$
+
+
+
+\mypar{Faster algorithm}
 
 %Faster algo: add $\prod_{k \in N(i) \setminus j} m_{ki}(x_d)$
 
