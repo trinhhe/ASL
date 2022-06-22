@@ -124,7 +124,7 @@ void graph_from_edge_list(rating_t *E, int target_uid, graph_t *_G)
 	// for padding where this zeroing out is actually important
 	for (idx_t i = 0; i < G.m; i++) {
 #ifdef COMPACT_MESSAGE
-		G.in_old[i] = G.in[i] = 1.0;
+		G.in_old[i] = G.in[i] = .5;
 #else
 		G.in_old[i] = G.in[i] = (msg_t){1, 1};
 #endif
@@ -220,6 +220,19 @@ void dump_beliefs(graph_t *G) {
 #endif
 	}
 	printf("\n");
+}
+
+void dump_msgs(graph_t *G) {
+	for (idx_t i = 0; i < G->n; i++) {
+		for (idx_t j = G->off[i]; j < G->off[i + 1]; j++) {
+#ifdef COMPACT_MESSAGE
+			printf("%.3f ", G->in[j]);
+#else
+			printf("%.3f ", G->in[j].L);
+#endif
+		}
+		printf("\n");
+	}
 }
 
 void dump_graph(graph_t *G) {

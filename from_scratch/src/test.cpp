@@ -10,7 +10,7 @@ void calculate_graph_and_beliefs(rating_t *ratings, int target_uid, graph_t *G) 
 	for (int it = 0; it < iterations; it++) {
 #ifdef DEBUG
 		printf("=== Iteration %3d ===\n", it);
-		dump_beliefs(G);
+		dump_msgs(G);
 #endif
 		propagate(G);
 	}

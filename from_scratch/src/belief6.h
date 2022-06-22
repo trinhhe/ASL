@@ -38,6 +38,10 @@ void propagate(graph_t *G) {
 		float_t prod_tot0 = 1;
 		float_t prod_tot1 = 1;
 		for (auto k = start; k < end; k++) {
+#ifdef GRAPH_PADDING
+			if (Gout[k] == -1)
+				break;
+#endif
 			prod_tot0 *= 1-in_old[k];
 			prod_tot1 *= in_old[k];
 		}
@@ -53,11 +57,6 @@ void propagate(graph_t *G) {
 
 		size_t j = start;
 		for (; j < max(0, (long long)end - 7); j+=8) {
-#ifdef GRAPH_PADDING
-			if (Gout[j] == -1)
-				break; // reached padding
-#endif
-
 			__m256 val1 = _mm256_set_ps(in_old[j+7], in_old[j+6], in_old[j+5], in_old[j+4], in_old[j+3], in_old[j+2], in_old[j+1], in_old[j+0]);
 			__m256 val0 = _mm256_sub_ps(one, val1);
 
@@ -65,10 +64,6 @@ void propagate(graph_t *G) {
 			__m256 out1 = _mm256_add_ps(_mm256_div_ps(glob_01v, val0), _mm256_div_ps(glob_11v, val1));
 
 			__m256 out_sum = _mm256_add_ps(out0, out1);
-
-#ifdef DEBUG
-			printf("unnorm: %f %f\n", out0, out1);
-#endif
 
 #ifdef NO_FABS
 			__m256 lt_mask = _mm256_cmp_ps(out_sum, eps, _CMP_LT_OQ);
@@ -79,6 +74,17 @@ void propagate(graph_t *G) {
 			__m256 out1_norm = _mm256_div_ps(out1, out_sum);
 			__m256 final_out1 = _mm256_blendv_ps(out1_norm, half, lt_mask);
 			
+#ifdef GRAPH_PADDING
+			// the recasting should not incurr a performance penalty, but just to be sure, "shift the burden" to GRAPH_PADDING and don't meddle with the nonpadded version
+			float_t *_outa = (float_t *)(in + (int32_t)Gout[j]);
+			float_t *_outb = (float_t *)(in + (int32_t)Gout[j+1]);
+			float_t *_outc = (float_t *)(in + (int32_t)Gout[j+2]);
+			float_t *_outd = (float_t *)(in + (int32_t)Gout[j+3]);
+			float_t *_oute = (float_t *)(in + (int32_t)Gout[j+4]);
+			float_t *_outf = (float_t *)(in + (int32_t)Gout[j+5]);
+			float_t *_outg = (float_t *)(in + (int32_t)Gout[j+6]);
+			float_t *_outh = (float_t *)(in + (int32_t)Gout[j+7]);
+#else
 			float_t *_outa = (float_t *)(in + Gout[j]);
 			float_t *_outb = (float_t *)(in + Gout[j+1]);
 			float_t *_outc = (float_t *)(in + Gout[j+2]);
@@ -87,6 +93,7 @@ void propagate(graph_t *G) {
 			float_t *_outf = (float_t *)(in + Gout[j+5]);
 			float_t *_outg = (float_t *)(in + Gout[j+6]);
 			float_t *_outh = (float_t *)(in + Gout[j+7]);
+#endif
 			*_outa = final_out1[0];
 			*_outb = final_out1[1];
 			*_outc = final_out1[2];
@@ -131,12 +138,17 @@ void get_beliefs(graph_t *G) {
 	const auto n = G->n;
 	const auto off = G->off;
 	const auto in = G->in;
+	const auto Gout = G->out;
 	const auto belief = G->belief;
 
 	for (int i = 0; i < n; i++) {
 		float_t b0 = 1;
 		float_t b1 = 1;
 		for (int j = off[i]; j < off[i + 1]; j++){
+#ifdef GRAPH_PADDING
+			if (Gout[j] == -1)
+				break;
+#endif
 			b0 *= 1-in[j];
 			b1 *= in[j];
 		}
