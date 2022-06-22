@@ -236,9 +236,9 @@ The difference in the two unrolling implementations is that thanks to optimizati
 In a different implementation\rh{would maybe mention that it's based on 3? But maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
-As seen in figure \ref{OptDiagram}, SIMD was introduced on basis of the message product precomputation.\rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel\rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
+As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3} \rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel AVX2 \rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
-In a second step, the vector instructions were optimized with some\rh{leave out ``some''?} shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}
+In a second step, the vector instructions were optimized with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}
 
 Even though, looking at the assembly compiled from optimization \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
 \begin{comment}
@@ -260,22 +260,17 @@ This is sufficient for any input that needs less than 48 GB of memory.}
 
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
+
 \mypar{Combining vectorize and save memory \opt{8}}
-\begin{itemize}
-\item combined the two
-\item expect to work well, since with increasing computational efficiency memory accesses become a bigger bottleneck
-\end{itemize}
+In a next step, optimization \opt{6} and \opt{7} were combined. This to optimisations were expected to work well together, since it combines greater computational efficiency with greater data efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
+
 
 \mypar{Unroll \opt{13}}
-\begin{itemize}
-\item try to see what happens if unrolled more
-\item more ILP or loss of locality?
-\end{itemize}
+On basis of optimisation \opt{8} another unrolling was tested. Now, the number of messages processed per iteration, was increased from 8 to 16. The idea was to see if even more use could be made of optimisation \opt{7} to increase ILP even more or if this would lead to a loss of locality and slow down computation.
+
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
-\begin{itemize}
-\item see if compiler can make use of additional information
-\end{itemize}
+In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations.
 
 %Now comes the ``beef'' of the paper, where you explain what you
 %did. Again, organize it in paragraphs with titles. As in every section
@@ -290,10 +285,6 @@ This compaction allowed for more values being read when loading 1 cache block, m
 %
 %Good visuals or even brief code snippets to illustrate what you did are good. Pasting large amounts of code to fill the space is not good.
 
-%idea how we could structure this seciton
-\begin{itemize}
-\item maybe make a subsection for every field in the diagram, explain what we did and what we expected form it
-\end{itemize}
 
 \section{Experimental Results}\label{sec:exp}
 
