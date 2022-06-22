@@ -460,7 +460,7 @@ We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a
 The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately.
 
 \begin{figure}\centering
-	\includegraphics[scale=0.59]{img/speedup[3][6][7][8]_small.pdf}
+	\includegraphics[width=\linewidth]{img/speedup[3][6][7][8]_small.pdf}
 	\caption{Relative speedup of vectorisation and saving memory optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
 \end{figure}
 
@@ -468,7 +468,7 @@ The relative speedup of the combined version of both optimisations (optimisation
 \mypar{Graph padding} To examine the effect of SIMD alignment we tried to pad the graph so that each vertex starts on an address divisible by SIMD size.
 In \cref{speedupGraphPaddingSmall}, we see no improvement in relative speedup over optimisation step \opt{8}.
 \begin{figure}\centering
-	\includegraphics[scale=0.58]{img/speedup[8]GraphPadding_small.pdf}
+	\includegraphics[width=\linewidth]{img/speedup[8]GraphPadding_small.pdf}
 	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on the small dataset. \label{speedupGraphPaddingSmall}}
 \end{figure}
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
@@ -478,7 +478,7 @@ If most of the vertices have a very low degree, for example lower than SIMD size
 Also in this case, the advantages of vectorisation diminish as most of the computation will be handled by the left-over loops, i.e. sequentially. 
 For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
 \begin{figure}\centering
-	\includegraphics[scale=0.58]{img/speedup[8]GraphPadding_bipartite.pdf}
+	\includegraphics[width=\linewidth]{img/speedup[8]GraphPadding_bipartite.pdf}
 	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
 \end{figure}
 These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010, 2020 up to 10100 vertices taking steps of 1010 \cite{networkx}.
@@ -496,7 +496,7 @@ The vectorised versions drop faster than the non-vectorised versions as their ad
 All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
 For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit into cache anymore.
 \begin{figure}\centering
-	\includegraphics[scale=0.59]{img/performance[3][6][7][8]_both.pdf}
+	\includegraphics[width=\linewidth]{img/performance[3][6][7][8]_both.pdf}
 	\caption{Performance of optimisations \opt{3}, \opt{6}, \opt{7} and \opt{8} on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
 \end{figure}
 
@@ -506,7 +506,7 @@ In order to see whether it is memory or compute bound and how close it is to the
 It is obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
 The last optimisation step achieves around 16.25\% of the vectorized peak performance and 65\% of the scalar peak performance on average on the platform.  
 \begin{figure}\centering
-	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
+	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_small.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
 			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). \label{rooflineEndToEndSmall}}
 \end{figure}
@@ -515,7 +515,7 @@ The last optimisation step achieves around 16.25\% of the vectorized peak perfor
 The overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
 \begin{figure}\centering
-	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
+	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_small.pdf}
 	\caption{Relative end-to-end speedup over baseline \opt{1} on the small dataset} \label{speedupEndToEndSmall}
 \end{figure}
 
