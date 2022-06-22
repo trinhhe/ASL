@@ -353,7 +353,7 @@ For running BP the number of iterations were limited to ten with exeption of opt
 In those cases, only a single iteration was measured due to the runtime growing prohibitively large otherwise.\sr{*}
 
 \mypar{Results}  The subsequent paragraphs demonstrate the incremental performance and runtime improvements achieved by successively applying the optimisations described in \cref{sec:yourmethod}.
-Additionally, interesting failed attempts are discussed briefly.  
+Additionally, interesting failed attempts are discussed.  
 Finally, a roofline plot with the final optimisation step and the relative end-to-end speedup over the baseline \opt{1} are shown.
 
 \mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is faster.
@@ -408,7 +408,7 @@ For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speed
 \end{figure}
 These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010, 2020 up to 10100 vertices taking steps of 1010 \cite{networkx}.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on higher degree graphs: 
-The relative speedup gain for bipartite graphs is slightly lower than in \cref{speedupGraphPaddingSmall}.
+The relative speedup gain for bipartite graphs is not significantly better than in \cref{speedupGraphPaddingSmall}.
 It turns out for the small dataset we used considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.
 
 \mypar{Other unsuccessful optimisations}
