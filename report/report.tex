@@ -312,7 +312,7 @@ The difference in the two unrolling implementations is that thanks to optimizati
 In a different implementation\rh{would maybe mention that it's based on 3? But maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
-As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3} \rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel AVX2 \rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
+As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
 In a second step, the vector instructions were optimized with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}
 
@@ -464,7 +464,7 @@ The relative speedup of the combined version of both optimisations (optimisation
 	\caption{Relative speedup of vectorisation and saving memory optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
 \end{figure}
 
-\rhinline{at this point, I would definitely mention and plot the optimisations that didn't work (i.e. unrolling and padding). Or at least mention if plotting is cumbersome.}
+
 \mypar{Graph padding} To examine the effect of SIMD alignment we tried to pad the graph so that each vertex starts on an address divisible by SIMD size.
 In \cref{speedupGraphPaddingSmall}, we see no improvement in relative speedup over optimisation step \opt{8}.
 \begin{figure}\centering
