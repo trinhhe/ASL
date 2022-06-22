@@ -12,6 +12,7 @@ variants = \
 	from_scratch@-DOPTVARIANT__6\
 	from_scratch@-DOPTVARIANT__6@-DVEC2\
 	from_scratch@-DOPTVARIANT__8\
+	from_scratch@-DOPTVARIANT__8@-DGRAPH_PADDING\
 	from_scratch@-DOPTVARIANT__8@-DNO_FABS\
 	from_scratch@-DOPTVARIANT__11@-frename-registers\
 	from_scratch@-DOPTVARIANT__9\
@@ -20,9 +21,13 @@ variants = \
 variants_small_only = \
 	from_scratch@-DOPTVARIANT__4\
 	with_library
+variants_bipartite = \
+	from_scratch@-DOPTVARIANT__8\
+	from_scratch@-DOPTVARIANT__8@-DGRAPH_PADDING
+
 combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants) $(variants_small_only),measurements/small/$(var)$(cflags).csv))
 combinations_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/big/$(var)$(cflags).csv))
-combinations_compl_bipartite = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/compl_bipartite/$(var)$(cflags).csv))
+combinations_compl_bipartite = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants_bipartite),measurements/compl_bipartite/$(var)$(cflags).csv))
 combinations_small_and_big = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants),measurements/small_and_big/$(var)$(cflags).csv))
 
 PLOT_OPTS=-n
@@ -34,7 +39,7 @@ endif
 
 all: plots
 
-plots: $(combinations_big) $(combinations_small) plots/small plots/big plots/slow-comparison plots/slow-vs-fast plots/vectorisation plots/compaction-and-vectorisation plots/compaction-and-vectorisation plots/end-to-end plots/end-to-end-big plots/compaction-and-vectorisation-big
+plots: $(combinations_big) $(combinations_small) $(combinations_compl_bipartite) plots/compl_bipartite plots/small plots/big plots/slow-comparison plots/slow-vs-fast plots/vectorisation plots/compaction-and-vectorisation plots/compaction-and-vectorisation plots/end-to-end plots/end-to-end-big plots/compaction-and-vectorisation-big plots/padding-bipartite plots/padding-small plots/padding-big
 
 plots/small: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_8@-O* measurements/small/*
@@ -42,8 +47,14 @@ plots/small: $(PLOT) $(combinations_small)
 plots/big: $(PLOT) $(combinations_small_big)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small_and_big/*_8@-O* measurements/small_and_big/*
 
-plots/compl_bipartite: $(PLOT) $(combinations_compl_bipartite)
-	$^ $(PLOT_OPTS) -o $@
+plots/padding-bipartite: $(PLOT) $(combinations_compl_bipartite)
+	$< $(PLOT_OPTS) -o $@ -r measurements/compl_bipartite/*__8@-{O,DGRAPH,O}* -p "no padding [8]" "padding [8 -DGRAPH_PADDING]"
+
+plots/padding-small: $(PLOT) $(combinations_small)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small/*__8@-{O,DGRAPH,O}* -p "no padding [8]" "padding [8 -DGRAPH_PADDING]"
+
+plots/padding-big: $(PLOT) $(combinations_small_and_big)
+	$< $(PLOT_OPTS) -o $@ -r measurements/small_and_big/*__8@-{O,DGRAPH,O}* -p "no padding [8]" "padding [8 -DGRAPH_PADDING]"
 
 plots/slow-comparison: $(PLOT) $(combinations_small)
 	$< $(PLOT_OPTS) -o $@ -r measurements/small/*_1@* measurements/small/*{__1,__2,with*}@* -p "baseline [1]" "scalar_replacement+collapse_2x2_loop [2]" library
