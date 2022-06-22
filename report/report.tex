@@ -289,8 +289,8 @@ In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword 
 
 \section{Experimental Results}\label{sec:exp}
 
-This section start by describing the experimental setup as a first part.
-In the second part we show the results of our experiments. 
+This section starts by describing the experimental setup as a first part.
+In the second part, we show the results of our experiments. 
 
 \mypar{Experimental setup} The following paragraphs start with providing details about experimental setup by describing the platform and compiler used, the test inputs and how measurements were performed. 
 
@@ -326,10 +326,10 @@ For comparison, \cref{streamBenchmarkResults} shows best memory throughput rates
 			@{}
 		}
 		\textbf{Function}	&	\textbf{Best Rate [MB/s]}   \\ \hline
-		Copy 				&	14'273.6					\\
-		Scale				&	13'646.1					\\
-		Add 				&	16'250.3					\\
-		Triad				& 	16'047.6 					\\
+		Copy 				&	14,273.6					\\
+		Scale				&	13,646.1					\\
+		Add 				&	16,250.3					\\
+		Triad				& 	16,047.6 					\\
 	\end{tabularx}
 	\caption{Memory throughput of experimental platform for a single core measured using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2}.\label{streamBenchmarkResults}}
 \end{table}
@@ -378,9 +378,7 @@ This is because there are enough neighbours for each node in the dataset such th
 	\includegraphics[width=\linewidth]{img/speedup[2][3]_small.pdf}
 	\caption{Relative speedup of optimisation step \opt{3} over optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
 \end{figure}
-\srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
-\HTinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
-\rhinline{also agree. Would also mention that unaligned and aligned load was roughly the same speed which defeats the single selling point of graph padding}
+
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
 We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1$\times$ with saving memory while vectorisation yields a relative speedup of at most 1.6$\times$ with respect to optimisation \opt{3}.
@@ -392,8 +390,25 @@ The relative speedup of the combined version of both optimisations (optimisation
 \end{figure}
 
 \rhinline{at this point, I would definitely mention and plot the optimisations that didn't work (i.e. unrolling and padding). Or at least mention if plotting is cumbersome.}
+\srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
+\HTinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
+\rhinline{also agree. Would also mention that unaligned and aligned load was roughly the same speed which defeats the single selling point of graph padding}
+\mypar{Graph padding} To examine the effect of SIMD alignment we tried to pad the graph so that each vertex starts on an address divisible by SIMD size.
+In TODO1, we see no improvement in relative speedup over optimisation step \opt{8}.
+The latency and throughput on the platform do not differ between unaligned and aligned vectorized load.
+Therefore, using aligned loads did not benefit the performance.
+Apart from that, graph padding increases the memory foot print.
+In case most of vertices have a very low degree, for example lower than SIMD size, the memory overhead of padding becomes significant.
+Also in this case the advantage from vectorisation diminishes as most of the computation will be handled by the left-over loops, i.e. sequentially. 
+\sr{mention average degree}
+For this reason, TODO2 displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
+\sr{mention library used for generating these bipartite graphs and sizes}
+TODO2 disproves the idea that padding could result in greater relative speedup on higher degree graphs.
 
-\mypar{Big inputs} Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
+\mypar{Other unsuccessful optimisations}
+\srinline{mention all other unsuccessful optimisations}
+
+\mypar{Performance \& Big inputs} Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
 To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimisations on the small and big dataset combined.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
 The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
@@ -412,11 +427,11 @@ The last optimisation step achieves around 16.25\% of the vectorized peak perfor
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
-			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). } \label{rooflineEndToEndSmall}}
-\end{figure}\rh{figure: why the italics?}
+			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). \label{rooflineEndToEndSmall}}
+\end{figure}
 
-\mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the speedup on the small dataset.
-The overall speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
+\mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the relative speedup over the baseline \opt{1} on the small dataset.
+The overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
 \begin{figure}\centering
 	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
@@ -458,7 +473,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
 Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
-We achieved a 100 to 500$\times$ speedup on an Intel(R) Core(TM) i5-7200U and up to 16.25\% vectorized peak performance on a small dataset which fits into cache.
+We achieved a 100 to 500$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.25\% vectorized peak performance on a small dataset which fits into cache.
 On a bigger dataset not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
 Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
 Out off all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}
@@ -491,7 +506,7 @@ There might be ways to further improve the performance our implementation since 
 
 %Example and structure follows.
 
-\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
+\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Tried graph padding optimization. Implemented precomputation of product optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
 \mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Extended flop counting with e.g. byte counting. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
 
