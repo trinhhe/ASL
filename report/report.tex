@@ -412,8 +412,8 @@ The last optimisation step achieves around 16.25\% of the vectorized peak perfor
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
-			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). }\rh{why the italics?} \label{rooflineEndToEndSmall}}
-\end{figure}
+			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). } \label{rooflineEndToEndSmall}}
+\end{figure}\rh{figure: why the italics?}
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the speedup on the small dataset.
 The overall speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
