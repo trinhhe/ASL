@@ -393,7 +393,7 @@ The relative speedup of the combined version of both optimisations (optimisation
 \mypar{Graph padding} To examine the effect of SIMD alignment we tried to pad the graph so that each vertex starts on an address divisible by SIMD size.
 In \cref{speedupGraphPaddingSmall}, we see no improvement in relative speedup over optimisation step \opt{8}.
 \begin{figure}\centering
-	\includegraphics[scale=0.59]{img/speedup[8]GraphPadding_small.pdf}
+	\includegraphics[scale=0.58]{img/speedup[8]GraphPadding_small.pdf}
 	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on the small dataset. \label{speedupGraphPaddingSmall}}
 \end{figure}
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
@@ -403,7 +403,7 @@ If most of the vertices have a very low degree, for example lower than SIMD size
 Also in this case, the advantages of vectorisation diminish as most of the computation will be handled by the left-over loops, i.e. sequentially. 
 For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
 \begin{figure}\centering
-	\includegraphics[scale=0.59]{img/speedup[8]GraphPadding_bipartite.pdf}
+	\includegraphics[scale=0.58]{img/speedup[8]GraphPadding_bipartite.pdf}
 	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
 \end{figure}
 These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010, 2020 up to 10100 vertices taking steps of 1010 \cite{networkx}.
