@@ -5,6 +5,10 @@
 #include "util.h"
 #include "../../measurement_utils/tsc_x86.h"
 
+#ifndef ITER
+#define ITER 10
+#endif
+
 //#define JUST_METADATA
 #define OVERNIGHT_MEASUREMENT
 #ifdef OVERNIGHT_MEASUREMENT
@@ -143,7 +147,7 @@ int main(int argc, const char **argv)
 		die("Usage: %s file-with-ratings.csv\n", argv[0]);
 
     int target_uid = 1;
-    int iterations = 10;
+    int iterations = ITER;
 
     myInt64 start_gbuild, end_gbuild, start_prop, end_prop, start_belief, end_belief;
     double total = 0;

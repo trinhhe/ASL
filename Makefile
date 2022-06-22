@@ -5,6 +5,8 @@ ONLY_PLOT=true
 # so, "-O3 -march=native" becomes "@-O3@-march__native"
 interesting_cflags = @-Ofast@-march__native
 variants = \
+	from_scratch@-DOPTVARIANT__1\
+	from_scratch@-DOPTVARIANT__2\
 	from_scratch@-DOPTVARIANT__3\
 	from_scratch@-DOPTVARIANT__7\
 	from_scratch@-DOPTVARIANT__6\
@@ -16,8 +18,6 @@ variants = \
 	from_scratch@-DOPTVARIANT__10\
 	from_scratch@-DOPTVARIANT__13
 variants_small_only = \
-	from_scratch@-DOPTVARIANT__1\
-	from_scratch@-DOPTVARIANT__2\
 	from_scratch@-DOPTVARIANT__4\
 	with_library
 combinations_small = $(foreach cflags,$(interesting_cflags),$(foreach var,$(variants) $(variants_small_only),measurements/small/$(var)$(cflags).csv))
