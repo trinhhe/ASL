@@ -100,8 +100,9 @@ Many papers about BP focus on the algorithmic site for optimization. Our focus i
 We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
-BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations.\rh{don't understand. Now I read this as ``so they use 30 iteration, which is 72.6\% less than before``, is that right?}
+BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations.
 \HTinline{No, I meant 30 - 0.726*30. I mention now explicitly \# iterations instead of percentage.}
+\rhinline{okay, but now I'm still a bit confused. So does this mean that originally, there were 30 iterations and they were able to bring them down to 8-9 with the algorithm still giving the same output?}
 
 There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
@@ -190,7 +191,7 @@ This can be directly expressed in pseudocode:
 
 \section{TODO: Your Proposed Method}\label{sec:yourmethod}
 \begin{figure}\centering
-	\includegraphics[width = 0.48 \textwidth]{img/OptimizationDiagram.png}
+	\includegraphics[width = \linewidth]{img/OptimizationDiagram.png}
 	\caption{Diagram of optimisation steps \label{OptDiagram}}
 \end{figure}
 \stinline{going to make the screen shot of the diagram prettier}
@@ -200,7 +201,7 @@ This section presents all optimization steps seen in figure TODO.
 \todo[inline]{could be worth it to give number all optimization in the order they are presented in this section}
 
 \mypar{Baseline \opt{1}}
-This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor\rh{would drop the capitalisation} graph.
+This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor graph.
 The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit \opt{2}}
@@ -228,7 +229,7 @@ In anticipation of unrolling and SIMD optional graph padding was added to optimi
 
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
-Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing 4 iterations at once\rh{don't understand the ``combined'' here} \st{is it clearer now?} allows for more instruction level parallelism (ILP).
+Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
 The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
 
 
@@ -382,7 +383,7 @@ This is because there are enough neighbours for each node in the dataset such th
 \rhinline{also agree. Would also mention that unaligned and aligned load was roughly the same speed which defeats the single selling point of graph padding}
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
-We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1x with saving memory while vectorisation yields a relative speedup of at most 1.6x with respect to optimisation \opt{3}.
+We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1$\times$ with saving memory while vectorisation yields a relative speedup of at most 1.6$\times$ with respect to optimisation \opt{3}.
 The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately.
 
 \begin{figure}\centering
@@ -397,7 +398,7 @@ To this end, \cref{cpctVectPerformanceBoth} shows the performances of these opti
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
 The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
 All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
-For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit in to cache anymore.
+For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit into cache anymore.
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/performance[3][6][7][8]_both.pdf}
 	\caption{Performance of optimisations \opt{3}, \opt{6}, \opt{7} and \opt{8} on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
@@ -406,16 +407,16 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 \mypar{Roofline}
 Optimisation step \opt{8} is the final one.
 In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEndSmall}.
-It obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
+It is obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
 The last optimisation step achieves around 16.25\% of the vectorized peak performance and 65\% of the scalar peak performance on average on the platform.  
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
-			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). } \label{rooflineEndToEndSmall}}
+			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). }\rh{why the italics?} \label{rooflineEndToEndSmall}}
 \end{figure}
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the speedup on the small dataset.
-The overall speedup lies between 100 to 500x for optimisation step \opt{8}.
+The overall speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
 \begin{figure}\centering
 	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
@@ -457,7 +458,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
 Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
-We achieved a 100 to 500x speedup on an Intel(R) Core(TM) i5-7200U and up to 16.25\% vectorized peak performance on a small dataset which fits into cache.
+We achieved a 100 to 500$\times$ speedup on an Intel(R) Core(TM) i5-7200U and up to 16.25\% vectorized peak performance on a small dataset which fits into cache.
 On a bigger dataset not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
 Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
 Out off all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}
@@ -467,7 +468,7 @@ There might be ways to further improve the performance our implementation since 
 %tense. Remember, now the reader has (hopefully) read the paper, so it
 %is a very different situation from the abstract. Try to highlight
 %important results and say the things you really want to get across
-%(e.g., the results show that we are within 2x of the optimal performance ...
+%(e.g., the results show that we are within 2$\times$ of the optimal performance ...
 %Even though we only considered the DFT, our optimisation
 %techniques should be also applicable ....) You can also formulate next
 %steps if you want. Be brief.
@@ -514,16 +515,19 @@ There might be ways to further improve the performance our implementation since 
 
 \rhinline{roofline: I would add an L3 memory bound (and maybe L1 and L2?) as some of our inputs fit into L1/L2/L3}
 
+\rhinline{roofline: mention that we assume each random access has to load a cache line from main memory}
+
 \rhinline{the supervisor seemed like he wanted to see more of big dataset plots? It kind of makes sense given that the small plots don't even overflow to RAM.}
 
-\subsection{Typography/language/details}
+\subsection{Typography/language/details to check before submitting}
 
+\todo[inline]{save the PDF as \texttt{41\_report.pdf}}
 \todo[inline]{disable slugs}
 \todo[inline]{BrE vs AmE (RH has a script somewhere)}
 \todo[inline]{spellcheck}
 \todo[inline]{check there are no more TODOs hiding}
 \todo[inline]{generally check the title, abstract, section titles, that we have no more template text somewhere}
-\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [] etc.}
+\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [], 5$\times$ instead of 5x}
 \todo[inline]{citations: don't use just plain URL when possible (usually everyone has a ``how to cite us'' section}
 
 % References should be produced using the bibtex program from suitable
