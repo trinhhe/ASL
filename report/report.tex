@@ -236,9 +236,9 @@ The difference in the two unrolling implementations is that thanks to optimizati
 In a different implementation\rh{would maybe mention that it's based on 3? But maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
-As seen in figure \ref{OptDiagram}, SIMD was introduced on basis of the message product precomputation.\rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel\rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
+As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3} \rh{maybe unnecessarily complicated? ``[\dots], SIMD was introduced on top of \opt{3}''?} First, Intel AVX2 \rh{maybe AVX2 is more specific than Intel?} intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
-In a second step, the vector instructions were optimized with some\rh{leave out ``some''?} shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}
+In a second step, the vector instructions were optimized with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}
 
 Even though, looking at the assembly compiled from optimization \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
 \begin{comment}
@@ -260,22 +260,17 @@ This is sufficient for any input that needs less than 48 GB of memory.}
 
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
+
 \mypar{Combining vectorize and save memory \opt{8}}
-\begin{itemize}
-\item combined the two
-\item expect to work well, since with increasing computational efficiency memory accesses become a bigger bottleneck
-\end{itemize}
+In a next step, optimization \opt{6} and \opt{7} were combined. This to optimisations were expected to work well together, since it combines greater computational efficiency with greater data efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
+
 
 \mypar{Unroll \opt{13}}
-\begin{itemize}
-\item try to see what happens if unrolled more
-\item more ILP or loss of locality?
-\end{itemize}
+On basis of optimisation \opt{8} another unrolling was tested. Now, the number of messages processed per iteration, was increased from 8 to 16. The idea was to see if even more use could be made of optimisation \opt{7} to increase ILP even more or if this would lead to a loss of locality and slow down computation.
+
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
-\begin{itemize}
-\item see if compiler can make use of additional information
-\end{itemize}
+In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations.
 
 %Now comes the ``beef'' of the paper, where you explain what you
 %did. Again, organize it in paragraphs with titles. As in every section
@@ -290,59 +285,55 @@ This compaction allowed for more values being read when loading 1 cache block, m
 %
 %Good visuals or even brief code snippets to illustrate what you did are good. Pasting large amounts of code to fill the space is not good.
 
-%idea how we could structure this seciton
-\begin{itemize}
-\item maybe make a subsection for every field in the diagram, explain what we did and what we expected form it
-\end{itemize}
 
 \section{Experimental Results}\label{sec:exp}
 
-%The effect of successful optimisations described in the previous section on performance and runtime are being evaluated in this section.
-This section demonstrates the incremental performance and runtime improvements achieved by successively applying succeeding\rh{two succs following one another} optimisations.  
-We start with providing details about experimental setup first, then show the results of applying optimisations and finally show a roofline plot.
-\rhinline{maybe add a subsection, ``Setup''?}
-\srinline{Maybe mention ten iterations of propagate were performed and what instructions where used to measure the cycles and how we counted flops?}
-\HTinline{Yeah, I would mention those things(added them at the end of experimental setup part)}
-\rhinline{the table spacing seems kinda weird. Maybe we can get rid of the left and right margin and align it with the rest of the text? (see for yourself by uncommenting below). And also maybe it's a figure?}
-\mypar{Platform} All the experiments were conducted on the following setup:
-\\
-\begin{tabularx}{\linewidth}{ 
-%		@{} % <-- to get rid of the space on the left
-		>{\raggedright\arraybackslash}l
-		>{\raggedright\arraybackslash}X 
-%		@{} % <-- the same for the right space
-	}
-	\textbf{Processor}	&	Intel(R) Core(TM) i5-7200U														\\
-	\textbf{Code name}	&	Kaby Lake \cite{intelSpec}														\\
-	\textbf{Cores}		&	2 \cite{intelSpec}																\\
-	\textbf{Threads}	&	4 \cite{intelSpec}																\\
-	\textbf{Frequency} 	&	2.50GHz (Turbo Boost disabled)													\\
-	\textbf{L1 cache} 	& 	2 x 32 KB 8-way set associative instruction cache \cite{optimisationManual}		\\
-						&	2 x 32 KB 8-way set associative data cache \cite{optimisationManual}	 		\\
-	\textbf{L2 cache}	&	2 x 256 KB 4-way set associative cache \cite{optimisationManual}				\\
-	\textbf{L3 cache}	&	3 MB 12-way set associative shared cache \cite{cpuWorldSpec, intelSpec}			\\
-	\textbf{RAM} 		&	2 × 8 GB DDR4 2133 MT/s 														\\
-\end{tabularx}
+This section start by describing the experimental setup as a first part.
+In the second part we show the results of our experiments. 
 
+\mypar{Experimental setup} The following paragraphs start with providing details about experimental setup by describing the platform and compiler used, the test inputs and how measurements were performed. 
+
+\mypar{Platform} All the experiments were conducted on an Intel(R) Core(TM) i5-7200U @2.50GHz which is described in \cref{platform}.
+\begin{table}
+	\begin{tabularx}{\linewidth}{ 
+			@{} % <-- to get rid of the space on the left
+			>{\raggedright\arraybackslash}l
+			>{\raggedright\arraybackslash}X 
+			@{} % <-- the same for the right space
+		}
+		\textbf{Processor}	&	Intel(R) Core(TM) i5-7200U														\\
+		\textbf{Code name}	&	Kaby Lake \cite{intelSpec}														\\
+		\textbf{Cores}		&	2 \cite{intelSpec}																\\
+		\textbf{Threads}	&	4 \cite{intelSpec}																\\
+		\textbf{Frequency} 	&	2.50GHz (Turbo Boost disabled)													\\
+		\textbf{L1 cache} 	& 	2 x 32 KB 8-way set associative instruction cache \cite{optimisationManual}		\\
+							&	2 x 32 KB 8-way set associative data cache \cite{optimisationManual}	 		\\
+		\textbf{L2 cache}	&	2 x 256 KB 4-way set associative cache \cite{optimisationManual}				\\
+		\textbf{L3 cache}	&	3 MB 12-way set associative shared cache \cite{cpuWorldSpec, intelSpec}			\\
+		\textbf{RAM} 		&	2 × 8 GB DDR4 2133 MT/s 														\\
+	\end{tabularx}
+	\caption{Experimental platform \label{platform}}
+\end{table} 
 The processor specification states a maximum overall memory bandwidth of 34.1 GB/s for two channels \cite{intelSpec}.
-Halving this number gives 17.05 GB/s per channel.
-In contrast, measuring the memory throughput of this platform for a single core using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2} gave the following results:\rh{again, may be a figure?}
-\\
-\begin{tabularx}{\linewidth-5mm}{ 
-		>{\raggedright\arraybackslash}X
-		>{\raggedright\arraybackslash}X
-	}
-	\textbf{Function}	&	\textbf{Best Rate [MB/s]}	\\ \hline
-	Copy 				&	14'273.6					\\
-	Scale				&	13'646.1					\\
-	Add 				&	16'250.3					\\
-	Triad				& 	16'047.6 					\\
-\end{tabularx}
-\\
-Taking the average over all functions gives 15'054.4 MB/s which is around 15 GB/s.
+Halving this number gives 17.05 GB/s per channel in theory.
+For comparison, \cref{streamBenchmarkResults} shows best memory throughput rates actually measured on this platform for a single core using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2}.
+\begin{table}
+	\begin{tabularx}{\linewidth-5mm}{ 
+		    @{}
+			>{\raggedright\arraybackslash}X
+			>{\raggedright\arraybackslash}X
+			@{}
+		}
+		\textbf{Function}	&	\textbf{Best Rate [MB/s]}   \\ \hline
+		Copy 				&	14'273.6					\\
+		Scale				&	13'646.1					\\
+		Add 				&	16'250.3					\\
+		Triad				& 	16'047.6 					\\
+	\end{tabularx}
+	\caption{Memory throughput of experimental platform for a single core measured using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2}.\label{streamBenchmarkResults}}
+\end{table}
+Taking the average over all functions in \cref{streamBenchmarkResults} gives 15'054.4 MB/s which is around 15 GB/s.
 Dividing this 15 GB/s by 2.5 GHz, results thus in an average memory bandwidth $\beta=6$ bytes/cycle.
-
-Further\rh{omit} we use the \verb@RDTSC@ instruction to measure the number of cycles. The number of flops is calculated directly in the measurement code. In addition we let BP run for fixed amount of iterations, namely 10. \HT{maybe move 10 iterations somewhere else}\rh{also, \opt{1, 2} run for just 1 iteration on the big inputs, I would definitely mention that}
 
 \mypar{Compiler} The program was compiled using GCC 12.1.0 with \verb@g++ -Ofast -march=native@.
 
@@ -352,59 +343,64 @@ and then normalising / desparsifying the user and movie identifiers separately.
 This section's plots display the results of either a small or a big dataset composed from inputs generated this way.
 The small dataset represents graphs of 981 to 10,334 vertices and consists of inputs % 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334
 considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450 and 540 users based on the MovieLens Latest Small dataset \cite{movieLensSmall}.
-The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 (doubling the threshold every time\rh{I thought it was just $16,200k$ for $k \in \{1, \ldots, 10\}$, not doubling?}) users based on the MovieLens 25M dataset \cite{movieLensBig}.
+The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 users (taking steps of 16,200) based on the MovieLens 25M dataset \cite{movieLensBig}.
+\srinline{Henry, is the step size 16,200 correct now?}
 
-\rhinline{maybe add a subsection, ``Results''?}
+\mypar{Measurement} For measuring the number of cycles, the \verb@RDTSC@ instruction has been used.
+In addition, the number of flops has been calculated directly in the measurement code.
+For running BP the number of iterations were limited to ten with exeption of optimisations \opt{1, 2} measured on the big dataset.
+In those cases, only a single iteration was measured due to the runtime growing prohibitively large otherwise.\sr{*}
 
-\mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is slower\rh{faster, we have to sell it :)}.
-For this purpose, the speedup in runtime of the different base implementations with respect to the from scratch implementation is displayed in \cref{libSpeedupSmall} on the small dataset.
+\mypar{Results}  The subsequent paragraphs demonstrate the incremental performance and runtime improvements achieved by successively applying the optimisations described in \cref{sec:yourmethod}.
+Additionally, interesting failed attempts are discussed briefly.  
+Finally, a roofline plot with the final optimisation step and the relative end-to-end speedup over the baseline \opt{1} are shown.
+
+\mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is faster.
+For this purpose, the relative speedup in runtime of the different base implementations over the from scratch implementation on the small dataset is displayed in \cref{libSpeedupSmall}.
 We see that libDAI library \opt{0} uses the most cycles compared to the others.
 Already implementing the algorithm from scratch provided slight runtime benefits (baseline \opt{1} in \cref{libSpeedupSmall}).
 Presumably, this came from the benefits of not using a library: less bound checks and function calls, and inlining of functions.
 Another reason is that baseline \opt{1} was implemented in a way to maximize sequential array access and used a CSR inspired format for storing all the incoming messages.
-Applying optimisation \opt{2} that unrolls the two innermost loops of \cref{algo:propagate} \rh{would comment this part out, too complicated sentence: iterating over the two states} to the baseline \opt{1} gives a 4$\times$ speedup.
-A reason for this is that the product calculation at \cref{line:product-calculation} of the algorithm could be reused by the outer loop iterating over states. \rh{I think the main reason for the speed up is scalar replacement, basically we get rid of a lot of pointer dereferences.}\sr{*}
+Applying optimisation \opt{2} to the baseline \opt{1} gives a 4$\times$ speedup.
+One reason for this is that the product calculation at \cref{line:product-calculation} of the algorithm can be reused by the outer loop iterating over states. 
+Another important reason is scalar replacement, which gets rid of a lot of pointer dereferences.
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/speedup[0][1]_small.pdf}
-	%\caption{Speedup of optimisation step \opt{2} over baseline \opt{1} and libDAI library \opt{0} with respect to the baseline on the small dataset. \label{libSpeedupSmall}}
-	% RH: tried rewording this, but don't know if it's better (I think the speedup should always be with respect to / over the thing that has speedup 1× in the picture, so baseline in this case)
 	\caption{Relative speedup of optimisation step \opt{2} and the libDAI library \opt{0} over the baseline \opt{1} on the small dataset. \label{libSpeedupSmall}}
 \end{figure}
 
-\mypar{Reducing computation} Optimisation \opt{3} was applied on top of optimisation \opt{2} and reduced floating point operations by replacing the computation of the product at \cref{line:product-calculation} in \cref{algo:propagate} with a single division in addition to moving the product into the outermost loop.
-How much of runtime improvement does optimisation step \opt{3} achieve despite the fact that on the used platform less divisions can be scheduled per cycle than additions/multiplication and that they have a greater latency than additions/multiplications \cite{optimisationManual}?\rh{I'd rephrase this to emphasize the contrast between why it could be faster (improved asymptotics) and why it could be slower (now we need division). Like (schematically), ``optimisation \opt{3} reduced floating point operations [...], but it also introduced the need for division, which is bad because [...].'' and only then maybe ask the rhetorical question (although I think we don't need it)}
-\cref{precomputeSpeedupSmall} shows that on the small dataset, this achieves a speedup of at least $20\times$ with respect to optimisation \opt{2}.
-It seems\rh{I'd drop the ``seems'', we can be more confident here} that there were enough neighbours for each node to compute the product over.\sr{(?)*}\rh{yeah that's the reason.}
+\mypar{Reducing computation} Optimisation step \opt{3} reduced floating point operations,
+but it also introduced the need for division, which is bad because the platform can schedule less divisions per cycle than additions/multiplications and divisions have a greater latency than addidions/multiplications.
+\cref{precomputeSpeedupSmall} shows that on the small dataset, optimisation step \opt{3} achieves a relative speedup of at least $20\times$ over optimisation \opt{2}.
+This is because there are enough neighbours for each node in the dataset such that computing the product over them for a node takes more cycles than using a division.
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/speedup[2][3]_small.pdf}
-	\caption{Speedup of optimisation step \opt{3} (precomputing the product)\rh{the paren is redundant?} added on top of optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
+	\caption{Relative speedup of optimisation step \opt{3} over optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
 \end{figure}
 \srinline{Add a paragraph about graph padding, the nature of the test input (average degree in graph) and the effect of alignment? Include fully bipartite graph measurements?}
 \HTinline{Yes and to the bipartite part, the plot should disprove the assumption that graph padding on higher degree graph helps}
 \rhinline{also agree. Would also mention that unaligned and aligned load was roughly the same speed which defeats the single selling point of graph padding}
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
-How do these optimisations impact the speedup?\rh{the rhetorical question is probably redundant here}
-We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a speedup of around 1.1x with saving memory while vectorisation yields a speedup of at most 1.6x with respect to optimisation \opt{3}.
-The speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately.
+We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1x with saving memory while vectorisation yields a relative speedup of at most 1.6x with respect to optimisation \opt{3}.
+The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately.
 
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/speedup[3][6][7][8]_small.pdf}
-	\caption{Speedup of vectorisation and saving memory optimisations based on optimisation \opt{3} (precomputing the product) on the small dataset. \label{cpctVectSpeedupSmall}}
+	\caption{Relative speedup of vectorisation and saving memory optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
 \end{figure}
 
-\rhinline{at this point, I would definitely mention and plot the optimizations that didn't work (i.e. unrolling and padding). Or at least mention if plotting is cumbersome.}
+\rhinline{at this point, I would definitely mention and plot the optimisations that didn't work (i.e. unrolling and padding). Or at least mention if plotting is cumbersome.}
 
-\rhinline{maybe add another mypar? ``big inputs'' or some such}
-Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
-To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimizations on the small and big dataset combined.
+\mypar{Big inputs} Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
+To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimisations on the small and big dataset combined.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
 The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
 All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
 For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit in to cache anymore.
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/performance[3][6][7][8]_both.pdf}
-	\caption{Speedup of vectorisation and saving memory optimisations based on optimisation \opt{3} (precomputing the product) on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
+	\caption{Performance of optimisations \opt{3}, \opt{6}, \opt{7} and \opt{8} on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
 \end{figure}
 
 \mypar{Roofline}
@@ -414,7 +410,7 @@ It obvious from \cref{rooflineEndToEndSmall} that all versions reside in the com
 The last optimisation step achieves around 16.25\% of the vectorized peak performance and 65\% of the scalar peak performance on average on the platform.  
 \begin{figure}\centering
 	\includegraphics[scale=0.59]{img/roofline[1][3][8]_small.pdf}
-	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} (precompute products) and the baseline using the small dataset.
+	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
 			\emph{The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). } \label{rooflineEndToEndSmall}}
 \end{figure}
 
@@ -423,7 +419,7 @@ The overall speedup lies between 100 to 500x for optimisation step \opt{8}.
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
 \begin{figure}\centering
 	\includegraphics[scale=0.56]{img/speedup[1][3][8]_small.pdf}
-	\caption{End-to-end speedup over baseline \opt{1} on the small dataset} \label{speedupEndToEndSmall}
+	\caption{Relative end-to-end speedup over baseline \opt{1} on the small dataset} \label{speedupEndToEndSmall}
 \end{figure}
 
 \srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t.~across plots the same color is used?}
