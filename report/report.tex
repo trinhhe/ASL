@@ -481,13 +481,22 @@ For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speed
 	\includegraphics[width=\linewidth]{img/speedup[8]GraphPadding_bipartite.pdf}
 	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
 \end{figure}
-These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010, 2020 up to 10100 vertices taking steps of 1010 \cite{networkx}.
+These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010 up to 10100 vertices taking steps of 1010 \cite{networkx}.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on higher degree graphs: 
 The relative speedup gain for bipartite graphs is not significantly better than in \cref{speedupGraphPaddingSmall}.
 It turns out for the small dataset we used considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.
 
-\mypar{Other unsuccessful optimisations}
-\srinline{mention all other unsuccessful optimisations}
+\mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase instruction level parallelism of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
+Optimisation \opt{13} tried to do achieve the same thing by doubling the unrolling factor of the inner loop but on top of optimisation step \opt{8}.
+\Cref{speedupUnsuccessful} shows that these optimisation steps could not increase the speedup relative to the optimisation steps they emerged from.
+The runtime is bounded by the divisions since they have the lowest throughput and latency.\sr{*}
+Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
+\begin{figure}\centering
+	\includegraphics[scale=0.58]{img/speedup[3][8][9][10][13]_small.pdf}
+	\caption{Relative speedup of further unrolling adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupUnsuccessful}}
+\end{figure}
+Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
+Hence, compiler could not take further advantage of this additional information.
 
 \mypar{Performance \& Big inputs} Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
 To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimisations on the small and big dataset combined.
@@ -587,7 +596,7 @@ There might be ways to further improve the performance our implementation since 
 
 %Example and structure follows.
 
-\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Tried graph padding optimization. Implemented precomputation of product optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
+\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimization. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
 \mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Extended flop counting with e.g. byte counting. Measuring graph padding on bipartite graph. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
 
