@@ -381,7 +381,7 @@ In the second part, we show the results of our experiments.
 
 \mypar{Experimental setup} The following paragraphs start with providing details about experimental setup by describing the platform and compiler used, the test inputs and how measurements were performed. 
 
-\mypar{Platform}\label{par:platform} All the experiments were conducted on an Intel(R) Core(TM) i5-7200U @2.50GHz which is described in \cref{platform}.
+\mypar{Platform} All the experiments were conducted on an Intel(R) Core(TM) i5-7200U @2.50GHz which is described in \cref{platform}.
 \begin{table}
 	\begin{tabularx}{\linewidth}{ 
 			@{} % <-- to get rid of the space on the left
@@ -529,7 +529,7 @@ The last optimisation step achieves around 16.13\% of the vectorized peak perfor
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_both.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} on the small and big dataset combined.
-			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in \cref{par:platform}. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
+			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in the paragraph \emph{Platform}. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
 \end{figure}
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
