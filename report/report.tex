@@ -101,13 +101,14 @@ Many papers about BP focus on the algorithmic site for optimization. Our focus i
 We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
-BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations.
+BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations without any performance degradation.
 \HTinline{No, I meant 30 - 0.726*30. I mention now explicitly \# iterations instead of percentage.}
 \rhinline{okay, but now I'm still a bit confused. So does this mean that originally, there were 30 iterations and they were able to bring them down to 8-9 with the algorithm still giving the same output?}
+\HTinline{tbh, I'm not really sure. I didn't read it in detail but they mentioned something like "fewer iterations without performance loss". That could mean a tiny error margin but acceptable for decoders or same output. Not sure.}
 
 There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10.
+In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10 for small datasets and 2 iterations for big datasets. \HT{is this correct?}
 
 \section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
@@ -122,7 +123,7 @@ just doesn't add any value IMO}
 
 Belief propagation is a general method for performing inference on
 graphical models that comes in many flavours and shapes. For the purpose of
-this article, we use \emph{belief propagation} (BP) solely to refer to the algorithm
+this article, we use \emph{belief propagation} (BP) \HT{can omit abbrevation BP since alrdy done in Intro section?}solely to refer to the algorithm
 of \citet[Section 2.1]{top-n-recommendation}, which we describe in the
 following paragraphs.
 
@@ -132,7 +133,7 @@ x_S \in X$. There is a joint probability mass function $p: X^V \to [0, 1]$
 (assumed intractable and inaccessible to us) that captures the probability of
 each possible assignment of states to vertices.\footnote{We use the notation
 $X^V$ to denote the space of all $|V|$-dimensional vectors $\vex$ indexed by
-elements of $V$ where each component $x_v$ is $\in X$. Given $v_i \in V$, we
+elements of $V$ where each component $x_v$ is $ X$. Given $v_i \in V$, we
 also sometimes write $x_i$ instead of $x_{v_i}$ for brevity.} The goal of the
 algorithm is, for each vertex $v_i$, to calculate its marginal distribution
 $p_i: X \to [0, 1]$:
@@ -180,9 +181,9 @@ i.e.~$m_{ij}(\cdot) = 1$.
 		Swap $m$ and $m'$.\;
 		\ShowLn\For{$i \in V$}{
 			\For{$j \in N(i)$}{
-				\For{$x_c \in X$}{
+				\ShowLn\For{$x_c \in X$}{
 					$m'_{ij}(x_c) \leftarrow 0$\;
-					\For{$x_d \in X$}{
+					\ShowLn\For{$x_d \in X$}{
 						\ShowLn$M^d_j \leftarrow \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$\;
 						$m'_{ij}(x_c) \pluseq \nodepot_i(x_d)\edgepot_{ij}(x_d,x_c) M^d_j$\;
 					}
@@ -228,7 +229,7 @@ and refer the reader to the original article.
 The algorithm represents the ratings as a bipartite graph, with users and
 movies as vertices and ratings as edges. Only ratings satisfying a certain
 threshold are considered (different thresholding methods are described in the
-paper). We use BP to model the probability that user $t$ likes a vertex. Thus,
+paper). \HT{maybe explicitly mention that our tresholding is average rating of users?}We use BP to model the probability that user $t$ likes a vertex. Thus,
 we have $X = \{\text{LIKE}, \text{DISLIKE}\} = \{L, D\}$. (Note that we also
 model user vertices although in the end we are only interested in movie
 vertices.)
@@ -280,10 +281,10 @@ This project has two baselines. The first makes use of the C++ library libDAI, w
 The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit \opt{2}}
-The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops explicitly. \todo[inline]{reference lines in Algorithm 1} This optimization was then used as basis for all following steps.
+The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops explicitly (line 6 and 8 of \cref{algo:propagate}). 
 
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimizations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner 2 by 2 loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
+Writing out the inner two by two loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
 \HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimization. In the result, we'll have our plots that should validate those assumptions}
 \rhinline{agree, although other way around it also kind of makes sense}
 
@@ -293,23 +294,23 @@ Writing out the inner 2 by 2 loop saves on control flow instructions and besides
 \stinline{good idea, then we can reference the theory like I did in the previous section}
 In the next step the algorithm was optimized, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
-This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. To avoid repeating the same calculations, the product was replaced with the following:
+This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. \HT{sounds strange maybe: ``.., that for every neighbor of a node, we compute a product...}To avoid repeating the same calculations, the product was replaced with the following:
 $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
-Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop. \todo[inline]{reference line of $i$-loop in algorithm 1}
+Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop (line 4 of \cref{algo:propagate}).
 
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
 
 \mypar{Graph padding}
-In anticipation of unrolling and SIMD optional graph padding was added to optimization 3 and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
+In anticipation of unrolling and SIMD, optional graph padding was added to optimization \opt{3} and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
 
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
-Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization 2 and once on basis of optimization 3. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimization 2, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
+Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization \opt{2} and once on basis of optimization \opt{3}. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
+The difference in the two unrolling implementations is that thanks to optimization \opt{2}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
 
 
 \mypar{Unroll outer loop \opt{9}}
-In a different implementation\rh{would maybe mention that it's based on 3? But maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization 2\rh{it's 3, right?} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
+In a different implementation\rh{would maybe mention that it's based on 3? But maybe having the tree figure is enough} we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization \opt{3}\rh{it's 3, right?}\HT{yes, should be 3 (I changed it)} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance. \HT{shouldn't it be 4 outer loops run during one unrolled iteration of the inner loop?}
 
 \mypar{Vectorise \opt{6}}
 As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
@@ -338,7 +339,7 @@ This compaction allowed for more values being read when loading 1 cache block, m
 
 
 \mypar{Combining vectorize and save memory \opt{8}}
-In a next step, optimization \opt{6} and \opt{7} were combined. This to optimisations were expected to work well together, since it combines greater computational efficiency with greater data efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
+In a next step, optimization \opt{6} and \opt{7} were combined. This two optimisations were expected to work well together, since it combines greater computational efficiency with greater data efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
 
 
 \mypar{Unroll \opt{13}}
@@ -346,7 +347,7 @@ On basis of optimisation \opt{8} another unrolling was tested. Now, the number o
 
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
-In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations.
+In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations. \HT{instead of ``was used to see if the compiler could make use of it..`` maybe ``was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimizations.``? }
 
 %Now comes the ``beef'' of the paper, where you explain what you
 %did. Again, organize it in paragraphs with titles. As in every section
@@ -421,6 +422,7 @@ The small dataset represents graphs of 981 to 10,334 vertices and consists of in
 considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450, 540 and 610 users based on the MovieLens Latest Small dataset \cite{movieLensSmall}.
 The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 users (taking steps of 16,200) based on the MovieLens 25M dataset \cite{movieLensBig}.
 \srinline{Henry, is the step size 16,200 correct now?}
+\HTinline{Yes}
 
 \mypar{Measurement} For measuring the number of cycles, the \verb@RDTSC@ instruction has been used.
 In addition, the number of flops has been calculated directly in the measurement code.
