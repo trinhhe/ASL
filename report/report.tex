@@ -103,16 +103,14 @@ In the age of digitalization a majority of the people spend their time on differ
 Many papers about BP focus on the algorithmic site for optimisation. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorisation.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation}. On top\sr{We provide an BP implemention based on ... optimised for sequential performance. The optimisations applied range from / include ...} of that we optimise the performance by some algorithmic changes, standard C optimisation techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimised version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}.\sr{Our BP implementation outperforms the libDAI library when applied to the specific problem of top-n recommendation. Or something similar maybe ... idk} Our overall speedup is up to 500 times, evaluated on the MovieLens datasets \cite{movieLens}.\sr{Would remove this last sentence. Speedup is probably mentioned in abstract, results and conclusion.}
+We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The optimisations applied range from algorithmic changes, standard C optimisation techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-n recommendation. 
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30 iterations, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
-\HTinline{[...] tbh, I'm not really sure. I didn't read it in detail but they mentioned something like "fewer iterations without performance loss". That could mean a tiny error margin but acceptable for decoders or same output. Not sure.}
-\rhinline{got it. do you agree with how I reformulated it now?}
 
 There are also works that focus on parallelisation. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single-core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10 in most cases or for some unoptimised versions on big datasets one single iteration. \sr{Would leave away what is after the comma: too much detail and redundant}
+In this paper, we focus on single-core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations.
 
 \section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
