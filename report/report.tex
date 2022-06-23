@@ -324,8 +324,8 @@ throughput.
 
 \mypar{Graph padding}
 In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3}. The idea behind it was to add $\O(n)$ dummy edges to the graph that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively.
-As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no a small sequential left-over loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
-To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, the graph padding could be activated and deactivated using a compiler flag but was deactivated by default.
+As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no small sequential left-over loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
+To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, the graph padding could be activated using a compiler flag (by default deactivated).
 The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
