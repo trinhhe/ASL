@@ -22,7 +22,8 @@
 
 % Title.
 % ------
-\title{TODO: A Descriptive Title, not too general, not too long}
+%\title{TODO: A Descriptive Title, not too general, not too long}
+\title{Optimising Sequential Performance of\\ Belief Propagation for Top-N Recommendation}
 %
 % Single address.
 % ---------------
@@ -57,10 +58,13 @@
 
 
 \begin{abstract}
-	\templatecomment{Describe in concise words what you do, why you do it (not necessarily
+	\begin{comment}Describe in concise words what you do, why you do it (not necessarily
 in this order), and the main result. The abstract has to be
 self-contained and readable for a person in the general area. You
-	should write the abstract last.}
+	should write the abstract last.
+	\end{comment}
+
+The Belief Propagation algorithm has found application in the design of recommender systems. It is of importance for e-commerce and consumers that the underlying algorithm achieves the best possible performance. This paper introduces an efficient and fast belief propagation implementation in C for single core. The optimizations include algorithmic changes, standard C optimization techniques, decreasing memory usage and SIMD instructions. We evaluate the performance on the MovieLens data set and achieve a speedup up to 1000x.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -96,10 +100,10 @@ In the age of digitalization a majority of the people spend their time on differ
 
 \citet{BPRS} and \citet{top-n-recommendation} propose a different approach where the relation of the users and items are represented as graphical models. The idea is to calculate the marginal probability distribution of the nodes which corresponds to predicting the ratings of the items for users. Since computing the marginal probability is intractable in general, they opted to approximate it with the \emph{belief propagation} (BP) algorithm which grows linearly with the number of nodes (users/items) and therefore does not have the computational constraint such as the matrix factorization algorithm.
 
-Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
+Many papers about BP focus on the algorithmic site for optimisation. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorisation.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times, \st{add a comma here?} evaluated on the MovieLens datasets \cite{movieLens}.
+We provide a BP implementation based on \citet{top-n-recommendation}. On top\sr{We provide an BP implemention based on ... optimised for sequential performance. The optimisations applied range from / include ...} of that we optimise the performance by some algorithmic changes, standard C optimisation techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimised version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}.\sr{Our BP implementation outperforms the libDAI library when applied to the specific problem of top-n recommendation. Or something similar maybe ... idk} Our overall speedup is up to 500 times, evaluated on the MovieLens datasets \cite{movieLens}.\sr{Would remove this last sentence. Speedup is probably mentioned in abstract, results and conclusion.}
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations without any performance degradation.
@@ -107,9 +111,9 @@ BP is also used in decoders for polar codes. For better performance, \citet{rela
 \rhinline{okay, but now I'm still a bit confused. So does this mean that originally, there were 30 iterations and they were able to bring them down to 8-9 with the algorithm still giving the same output?}
 \HTinline{tbh, I'm not really sure. I didn't read it in detail but they mentioned something like "fewer iterations without performance loss". That could mean a tiny error margin but acceptable for decoders or same output. Not sure.}
 
-There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
+There are also works that focus on parallelisation. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10 in most cases or for some unoptimized versions on big datasets one single iteration.
+In this paper, we focus on single-core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10 in most cases or for some unoptimised versions on big datasets one single iteration. \sr{Would leave away what is after the comma: too much detail and redundant}
 
 \section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
@@ -225,7 +229,7 @@ In our concrete instantiation, items are actually movies and ratings are
 integers in $\{1, \ldots, 5\}$.
 
 \mypar{Algorithm} As already mentioned, we implement the algorithm described by
-\citet{top-n-recommendation}. As our work focuses solely on optimizing the
+\citet{top-n-recommendation}. As our work focuses solely on optimising the
 belief propagation part of the algorithm, we describe the rest of the algorithm
 in minimum detail and refer the reader to the original article.
 
@@ -251,7 +255,7 @@ In the rest of this article, we only focus on the BP part of the algorithm (as
 described in \cref{algo:propagate}), as it is by far the largest bottleneck. To
 simplify, we assume that we already have a bipartite graph $G$ with $n$
 vertices and $m$ edges, along with $\nodepot_i$ and $\edgepot_{ij}$. We perform
-all our analysis and optimization with respect to $G$, $n$ and $m$.
+all our analysis and optimisation with respect to $G$, $n$ and $m$.
 
 \mypar{Cost analysis} we have chosen the number of flops as the cost measure.
 Analyzing \cref{algo:propagate} gives us $$4 \cdot (\deg(i) (\deg(i) - 2) +
@@ -286,49 +290,51 @@ where $\avgdeg$ is the average degree and we used respectively 1) the fact that 
 \stinline{going to make the screen shot of the diagram prettier}
 \rhinline{I'd definitely aim for a figure that spans both columns, this is simply too small}
 
-This section presents all optimization steps seen in \cref{OptDiagram}.
+This section presents all optimisation steps seen in \cref{OptDiagram}.
 
 
 \mypar{Baseline \opt{1}}
 This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor graph.
-The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
+The second baseline, and basis for all optimisation, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit \opt{2}}
-The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops, starting on line~\ref{line:for-xc} of \cref{algo:propagate}, explicitly. This optimization was then used as basis for all following steps.
+The first optimisations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops, starting on line~\ref{line:for-xc} of \cref{algo:propagate}, explicitly. This optimisation was then used as basis for all following steps.
 
-Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimizations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner two by two loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
-\HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimization. In the result, we'll have our plots that should validate those assumptions}
+Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimisations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
+Writing out the inner two by two loop saves on control flow instructions in addition to saving computation and it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
+\HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimisation. In the result, we'll have our plots that should validate those assumptions}
 \rhinline{agree, although other way around it also kind of makes sense}
+\srinline{Agree with Henry}
 
 
 \mypar{Precompute message products \opt{3}}
 \rhinline{I plan on describing some of this in \cref{sec:background}, so I'll maybe move some of this there after I get to it.}
 \stinline{good idea, then we can reference the theory like I did in the previous section}
-In the next step the algorithm was optimized, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
+In the next step the algorithm was optimised, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
-This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. \HT{sounds strange maybe: ``.., that for every neighbor of a node, we compute a product...}To avoid repeating the same calculations, the product was replaced with the following:
+This means, that for every neighbour of a node computes a product of messages from all other neighbours of a node. \HT{sounds strange maybe: ``.., that for every neighbour of a node, we compute a product...}To avoid repeating the same calculations, the product was replaced with the following:
 $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
-Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop, right before line~\ref{line:for-j} in \cref{algo:propagate}.
+Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbours of a node and therefore can be calculated in the outer loop, right before line~\ref{line:for-j} in \cref{algo:propagate}.
 
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
 
 \mypar{Graph padding}
-In anticipation of unrolling and SIMD optional graph padding was added to optimization \opt{3} and kept for all following optimisation steps (as seen in \cref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from \cref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
+In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3} and kept for all following optimisation steps (as seen in \cref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively. With this, when the j-loop from \cref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
 
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
-Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization \opt{2} and once on basis of optimization \opt{3}. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimization \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
+Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimisation \opt{2} and once on basis of optimisation \opt{3}. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the for-loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
+The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
 
 
 \mypar{Unroll outer loop \opt{9}}
-In a different implementation, based on optimisation \opt{3}, we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization \opt{3} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
+In a different implementation, based on optimisation \opt{3}, we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimisation \opt{3} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
 As seen in \cref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
-In a second step, the vector instructions were optimized with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}
-Even though, looking at the assembly compiled from optimization \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
+In a second step, the vector instructions were optimised with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}
+Even though, looking at the assembly compiled from optimisation \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
+\HTinline{I think we should mention that even though only 4 msgs are processed, sequential in-msg access gives us a slight performance increase. (maybe in section 4 with plot?)}
 
 
 \begin{comment}
@@ -350,8 +356,8 @@ This is sufficient for any input that needs less than 48 GB of memory.}
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
 
-\mypar{Combining vectorize and save memory \opt{8}}
-In a next step, optimization \opt{6} and \opt{7} were combined. This two optimisations were expected to work well together, since it combines greater computational efficiency with greater data efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
+\mypar{Combining vectorise and save memory \opt{8}}
+In a next step, optimisation \opt{6} and \opt{7} were combined. This two optimisations were expected to work well together, since it combines greater computational efficiency with greater data efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
 
 
 \mypar{Unroll \opt{13}}
@@ -359,7 +365,7 @@ On basis of optimisation \opt{8} another unrolling was tested. Now, the number o
 
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
-In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations. \HT{instead of ``was used to see if the compiler could make use of it..`` maybe ``was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimizations.``? }
+In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations. \HT{instead of ``was used to see if the compiler could make use of it..`` maybe ``was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimisations.``? }\sr{I would apply this suggestion}
 
 %Now comes the ``beef'' of the paper, where you explain what you
 %did. Again, organize it in paragraphs with titles. As in every section
@@ -466,12 +472,12 @@ Finally, a roofline plot with the final optimisation step and the relative end-t
 \hfil
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[8]padding_small.pdf}
-	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on the small dataset. \label{speedupGraphPaddingSmall}}
+	\caption{Relative speedup of using graph adding on top of optimisation step \opt{8} on the small dataset. \label{speedupGraphPaddingSmall}}
 \end{minipage}%
 
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[8]padding_bipartite.pdf}
-	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
+	\caption{Relative speedup of using graph adding on top of optimisation step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
 \end{minipage}%
 \hfil
 \begin{minipage}[t]{\oldlinewidth}\centering
@@ -498,7 +504,7 @@ This is because there are enough neighbours for each node in the dataset such th
 \begin{figure*}[!t]
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[3][8][9][10][13]_small.pdf}
-	\caption{Relative speedup of further unrolling added on top of optimization step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
+	\caption{Relative speedup of further unrolling added on top of optimisation step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
 \end{minipage}%
 \hfil
 \begin{minipage}[t]{\oldlinewidth}\centering
@@ -513,7 +519,7 @@ This is because there are enough neighbours for each node in the dataset such th
 \end{figure}
 
 \mypar{Saving memory and vectorisation} 
-For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
+For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorisation.
 We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1$\times$ with saving memory while vectorisation yields a relative speedup of at most 1.6$\times$ with respect to optimisation \opt{3}.
 The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately and at least 1.3$\times$.
 
@@ -549,7 +555,7 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 Optimisation step \opt{8} is the final one.
 In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEnd}.
 It is obvious from \cref{rooflineEndToEnd} that all versions reside in the compute-bound region.
-The last optimisation step achieves around 16.13\% of the vectorized peak performance and 64.5\% of the scalar peak performance on average on the platform.  
+The last optimisation step achieves around 16.13\% of the vectorised peak performance and 64.5\% of the scalar peak performance on average on the platform.  
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
 On the small dataset, the overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
@@ -585,7 +591,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
 Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
-We achieved a 100$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.13\% vectorized peak performance on dataset which does not fit entirely into cache.
+We achieved a 100$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
 The speedup scales with input size such that for the input with 221,588 vertices it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}
 For inputs not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
 Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
@@ -619,13 +625,13 @@ There might be ways to further improve the performance our implementation since 
 
 %Example and structure follows.
 
-\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimization. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
+\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
 \mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Extended flop counting with e.g. byte counting. Measuring graph padding on bipartite graph. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
 
 \mypar{Sarah} Implemented flop counting in code of both algorithms together with Henry. Improved library flop counting. Performed unrolling optimisation of inner loop over neighbours of a node. Mostly prepared the slides on optimisations for the presentation.
 
-\mypar{Stephanie} Did the base implementation using the libDAI library. Vectorized loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
+\mypar{Stephanie} Did the base implementation using the libDAI library. Vectorised loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
 
 \srinline{Just wrote down what came into my mind so far. Most likely the description is incomplete and some points are wrong. Fix it.}
 
