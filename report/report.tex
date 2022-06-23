@@ -376,6 +376,20 @@ In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword 
 
 \section{Experimental Results}\label{sec:exp}
 
+\oldlinewidth=\linewidth
+\begin{figure*}
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/speedup[0][1][2]_small.pdf}
+	\caption{Relative speedup of optimisation step \opt{2} and the libDAI library \opt{0} over the baseline \opt{1} on the small dataset. \label{libSpeedupSmall}}
+\end{minipage}%
+\hfil
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/speedup[2][3]_small.pdf}
+	\caption{Relative speedup of optimisation step \opt{3} over optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
+\end{minipage}%
+\end{figure*}
+
+
 This section starts by describing the experimental setup as a first part.
 In the second part, we show the results of our experiments. 
 
@@ -452,19 +466,11 @@ Another reason is that baseline \opt{1} was implemented in a way to maximize seq
 Applying optimisation \opt{2} to the baseline \opt{1} gives a 4$\times$ speedup.
 One reason for this is that the product calculation at line~\ref{line:calc-prod-slow} of the algorithm can be reused by the outer loop iterating over states. 
 Another important reason is scalar replacement, which gets rid of a lot of pointer dereferences.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[0][1][2]_small.pdf}
-	\caption{Relative speedup of optimisation step \opt{2} and the libDAI library \opt{0} over the baseline \opt{1} on the small dataset. \label{libSpeedupSmall}}
-\end{figure}
 
 \mypar{Reducing computation} Optimisation step \opt{3} reduced floating point operations,
 but it also introduced the need for division, which is bad because the platform can schedule less divisions per cycle than additions/multiplications and divisions have a greater latency than addidions/multiplications.
 \cref{precomputeSpeedupSmall} shows that on the small dataset, optimisation step \opt{3} achieves a relative speedup of at least $20\times$ over optimisation \opt{2}.
 This is because there are enough neighbours for each node in the dataset such that computing the product over them for a node takes more cycles than using a division.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[2][3]_small.pdf}
-	\caption{Relative speedup of optimisation step \opt{3} over optimisation \opt{2} on the small dataset. \label{precomputeSpeedupSmall}}
-\end{figure}
 
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
@@ -504,7 +510,7 @@ Optimisation \opt{13} tried to do achieve the same thing by doubling the unrolli
 The runtime is bounded by the divisions since they have the lowest throughput and latency.\sr{*}
 Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
 \begin{figure}\centering
-	\includegraphics[scale=0.58]{img/speedup[3][8][9][10][13]_small.pdf}
+	\includegraphics[width=\linewidth]{img/speedup[3][8][9][10][13]_small.pdf}
 	\caption{Relative speedup of further unrolling added on top of optimization step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
 \end{figure}
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
