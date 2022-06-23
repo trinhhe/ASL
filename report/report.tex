@@ -98,7 +98,7 @@ In the age of digitalization a majority of the people spend their time on differ
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times evaluated on the MovieLens datasets \cite{movieLens}.
+We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times \st{add a comma here?} evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations without any performance degradation.
@@ -249,7 +249,7 @@ described in \cref{algo:propagate}), as it is by far the largest bottleneck.
 This means for example that we analyze the runtime in terms of the size of the
 constructed factor graph $G$.
 
-\mypar{Cost analysis} we have chosen the number of flops as the cost measure. analyzing \cref{algo:propagate} gives us $\deg(v)$
+\mypar{Cost analysis} We have chosen the number of flops as the cost measure. Analyzing \cref{algo:propagate} gives us $\deg(v)$
 
 
 
@@ -304,12 +304,12 @@ Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node a
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
 
 \mypar{Graph padding}
-In anticipation of unrolling and SIMD, optional graph padding was added to optimization \opt{3} and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step, whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
+In anticipation of unrolling and SIMD optional graph padding was added to optimization \opt{3} and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
 
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
 Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimization \opt{2} and once on basis of optimization \opt{3}. In both implementations, the loop was unrolled by a factor of 4. This allowed for more scalar replacement. Since the four loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimization \opt{2}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
+The difference in the two unrolling implementations is that thanks to optimization \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version with more flops.
 
 
 \mypar{Unroll outer loop \opt{9}}
@@ -319,7 +319,7 @@ In a different implementation, based on optimisation \opt{3}, we examined what h
 As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
 In a second step, the vector instructions were optimized with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}
 Even though, looking at the assembly compiled from optimization \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
-\stinline{how do i get rid of the massive space that's inserted here?}
+
 
 \begin{comment}
 For this course, explain all the optimisations you performed. This mean, you first very briefly
