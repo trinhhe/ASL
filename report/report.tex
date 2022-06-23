@@ -106,10 +106,9 @@ Many papers about BP focus on the algorithmic site for optimisation. Our focus i
 We provide a BP implementation based on \citet{top-n-recommendation}. On top\sr{We provide an BP implemention based on ... optimised for sequential performance. The optimisations applied range from / include ...} of that we optimise the performance by some algorithmic changes, standard C optimisation techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimised version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}.\sr{Our BP implementation outperforms the libDAI library when applied to the specific problem of top-n recommendation. Or something similar maybe ... idk} Our overall speedup is up to 500 times, evaluated on the MovieLens datasets \cite{movieLens}.\sr{Would remove this last sentence. Speedup is probably mentioned in abstract, results and conclusion.}
 
 \mypar{Related Work}
-BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations without any performance degradation.
-\HTinline{No, I meant 30 - 0.726*30. I mention now explicitly \# iterations instead of percentage.}
-\rhinline{okay, but now I'm still a bit confused. So does this mean that originally, there were 30 iterations and they were able to bring them down to 8-9 with the algorithm still giving the same output?}
-\HTinline{tbh, I'm not really sure. I didn't read it in detail but they mentioned something like "fewer iterations without performance loss". That could mean a tiny error margin but acceptable for decoders or same output. Not sure.}
+BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30 iterations, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
+\HTinline{[...] tbh, I'm not really sure. I didn't read it in detail but they mentioned something like "fewer iterations without performance loss". That could mean a tiny error margin but acceptable for decoders or same output. Not sure.}
+\rhinline{got it. do you agree with how I reformulated it now?}
 
 There are also works that focus on parallelisation. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
@@ -128,7 +127,7 @@ just doesn't add any value IMO}
 
 Belief propagation is a general method for performing inference on
 graphical models that comes in many flavours and shapes. For the purpose of
-this article, we use \emph{belief propagation} (BP) \HT{can omit abbrevation BP since alrdy done in Intro section?}solely to refer to the algorithm
+this article, we use \emph{belief propagation} solely to refer to the algorithm
 of \citet[Section 2.1]{top-n-recommendation}, which we describe in the
 following paragraphs.
 
@@ -236,7 +235,7 @@ in minimum detail and refer the reader to the original article.
 The algorithm represents the ratings as a bipartite graph, with users and
 movies as vertices and ratings as edges. Only edges whose ratings satisfy a
 certain threshold are kept (different thresholding methods are described in the
-paper). \HT{maybe explicitly mention that our tresholding is average rating of users?}We use BP to model the probability that user $t$ likes a vertex. Thus,
+paper; we use the threshold that keeps edges above user's average rating). \HT{maybe explicitly mention that our tresholding is average rating of users?}\rh{why not}We use BP to model the probability that user $t$ likes a vertex. Thus,
 the possible states of each vertex are $X = \{$LIKE, DISLIKE$\} =
 \{L, D\}$. (Note that we also model user vertices although in the end we are
 only interested in movie vertices.)
@@ -287,8 +286,6 @@ where $\avgdeg$ is the average degree and we used respectively 1) the fact that 
 	\includegraphics[width=0.7\textwidth]{img/OptimizationDiagram.png}
 	\caption{Diagram of optimisation steps \label{OptDiagram}}
 \end{figure*}
-\stinline{going to make the screen shot of the diagram prettier}
-\rhinline{I'd definitely aim for a figure that spans both columns, this is simply too small}
 
 This section presents all optimisation steps seen in \cref{OptDiagram}.
 
@@ -301,11 +298,7 @@ The second baseline, and basis for all optimisation, was implemented from scratc
 The first optimisations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops, starting on line~\ref{line:for-xc} of \cref{algo:propagate}, explicitly. This optimisation was then used as basis for all following steps.
 
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimisations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner two by two loop saves on control flow instructions in addition to saving computation and it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
-\HTinline{I think the reasoning for assumptions should be here since they are necessary to explain what and why we did this optimisation. In the result, we'll have our plots that should validate those assumptions}
-\rhinline{agree, although other way around it also kind of makes sense}
-\srinline{Agree with Henry}
-
+Writing out the inner two by two loop saves on control flow instructions in addition to saving computation and it also makes it more predictable for the compiler. 
 
 \mypar{Precompute message products \opt{3}}
 \rhinline{I plan on describing some of this in \cref{sec:background}, so I'll maybe move some of this there after I get to it.}
@@ -348,10 +341,9 @@ As important as the final results is to show that you took a structured, organiz
 Since it was reasonable to assume, that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.\\
 The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.\\
 In a second step, the type of indices was changed from \verb@size_t@ to \verb@uint32_t@. This is sufficient for any input that needs less than 48 GB of memory. 
-\rhinline{I calculated it, indexing $0, \ldots, m - 1$ is the bottleneck, and for a given $m$, we allocate $\ge 3m \cdot 4$ bytes of memory (for G.in, G.in\_old and G.out). So, if we cannot index, this means $m > 2^{32} = 4$ GB, which means we use $>48$ GB of memory. So, I'd say (instead of ``This could be done [\dots]''):
-
-This is sufficient for any input that needs less than 48 GB of memory.}
+\rhinline{I calculated [for how big input this is enough] [...]}
 \stinline{Thanks! Should I also add the explanation?}
+\rhinline{I think it isn't worth the space.}
 
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
@@ -531,7 +523,7 @@ Apart from that, graph padding increases the memory foot print.
 If most of the vertices have a very low degree, for example lower than SIMD size, the memory overhead of padding becomes significant.
 Also in this case, the advantages of vectorisation diminish as most of the computation will be handled by the left-over loops, i.e. sequentially. 
 For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
-These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010 up to 10100 vertices taking steps of 1010 \cite{networkx}.
+These complete bipartite graphs were generated using the \texttt{networkx}\sr{cite how} library for 1010 up to 10100 vertices taking steps of 1010 \cite{networkx}.\rh{I'm not sure we need to say it was networkx. to me it feels equivalent to saying the plots were generated by matplotlib}
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on higher degree graphs: 
 The relative speedup gain for bipartite graphs is not significantly better than in \cref{speedupGraphPaddingSmall}.
 It turns out for the small dataset we used considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.
@@ -592,7 +584,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
 Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
 We achieved a 100$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
-The speedup scales with input size such that for the input with 221,588 vertices it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}
+The speedup scales with input size such that for the input with 221,588 vertices it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{yeah, the bigger the speedup, the cooler we look}
 For inputs not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
 Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
 Out off all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}
