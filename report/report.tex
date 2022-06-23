@@ -57,10 +57,13 @@
 %
 
 \begin{abstract}
-	\templatecomment{Describe in concise words what you do, why you do it (not necessarily
+	\begin{comment}Describe in concise words what you do, why you do it (not necessarily
 in this order), and the main result. The abstract has to be
 self-contained and readable for a person in the general area. You
-	should write the abstract last.}
+	should write the abstract last.
+	\end{comment}
+
+The Belief Propagation algorithm has found application in the design of recommender systems. It is of importance for e-commerce and consumers that the underlying algorithm achieves the best possible performance. This paper introduces an efficient and fast belief propagation implementation in C for single core. The optimizations include algorithmic changes, standard C optimization techniques, decreasing memory usage and SIMD instructions. We evaluate the performance on the MovieLens data set and achieve a speedup up to 1000x.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -330,6 +333,7 @@ In a different implementation, based on optimisation \opt{3}, we examined what h
 As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
 In a second step, the vector instructions were optimised with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}
 Even though, looking at the assembly compiled from optimisation \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
+\HTinline{I think we should mention that even though only 4 msgs are processed, sequential in-msg access gives us a slight performance increase. (maybe in section 4 with plot?)}
 
 
 \begin{comment}
