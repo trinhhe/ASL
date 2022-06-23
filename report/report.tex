@@ -148,14 +148,10 @@ Intuitively, node potentials capture our priors about which states each vertex
 inclines to, while the edge potentials capture the influence the state of a
 vertex has on the state of its neighbours.
 
-\rhinline{now it's kind of fuzzy,
-saying ``potentials SOMEHOW MAGICALLY model $p$'', without really saying how.
-But I don't want to go into too much detail. This is my try at sweeping it under the rug:
-
 In classical BP, it is assumed that $p$ can be explicitly expressed in terms of
 $\phi_i$ and $\psi_{ij}$. In our case, where $p$ itself is inherently more
 fuzzy, we make no such claim, and content ourselves with saying that $\phi_i$
-and $\psi_{ij}$ allow us to approximately model $p$.}
+and $\psi_{ij}$ allow us to approximately model $p$.
 \srinline{For me this is fine. The paper is about optimisation.}
 
 \mypar{Message passing} The belief propagation algorithm itself consists of two
