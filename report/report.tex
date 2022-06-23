@@ -542,8 +542,8 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 
 \mypar{Roofline}
 Optimisation step \opt{8} is the final one.
-In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEnd}.
-It is obvious from \cref{rooflineEndToEnd} that all versions reside in the compute-bound region.
+In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEndSmall}.
+It is obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
 The last optimisation step achieves around 16.13\% of the vectorised peak performance and 64.5\% of the scalar peak performance on average on the platform.  
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
@@ -649,6 +649,7 @@ There might be ways to further improve the performance our implementation since 
 \todo[inline]{generally check the title, abstract, section titles, that we have no more template text somewhere}
 \todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [], 5$\times$ instead of 5x}
 \todo[inline]{citations: don't use just plain URL when possible (usually everyone has a ``how to cite us'' section}
+\todo[inline]{pdfgrep ``??'' (unresolved references)}
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
