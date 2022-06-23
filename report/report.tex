@@ -310,7 +310,7 @@ incoming messages can be done contiguously, and random access is only needed
 when sending a message to a neighbour.
 
 \mypar{Low-hanging fruit \opt{2}}
-The first optimisations applied on top of the baseline implementation were scalar replacement and writing out explicitely the inner two by two loops starting on line~\ref{line:for-xc} of \cref{algo:propagate}. This optimisation was then used as basis for all following steps.
+The first optimisations applied on top of the baseline implementation were scalar replacement and writing out explicitly the inner two by two loops starting on line~\ref{line:for-xc} of \cref{algo:propagate}. This optimisation was then used as basis for all following steps.
 
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimisations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
 Writing out the inner two by two loop saves on control flow instructions in addition to saving computation as well as enabling the compiler more predictability.
