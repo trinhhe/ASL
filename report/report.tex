@@ -66,8 +66,8 @@ self-contained and readable for a person in the general area. You
 
 The Belief Propagation algorithm has found application in the design of recommender systems. It is of importance for e-commerce and consumers that the underlying algorithm achieves the best possible performance. This paper introduces an efficient and fast belief propagation implementation in C for single core. The optimizations include algorithmic changes, standard C optimization techniques, decreasing memory usage and SIMD instructions. We evaluate the performance on the MovieLens data set and achieve a speedup up to 1000$\times$.
 \srinline{
-	Recommender systems are omnipresent in online shopping and streaming services. 
-	A scalable alternative to matrix factorization is belief propagation.
+	Recommender systems are omnipresent in today's online shopping and streaming services. 
+	A scalable alternative to matrix factorization is belief propagation as it supports incremental updates of the model.
     The paper presents an efficient ... appling various optimisation ideas and techniques.
 	We evaluate the performance ... and achieve a speedup of at least 100$\times$. Moreover, the effects of the optimisations on speedup grow with the input size.
 	...
@@ -310,10 +310,10 @@ incoming messages can be done contiguously, and random access is only needed
 when sending a message to a neighbour.
 
 \mypar{Low-hanging fruit \opt{2}}
-The first optimisations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops, starting on line~\ref{line:for-xc} of \cref{algo:propagate}, explicitly. This optimisation was then used as basis for all following steps.
+The first optimisations applied on top of the baseline implementation were scalar replacement and writing out explicitly the inner two by two loops starting on line~\ref{line:for-xc} of \cref{algo:propagate}. This optimisation was then used as basis for all following steps.
 
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimisations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
-Writing out the inner two by two loop saves on control flow instructions in addition to saving computation and it also makes it more predictable for the compiler. 
+Writing out the inner two by two loop saves on control flow instructions in addition to saving computation as well as enabling the compiler more predictability.
 
 \mypar{Precompute message products \opt{3}} In the next step, we switched to
 the asymptotically faster algorithm introduced in \cref{subsec:faster}. This
@@ -323,12 +323,14 @@ introduced additional division operations which have worse latency and
 throughput.
 
 \mypar{Graph padding}
-In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3} and kept for all following optimisation steps (as seen in \cref{OptDiagram}.) The idea behind it was to add $\O(n)$ dummy edges to the graph that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively. With this, when the $j$-loop from \cref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. Additionally, this allows for aligned store and load with SIMD. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
-
+In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3}. The idea behind it was to add $\O(n)$ dummy edges to the graph that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively.
+As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no small sequential left-over loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
+To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, the graph padding could be activated using a compiler flag (by default deactivated).
+The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
 Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimisation \opt{2} and once on basis of optimisation \opt{3}. In both implementations, the loop was unrolled by a factor of~4. This allowed for more scalar replacement. Since the for-loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version \opt{4} with more flops.
+The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version \opt{4} with more flops.\sr{Henry, would you say we need a plot here too?}
 
 
 \mypar{Unroll outer loop \opt{9}}
@@ -336,7 +338,7 @@ In a different implementation, based on optimisation \opt{3}, we examined what h
 
 \mypar{Vectorise \opt{6}}
 As seen in \cref{OptDiagram}\rh{do we need ``as seen''?}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
-In a second step, the vector instructions were optimised with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}
+In a second step, the vector instructions were optimised with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}\sr{pherhaps it would be interesting}
 Even though, looking at the assembly compiled from optimisation \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
 \HTinline{I think we should mention that even though only 4 msgs are processed, sequential in-msg access gives us a slight performance increase. (maybe in section 4 with plot?)}
 
@@ -399,8 +401,8 @@ In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword 
 \end{figure*}
 
 
-This section starts by describing the experimental setup as a first part\rh{drop `as a first part', or change to `in the first part'}.
-In the second part, we show the results of our experiments. 
+This section starts by describing the experimental setup as a first part\rh{drop `as a first part', or change to `in the first part'}..
+In the second part, we show the results of our experiments evaluating the optimisations steps described in the previous section. 
 
 \subsection{Experimental setup}\label{sec:setup} \rh{Would just say `This \namecref{sec:setup} provides details...'} The following paragraphs start with providing details about experimental setup by describing the platform and compiler used, the test inputs and how measurements were performed. 
 
@@ -488,9 +490,9 @@ The big dataset represents graphs of 45,729 to 221,588 vertices and 2,009,141 to
 \mypar{Measurement} For measuring the number of cycles, the \verb@RDTSC@ instruction has been used.
 In addition, the number of flops has been calculated directly in the measurement code.
 \rh{This is sloppy, but I think we should mention it. If you can improve on it, please do.}As mentioned in TODO, we solely optimised and measured the belief propagation procedure of \cref{algo:propagate}. The number of iterations was set to 10 with the exception of optimisations \opt{1, 2} measured on the big dataset.
-In those cases, only a single iteration was measured due to the runtime growing prohibitively large otherwise.\sr{*}
+In those cases, only a single iteration was run due to the runtime growing prohibitively large otherwise.
 
-\subsection{Experiment results}  The subsequent paragraphs demonstrate the incremental performance and runtime improvements achieved by successively applying the optimisations described in \cref{sec:yourmethod}.
+\subsection{Experimental results}  The subsequent paragraphs demonstrate the incremental performance and runtime improvements achieved by successively applying the optimisations described in \cref{sec:yourmethod}.
 Additionally, interesting failed attempts are discussed.  
 Finally, a roofline plot with the final optimisation step and the relative end-to-end speedup over the baseline \opt{1} are shown.
 
@@ -564,7 +566,7 @@ Also in this case, the advantages of vectorisation diminish as most of the compu
 For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs of the same amount of vertices as for the small dataset.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on higher degree graphs: 
 The relative speedup gain for bipartite graphs is not significantly better than in \cref{speedupGraphPaddingSmall}.
-It turns out for the small dataset we used considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.\rh{how did you arrive at those numbers? My calculations say something different}
+It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.\rh{how did you arrive at those numbers? My calculations say something different}
 
 \mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase instruction level parallelism of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
 Optimisation \opt{13} tried to do achieve the same thing by doubling the unrolling factor of the inner loop but on top of optimisation step \opt{8}.
