@@ -118,11 +118,13 @@ In this paper, we focus on single-core performance where we do not concern ourse
 \section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
 In this section, we start by formulating belief propagation in the form that we
-use in our algorithm. Then we describe what role it plays in top-N
+use in our algorithm.\sr{Maybe replace 'in the form ...' with as described by \citet{top-n-recommendation}} Then we describe what role it plays in top-N
 recommendation.\todo{Update}
 
 \rhinline{I'm omitting general description of belief propagation because it
 just doesn't add any value IMO}
+\srinline{When I read it I find it enough.}
+\sr{For me this is fine. The paper is about optimisation.}
 
 \subsection{Belief propagation} \label{subsec:bp}
 
@@ -225,6 +227,7 @@ are given a list of triplets of the form $(\text{userID}, \text{itemID},
 so-called \emph{target} user). Based on that, we want to recommend $r$ items to
 user $t$ such that $t$ is as likely as possible to like those items.
 
+\sr{Why not remove this space here and append the next sentece?}
 In our concrete instantiation, items are actually movies and ratings are
 integers in $\{1, \ldots, 5\}$.
 
@@ -232,8 +235,9 @@ integers in $\{1, \ldots, 5\}$.
 \citet{top-n-recommendation}. As our work focuses solely on optimising the
 belief propagation part of the algorithm, we describe the rest of the algorithm
 in minimum detail and refer the reader to the original article.
+\srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-n recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
 
-The algorithm represents the ratings as a bipartite graph, with users and
+The algorithm\sr{I would not use the word 'algorithm' in this whole subsection 'top-n-recommendation' as I find it a bit confusing (with the propagate part which is also called algorithm). I would say that we describe the type of inputs to propagate.} represents the ratings as a bipartite graph, with users and
 movies as vertices and ratings as edges. Only edges whose ratings satisfy a
 certain threshold are kept (different thresholding methods are described in the
 paper). \HT{maybe explicitly mention that our tresholding is average rating of users?}We use BP to model the probability that user $t$ likes a vertex. Thus,
@@ -247,12 +251,12 @@ D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
 $\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
 
 After constructing the graph in this fashion, we run BP for a fixed number of
-iterations (10 in our case). Then we compute the beliefs $b_i$, sort the movie
+iterations (10 in our case)\sr{Information in braces might be redundant.}. Then we compute the beliefs $b_i$, sort the movie
 vertices according to $b_i(\text{LIKE})$ and output the $r$ vertices with the
 largest $b_i(\text{LIKE})$.
 
 In the rest of this article, we only focus on the BP part of the algorithm (as
-described in \cref{algo:propagate}), as it is by far the largest bottleneck. To
+described in \cref{algo:propagate}), as it is by far the largest bottleneck.\sr{Maybe move this to METHOD or RESULTS and mention that 'As we see in Section ... the propagate part turns out to be the bottleneck thus for simplicity we only do the cost analysis for this part.' Or something similar ...} To
 simplify, we assume that we already have a bipartite graph $G$ with $n$
 vertices and $m$ edges, along with $\nodepot_i$ and $\edgepot_{ij}$. We perform
 all our analysis and optimisation with respect to $G$, $n$ and $m$.
@@ -268,7 +272,7 @@ Analyzing \cref{algo:propagate} gives us $$4 \cdot (\deg(i) (\deg(i) - 2) +
 	&= 14m + 4\sum_{i\in V} \deg(i)^2\\
 	&\ge 14m + 16m^2 / n \\
 	&= 14m + 8m \cdot \avgdeg,
-\end{align*}
+\end{align*}\sr{Include normalisation line 12?}
 %
 where $\avgdeg$ is the average degree and we used respectively 1) the fact that $\sum_{i\in V}\deg(i) = 2|E|$, 2) the Cauchy-Schwarz inequality for $x_i = \deg(i)$ and $y_i = 1$, and 3) the fact that $2m = n\cdot\avgdeg$.
 
