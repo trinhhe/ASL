@@ -7,6 +7,7 @@
 void calculate_graph_and_beliefs(rating_t *ratings, int target_uid, graph_t *G) {
     int iterations = 10;
 	graph_from_edge_list(ratings, target_uid, G);
+	printf("%d %d\n", (int)G->n, (int)G->m);
 	for (int it = 0; it < iterations; it++) {
 #ifdef DEBUG
 		printf("=== Iteration %3d ===\n", it);
