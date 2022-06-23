@@ -98,7 +98,7 @@ In the age of digitalization a majority of the people spend their time on differ
 Many papers about BP focus on the algorithmic site for optimization. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorization.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times \st{add a comma here?} evaluated on the MovieLens datasets \cite{movieLens}.
+We provide a BP implementation based on \citet{top-n-recommendation}. On top of that we optimize the performance by some algorithmic changes, standard C optimization techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our optimized version beats the baseline implementation and also the library \emph{libDAI} BP implementation \cite{libdai}. Our overall speedup is up to 500 times, \st{add a comma here?} evaluated on the MovieLens datasets \cite{movieLens}.
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for 30 iterations, they effectively reduce the number of iterations roughly to 8-9 iterations without any performance degradation.
@@ -108,7 +108,7 @@ BP is also used in decoders for polar codes. For better performance, \citet{rela
 
 There are also works that focus on parallelization. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10 for small datasets and 2 iterations for big datasets. \HT{is this correct?}
+In this paper, we focus on single core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations, namely 10 in most cases or for some unoptimized versions on big datasets one single iteration.
 
 \section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
@@ -530,7 +530,7 @@ The last optimisation step achieves around 16.25\% of the vectorized peak perfor
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_small.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
-			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidth between L3 cache and memory ($\beta = 6$). \label{rooflineEndToEndSmall}}
+			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
 \end{figure}
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the relative speedup over the baseline \opt{1} on the small dataset.
