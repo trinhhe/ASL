@@ -560,38 +560,38 @@ The relative speedup of the combined version of both optimisations (optimisation
 In \cref{speedupGraphPaddingSmall}, we see no improvement\rh{no improvement? it's worse! just roast it, I won't mind :D} in relative speedup over optimisation step \opt{8}.
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
 Therefore, using aligned loads did not benefit the relative speedup.
-Apart from that, graph padding increases the memory foot print.
+Apart from that, graph padding increases the memory footprint.
 If most of the vertices have a very low degree, for example lower than SIMD size, the memory overhead of padding becomes significant.
 Also in this case, the advantages of vectorisation diminish as most of the computation will be handled by the left-over loops, i.e. sequentially.\rh{if I understand it this sentence correctly, that's not necessarily true, the padding is done so that the size will be exactly a multiple of SIMD size, so no left-over loop is needed (in the last iteration, we just maybe deal with some dummy edges which is fine, the SIMD algo doesn't mind).}
-For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs of the same amount of vertices as for the small dataset.
+For this reason,\rh{This sounds weird, for what reason? AFAIK the reason is only described later (we want to (dis)prove that bigger avg degree might work) and that's why it's weird. But I can't think of how to reformulate} \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs of the same amount of vertices as for the small dataset.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on higher degree graphs: 
 The relative speedup gain for bipartite graphs is not significantly better than in \cref{speedupGraphPaddingSmall}.
 It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.\rh{how did you arrive at those numbers? My calculations say something different}
 
 \mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase instruction level parallelism of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
-Optimisation \opt{13} tried to do achieve the same thing by doubling the unrolling factor of the inner loop but on top of optimisation step \opt{8}.
+Optimisation \opt{13} tried to achieve the same thing by doubling the unrolling factor of the inner loop but on top of optimisation step \opt{8}.
 \Cref{speedupUnsuccessful} shows that these optimisation steps could not increase the speedup relative to the optimisation steps they emerged from.
-The runtime is bounded by the divisions since they have the lowest throughput and latency.\sr{*}
+The runtime is bounded by the divisions since they have the lowest throughput and latency.\sr{*}\rhinline{is that the case though? for unroll-i I think bad locality definitely plays a bigger role. For unroll-j, tbh, I don't know. the division may be a factor, but I don't think that's the full story. Maybe we spill out of registers? or, in case of vectorisation, spend more time in leftover loop because it's larger on average?}
 Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
 Hence, compiler could not take further advantage of this additional information.
 
-\mypar{Performance \& Big inputs} Since the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
+\mypar{Performance \& Big inputs} Since\rh{would drop both ``since'' and make simple sentences out of this, or at least the first since.} the optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken and since we only discussed what happens on the small dataset so far, it is interesting to see the actual performance achieved and also how it changes for a working set that doesn't fit into cache anymore.
 To this end, \cref{cpctVectPerformanceBoth} shows the performances of these optimisations on the small and big dataset combined.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
 The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
-All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
-For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit into cache anymore.
+All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.05 flops/cycle (below 0.005 flops/cycle on the big dataset).
+For all versions, starting from the datapoint close to 50,000 vertices, the data structures didn't fit into L3 cache anymore.
 
 \mypar{Roofline}
 Optimisation step \opt{8} is the final one.
-In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEndSmall}.
+In order to see whether it is memory or compute bound and how close it is to the optimal performance, consider \cref{rooflineEndToEndSmall}.
 It is obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
 The last optimisation step achieves around 16.13\% of the vectorised peak performance and 64.5\% of the scalar peak performance on average on the platform.  
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
 On the small dataset, the overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
-The big dataset appears after the first peak\sr{Maybe explain that peak?} in \cref{speedupEndToEnd}, after which the relative speedup scales with input size.\sr{*}
+The big dataset appears after the first peak\sr{Maybe explain that peak?}\rh{Yeah. Do you want to or should I? AFAIK the peak is there because the different dataset has different average degree when starting from small inputs, so the baseline is suddenly faster before dropping again.} in \cref{speedupEndToEnd}, after which the relative speedup scales with input size.\sr{*}
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEnd}.
 
 %Here you evaluate your work using experiments. You start again with a
@@ -622,13 +622,13 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 \section{Conclusion}
 
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
-Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
-We achieved a 100$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
-The speedup scales with input size such that for the input with 221,588 vertices it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{yeah, the bigger the speedup, the cooler we look}
+Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays\rh{drop}. 
+We achieved a 100$\times$\rh{1000?} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and up to 16.13\% vectorised peak performance on a dataset which does not fit entirely into cache.
+The speedup scales with input size such that for the input with 221,588\rh{here I'd probably round to $\approx$200,000?} vertices it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{I think the scaling up is relatively legit. After rerunning the experiments, 1 and 10 iterations behaved the same. So this is a ``real'' achievement IMO.}
 For inputs not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
-Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
-Out off all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}
-There might be ways to further improve the performance our implementation since it is compute-bound and did not hit peak performance.\sr{*}
+Also, for bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
+Out of all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}\rh{Maybe focus less on details and more on the takeaway message? hmm, but what is it? probably sth along the lines of ``the best optimisation was to improve the algorithm/time complexity'', but idk how to phrase it nicely}
+There might be ways to further improve the performance our implementation since it is compute-bound and did not hit peak performance.\sr{*}\rh{would omit in this form because it's kind of negative :) but if we can formulate in some insightful manner, idk, ``we suspect we could improve it if we did this / if we had a machine with better this''}
 %Here you need to briefly summarize what you did and why this is
 %important. {\em Do not take the abstract} and put it in the past
 %tense. Remember, now the reader has (hopefully) read the paper, so it
@@ -657,11 +657,13 @@ There might be ways to further improve the performance our implementation since 
 
 %Example and structure follows.
 
-\mypar{Richard} Did the base implementation from scratch in C in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
-
-\mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Extended flop counting with e.g. byte counting. Measuring graph padding on bipartite graph. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
+\mypar{Henry} Implemented flop counting in code. Tried out unrolling outer loop over nodes further. Tried out unrolling inner loop over neighbours of a node further. Extended flop counting with e.g. byte counting. Measured graph padding on bipartite graph. Implemented roofline plot. Helped with preparing plots for the presentation, mainly the roofline.
 
 \mypar{Sarah} Implemented flop counting in code of both algorithms together with Henry. Improved library flop counting. Performed unrolling optimisation of inner loop over neighbours of a node. Mostly prepared the slides on optimisations for the presentation.
+
+\mypar{Richard} Did the base implementation from scratch in C.
+% in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. % It's too long
+Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
 \mypar{Stephanie} Did the base implementation using the libDAI library. Vectorised loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
 
@@ -670,11 +672,6 @@ There might be ways to further improve the performance our implementation since 
 \section{Global TODOs}
 
 \rhinline{just a list of TODOs we should tackle before submitting, feel free to add/disagree}
-
-\subsection{New measurements}
-
-\rhinline{after new measurements arrive (should be 2022-06-22 morning), there is lot to do:}
-\todo[inline]{change the concrete speedup numbers in the text (should not affect small dataset, but let's see first)}
 
 \subsection{Plots}
 
