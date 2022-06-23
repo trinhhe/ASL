@@ -140,16 +140,16 @@ $$p_i(x_j) = \sum_{\ves \in X^V: s_i = x_j} p(\ves) = \Pr_p[s_i = x_j]$$
 %
 % In other words, we want to know how probable it is that $v_i$ ends up in the respective states $\in X$.
 To model $p$, the algorithm is also given a collection of node potentials
-$\{\,\phi_i\,\}_{i \in V}$, with $\phi_i: X \to [0, 1]$, and a collection of edge
-potentials $\{\,\psi_{ij}\,\}_{ij \in E}$, with $\psi_{ij}: X\times X \to [0, 1]$.
+$\{\,\nodepot_i\,\}_{i \in V}$, with $\nodepot_i: X \to [0, 1]$, and a collection of edge
+potentials $\{\,\edgepot_{ij}\,\}_{ij \in E}$, with $\edgepot_{ij}: X\times X \to [0, 1]$.
 Intuitively, node potentials capture our priors about which states each vertex
 inclines to, while the edge potentials capture the influence the state of a
 vertex has on the state of its neighbours.
 
 In classical BP, it is assumed that $p$ can be explicitly expressed in terms of
-$\phi_i$ and $\psi_{ij}$. In our case, where $p$ itself is inherently more
-fuzzy, we make no such claim, and content ourselves with saying that $\phi_i$
-and $\psi_{ij}$ allow us to approximately model $p$.
+$\nodepot_i$ and $\edgepot_{ij}$. In our case, where $p$ itself is inherently more
+fuzzy, we make no such claim, and content ourselves with saying that $\nodepot_i$
+and $\edgepot_{ij}$ allow us to approximately model $p$.
 \srinline{For me this is fine. The paper is about optimisation.}
 
 \mypar{Message passing} The belief propagation algorithm itself consists of two
@@ -225,7 +225,7 @@ in minimum detail and refer the reader to the original article.
 \srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-n recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
 \rhinline{The thing is that I want to give a heads up ``hey reader, it's ok that you find this vague, it actually is because it wasn't our main focus''. it doesn't have to be here, but I would put it \emph{somewhere}}
 
-The algorithm\sr{I would not use the word 'algorithm' in this whole subsection 'top-n-recommendation' as I find it a bit confusing (with the propagate part which is also called algorithm). I would say that we describe the type of inputs to propagate.}\rh{if I changed it to ``we'' (we set $\phi_i$), would it be better, or worse?} represents the ratings as a bipartite graph, with users and
+The algorithm\sr{I would not use the word 'algorithm' in this whole subsection 'top-n-recommendation' as I find it a bit confusing (with the propagate part which is also called algorithm). I would say that we describe the type of inputs to propagate.}\rh{if I changed it to ``we'' (we set $\nodepot_i$), would it be better, or worse?} represents the ratings as a bipartite graph, with users and
 movies as vertices and ratings as edges. Only edges whose ratings satisfy a
 certain threshold are kept (different thresholding methods are described in the
 paper; we use the threshold that keeps edges above user's average rating). We use BP to model the probability that user $t$ likes a vertex. Thus,
@@ -264,14 +264,20 @@ Analyzing \cref{algo:propagate} gives us $$4 \cdot (\deg(i) (\deg(i) - 2) +
 %
 where $\avgdeg$ is the average degree and we used respectively 1) the fact that $\sum_{i\in V}\deg(i) = 2|E|$, 2) the Cauchy-Schwarz inequality for $x_i = \deg(i)$ and $y_i = 1$, and 3) the fact that $2m = n\cdot\avgdeg$.
 
-%\subsection{Faster algorithm}\label{subsec:faster}
-%Looking closer at line TODO of \cref{algo:propagate}, we can see that for a
-%given $i$, the calculation of $M^d_j$ is very similar for different $j$. We can
-%exploit that to insert $$M^d \leftarrow \prod_{k \in N(i)} m_{ki}(x_d)$$ before
-%line TODO, and replace line TODO with $$M^d_j \leftarrow M^d / m_{ji}(x_d),$$ thus
-%replacing $\deg(i) - 2$ multiplications with one division. 
-%
-%this drastically changes the cost analysis. Now we get $4
+\subsection{Faster belief propagation}\label{subsec:faster}
+
+\rhinline{TODO: In one sentence mention that this is our contribution (and does not come from the paper)}
+
+Looking closer at \cref{algo:propagate}, we can see that for a given $i$, the
+calculation of $M^d_j$ is very similar for different $j$. We can exploit that
+to insert $$M^d \leftarrow \prod_{k \in N(i)} m_{ki}(x_d)$$ before line
+\ref{line:for-j}, and replace line \ref{line:calc-prod-slow} with $$M^d_j
+\leftarrow M^d / m_{ji}(x_d),$$ thus replacing $\deg(i) - 2$ multiplications
+with one division. We can also move the multiplication by
+$\nodepot_i(x_d)\edgepot_{ij}(x_d, x_c)$ outside the $j$-loop since the
+potentials do not depend on $j$.
+
+This drastically decreases the flop count to $C(G) = 26m + 8n$.
 
 \section{Optimisation Steps}\label{sec:yourmethod}
 \begin{figure*}[t]
@@ -293,16 +299,12 @@ The first optimisations applied on top of the baseline implementation were scala
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimisations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
 Writing out the inner two by two loop saves on control flow instructions in addition to saving computation and it also makes it more predictable for the compiler. 
 
-\mypar{Precompute message products \opt{3}}
-\rhinline{I plan on describing some of this in \cref{sec:background}, so I'll maybe move some of this there after I get to it.}
-\stinline{good idea, then we can reference the theory like I did in the previous section}
-In the next step the algorithm was optimised, specifically the message calculation. As seen in \cref{sec:background}, the messages get calculated according to:
-$$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
-This means, that for every neighbour of a node computes a product of messages from all other neighbours of a node. \HT{sounds strange maybe: ``.., that for every neighbour of a node, we compute a product...}To avoid repeating the same calculations, the product was replaced with the following:
-$$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
-Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbours of a node and therefore can be calculated in the outer loop, right before line~\ref{line:for-j} in \cref{algo:propagate}.
-
-This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
+\mypar{Precompute message products \opt{3}} In the next step, we switched to
+the asymptotically faster algorithm introduced in \cref{subsec:faster}. This
+improved the time complexity from $\O(m\cdot \avgdeg)$ to $O(m + n)$, while
+decreasing the flop count to $C(G) = 26m + 9n$. On the other hand, it
+introduced additional division operations which have worse latency and
+throughput.
 
 \mypar{Graph padding}
 In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3} and kept for all following optimisation steps (as seen in \cref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively. With this, when the j-loop from \cref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
@@ -334,9 +336,6 @@ As important as the final results is to show that you took a structured, organiz
 Since it was reasonable to assume, that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.\\
 The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.\\
 In a second step, the type of indices was changed from \verb@size_t@ to \verb@uint32_t@. This is sufficient for any input that needs less than 48 GB of memory. 
-\rhinline{I calculated [for how big input this is enough] [...]}
-\stinline{Thanks! Should I also add the explanation?}
-\rhinline{I think it isn't worth the space.}
 
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
@@ -571,7 +570,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 %Every plot should be referenced and discussed (what does it show, which statements do
 %you extract).
 
-\section{Conclusions}
+\section{Conclusion}
 
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
 Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
