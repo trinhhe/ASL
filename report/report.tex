@@ -3,7 +3,7 @@
 %   IEEEbib.bst - IEEE bibliography style file.
 % --------------------------------------------------------------------------
 
-\documentclass[letterpaper]{article}
+\documentclass[final,letterpaper]{article}
 \usepackage{spconf,amsmath,amssymb,graphicx,xspace,tabularx,hyperref}
 \usepackage{cleveref}
 \let\cref=\Cref % Capitalise `Section 3` etc. when referencing
@@ -26,7 +26,7 @@
 %
 % Single address.
 % ---------------
-\name{Henry Trinh, Richard Hladik, Stephanie Ruhstaller, Sarah Tr\"ondle}
+\name{Henry Trinh, Richard Hladík, Stephanie Ruhstaller, Sarah Tr\"ondle}
 \address{Department of Computer Science\\ ETH Zurich, Switzerland}
 
 % For example:
@@ -54,6 +54,7 @@
 %
 \maketitle
 %
+
 
 \begin{abstract}
 	\templatecomment{Describe in concise words what you do, why you do it (not necessarily
@@ -285,7 +286,7 @@ where $\avgdeg$ is the average degree and we used respectively 1) the fact that 
 \stinline{going to make the screen shot of the diagram prettier}
 \rhinline{I'd definitely aim for a figure that spans both columns, this is simply too small}
 
-This section presents all optimization steps seen in figure \ref{OptDiagram}.
+This section presents all optimization steps seen in \cref{OptDiagram}.
 
 
 \mypar{Baseline \opt{1}}
@@ -293,7 +294,7 @@ This project has two baselines. The first makes use of the C++ library libDAI, w
 The second baseline, and basis for all optimization, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 \mypar{Low-hanging fruit \opt{2}}
-The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops, starting on line~\ref{line:for-xc} of algorithm \ref{algo:propagate}, explicitly. This optimization was then used as basis for all following steps.
+The first optimizations applied on top of the baseline implementation were scalar replacement and writing out the inner two by two loops, starting on line~\ref{line:for-xc} of \cref{algo:propagate}, explicitly. This optimization was then used as basis for all following steps.
 
 Using scalar replacement for values that are accessed through pointers should allow the compiler to use more optimizations since the possibility of aliasing is excluded, and can possibly save memory accesses when a pointer is dereferenced once instead of multiple times.
 Writing out the inner two by two loop saves on control flow instructions and besides saving computation, it also makes it more predictable for the compiler. \stinline{should the reasoning of our assumptions be in this section or in results?}
@@ -308,12 +309,12 @@ In the next step the algorithm was optimized, specifically the message calculati
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d)$$
 This means, that for every neighbor of a node computes a product of messages from all other neighbors of a node. \HT{sounds strange maybe: ``.., that for every neighbor of a node, we compute a product...}To avoid repeating the same calculations, the product was replaced with the following:
 $$\prod_{k \in N(i) \setminus j} m_{ki}(x_d) = \frac{1}{m_{kj}(x_d)} \cdot \prod_{k \in N(i)} m_{ki}(x_d)$$
-Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop, right before line~\ref{line:for-j} in algorithm \ref{algo:propagate}.
+Where $\prod_{k \in N(i)} m_{ki}(x_d)$ is the same for all neighbors of a node and therefore can be calculated in the outer loop, right before line~\ref{line:for-j} in \cref{algo:propagate}.
 
 This improves the asymptotic complexity of the belief propagation algorithm from $O(|E|\cdot avgDegree)$ to $O(|E|)$. Which means a drastic decrease in required flops per graph node, what should lead to a significant speedup.
 
 \mypar{Graph padding}
-In anticipation of unrolling and SIMD optional graph padding was added to optimization \opt{3} and kept for all following optimisation steps (as seen in figure \ref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from algorithm \ref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
+In anticipation of unrolling and SIMD optional graph padding was added to optimization \opt{3} and kept for all following optimisation steps (as seen in \cref{OptDiagram}.) The idea behind it was, to add additional nodes in the graph, that would not have any influence on the result, but would make the number of neighbors of a node divisible by 4 or 8 respectively. With this, when the j-loop from \cref{algo:propagate} is unrolled, there is no need to add a small left-over loop without unrolling. To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, it was implemented with the help of macros. So the graph padding could easily be activated or deactivated.
 
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
@@ -325,7 +326,7 @@ The difference in the two unrolling implementations is that thanks to optimizati
 In a different implementation, based on optimisation \opt{3}, we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimization \opt{3} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
-As seen in figure \ref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
+As seen in \cref{OptDiagram}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
 In a second step, the vector instructions were optimized with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}
 Even though, looking at the assembly compiled from optimization \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
 
@@ -377,7 +378,7 @@ In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword 
 \section{Experimental Results}\label{sec:exp}
 
 \oldlinewidth=\linewidth
-\begin{figure*}
+\begin{figure*}[!t] % Don't know how to get rid of the !, but it works somehow
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[0][1][2]_small.pdf}
 	\caption{Relative speedup of optimisation step \opt{2} and the libDAI library \opt{0} over the baseline \opt{1} on the small dataset. \label{libSpeedupSmall}}
@@ -457,6 +458,28 @@ In those cases, only a single iteration was measured due to the runtime growing 
 Additionally, interesting failed attempts are discussed.  
 Finally, a roofline plot with the final optimisation step and the relative end-to-end speedup over the baseline \opt{1} are shown.
 
+\begin{figure*}[!t]
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/speedup[3][6][7][8]_small.pdf}
+	\caption{Relative speedup of vectorisation and saving memory optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
+\end{minipage}%
+\hfil
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/speedup[8]padding_small.pdf}
+	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on the small dataset. \label{speedupGraphPaddingSmall}}
+\end{minipage}%
+
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/speedup[8]padding_bipartite.pdf}
+	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
+\end{minipage}%
+\hfil
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/performance[3][6][7][8]_both.pdf}
+	\caption{Performance of optimisations \opt{3}, \opt{6}, \opt{7} and \opt{8} on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
+\end{minipage}%
+\end{figure*}
+
 \mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is faster.
 For this purpose, the relative speedup in runtime of the different base implementations over the from scratch implementation on the small dataset is displayed in \cref{libSpeedupSmall}.
 We see that libDAI library \opt{0} uses the most cycles compared to the others.
@@ -472,33 +495,36 @@ but it also introduced the need for division, which is bad because the platform 
 \cref{precomputeSpeedupSmall} shows that on the small dataset, optimisation step \opt{3} achieves a relative speedup of at least $20\times$ over optimisation \opt{2}.
 This is because there are enough neighbours for each node in the dataset such that computing the product over them for a node takes more cycles than using a division.
 
+\begin{figure*}[!t]
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/speedup[3][8][9][10][13]_small.pdf}
+	\caption{Relative speedup of further unrolling added on top of optimization step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
+\end{minipage}%
+\hfil
+\begin{minipage}[t]{\oldlinewidth}\centering
+	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_both.pdf}
+	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} on the small and big dataset combined.
+			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in the paragraph \emph{Platform}. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
+\end{minipage}%
+\end{figure*}
+\begin{figure}[!bt]\centering
+	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_both.pdf}
+	\caption{Relative end-to-end speedup over baseline \opt{1} on the small and big dataset combined} \label{speedupEndToEnd}
+\end{figure}
+
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
 We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1$\times$ with saving memory while vectorisation yields a relative speedup of at most 1.6$\times$ with respect to optimisation \opt{3}.
 The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately and at least 1.3$\times$.
 
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[3][6][7][8]_small.pdf}
-	\caption{Relative speedup of vectorisation and saving memory optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
-\end{figure}
-
-
 \mypar{Graph padding} To examine the effect of SIMD alignment we tried to pad the graph so that each vertex starts on an address divisible by SIMD size.
 In \cref{speedupGraphPaddingSmall}, we see no improvement in relative speedup over optimisation step \opt{8}.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[8]padding_small.pdf}
-	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on the small dataset. \label{speedupGraphPaddingSmall}}
-\end{figure}
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
 Therefore, using aligned loads did not benefit the relative speedup.
 Apart from that, graph padding increases the memory foot print.
 If most of the vertices have a very low degree, for example lower than SIMD size, the memory overhead of padding becomes significant.
 Also in this case, the advantages of vectorisation diminish as most of the computation will be handled by the left-over loops, i.e. sequentially. 
 For this reason, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[8]padding_bipartite.pdf}
-	\caption{Relative speedup of using graph adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupGraphPaddingBipartite}}
-\end{figure}
 These complete bipartite graphs were generated using \texttt{networkx}\sr{cite how} library for 1010 up to 10100 vertices taking steps of 1010 \cite{networkx}.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on higher degree graphs: 
 The relative speedup gain for bipartite graphs is not significantly better than in \cref{speedupGraphPaddingSmall}.
@@ -509,10 +535,6 @@ Optimisation \opt{13} tried to do achieve the same thing by doubling the unrolli
 \Cref{speedupUnsuccessful} shows that these optimisation steps could not increase the speedup relative to the optimisation steps they emerged from.
 The runtime is bounded by the divisions since they have the lowest throughput and latency.\sr{*}
 Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[3][8][9][10][13]_small.pdf}
-	\caption{Relative speedup of further unrolling added on top of optimization step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
-\end{figure}
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
 Hence, compiler could not take further advantage of this additional information.
 
@@ -522,30 +544,17 @@ We see that for the bigger inputs the combined version is still the best but the
 The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
 All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.1 flops/cycle.
 For the versions saving memory, starting from the datapoint close to 50,000 vertices, the data structures didn't fit into cache anymore.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/performance[3][6][7][8]_both.pdf}
-	\caption{Performance of optimisations \opt{3}, \opt{6}, \opt{7} and \opt{8} on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
-\end{figure}
 
 \mypar{Roofline}
 Optimisation step \opt{8} is the final one.
 In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEnd}.
 It is obvious from \cref{rooflineEndToEnd} that all versions reside in the compute-bound region.
 The last optimisation step achieves around 16.13\% of the vectorized peak performance and 64.5\% of the scalar peak performance on average on the platform.  
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_both.pdf}
-	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} on the small and big dataset combined.
-			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in the paragraph \emph{Platform}. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
-\end{figure}
 
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
 On the small dataset, the overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
 The big dataset appears after the first peak\sr{Maybe explain that peak?} in \cref{speedupEndToEnd}, after which the relative speedup scales with input size.\sr{*}
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEnd}.
-\begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_both.pdf}
-	\caption{Relative end-to-end speedup over baseline \opt{1} on the small and big dataset combined} \label{speedupEndToEnd}
-\end{figure}
 
 %Here you evaluate your work using experiments. You start again with a
 %very short summary of the section. The typical structure follows.
