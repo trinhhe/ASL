@@ -381,7 +381,7 @@ In the second part, we show the results of our experiments.
 
 \mypar{Experimental setup} The following paragraphs start with providing details about experimental setup by describing the platform and compiler used, the test inputs and how measurements were performed. 
 
-\mypar{Platform} All the experiments were conducted on an Intel(R) Core(TM) i5-7200U @2.50GHz which is described in \cref{platform}.
+\mypar{Platform}\label{par:platform} All the experiments were conducted on an Intel(R) Core(TM) i5-7200U @2.50GHz which is described in \cref{platform}.
 \begin{table}
 	\begin{tabularx}{\linewidth}{ 
 			@{} % <-- to get rid of the space on the left
@@ -421,7 +421,8 @@ For comparison, \cref{streamBenchmarkResults} shows best memory throughput rates
 	\caption{Memory throughput of experimental platform for a single core measured using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2}.\label{streamBenchmarkResults}}
 \end{table}
 Taking the average over all functions in \cref{streamBenchmarkResults} gives 15'054.4 MB/s which is around 15 GB/s.
-Dividing this 15 GB/s by 2.5 GHz, results thus in an average memory bandwidth $\beta=6$ bytes/cycle. Furthermore, the bandwidths for L1, L2 and L3 caches are 81, 29 and 18 bytes/cycle which are taken from \cite{optimisationManual}
+Dividing this 15 GB/s by 2.5 GHz, results thus in an average memory bandwidth $\beta=6$ bytes/cycle. 
+Furthermore, the bandwidths for L1, L2 and L3 caches are 81, 29 and 18 bytes/cycle which are taken from \cite{optimisationManual}
 
 \mypar{Compiler} The program was compiled using GCC 12.1.0 with \verb@g++ -Ofast -march=native@.
 
@@ -432,8 +433,6 @@ This section's plots display the results of either a small or a big dataset comp
 The small dataset represents graphs of 981 to 10,334 vertices and consists of inputs % 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334
 considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450, 540 and 610 users based on the MovieLens Latest Small dataset \cite{movieLensSmall}.
 The big dataset represents graphs of 45,729 to 221,588 vertices and considers the first 16,200, 32,400 ... 162,000 users (taking steps of 16,200) based on the MovieLens 25M dataset \cite{movieLensBig}.
-\srinline{Henry, is the step size 16,200 correct now?}
-\HTinline{Yes}
 
 \mypar{Measurement} For measuring the number of cycles, the \verb@RDTSC@ instruction has been used.
 In addition, the number of flops has been calculated directly in the measurement code.
@@ -470,7 +469,7 @@ This is because there are enough neighbours for each node in the dataset such th
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, on the one hand optimisation \opt{7} additionally tried to save memory and on the other hand optimisation \opt{6} added vectorization.
 We see in \cref{cpctVectSpeedupSmall} that for the small dataset there is only a relative speedup of around 1.1$\times$ with saving memory while vectorisation yields a relative speedup of at most 1.6$\times$ with respect to optimisation \opt{3}.
-The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately.
+The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is greater than each of them separately and at least 1.3$\times$.
 
 \begin{figure}\centering
 	\includegraphics[width=\linewidth]{img/speedup[3][6][7][8]_small.pdf}
@@ -506,7 +505,7 @@ The runtime is bounded by the divisions since they have the lowest throughput an
 Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
 \begin{figure}\centering
 	\includegraphics[scale=0.58]{img/speedup[3][8][9][10][13]_small.pdf}
-	\caption{Relative speedup of further unrolling adding on top of optimization step \opt{8} on complete bipartite graphs. \label{speedupUnsuccessful}}
+	\caption{Relative speedup of further unrolling added on top of optimization step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
 \end{figure}
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
 Hence, compiler could not take further advantage of this additional information.
@@ -524,28 +523,23 @@ For the versions saving memory, starting from the datapoint close to 50,000 vert
 
 \mypar{Roofline}
 Optimisation step \opt{8} is the final one.
-In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEndSmall}.
-It is obvious from \cref{rooflineEndToEndSmall} that all versions reside in the compute-bound region.
-The last optimisation step achieves around 16.25\% of the vectorized peak performance and 65\% of the scalar peak performance on average on the platform.  
+In order to see whether it is memory or compute bound and how close it is to the optimal performance consider \cref{rooflineEndToEnd}.
+It is obvious from \cref{rooflineEndToEnd} that all versions reside in the compute-bound region.
+The last optimisation step achieves around 16.13\% of the vectorized peak performance and 64.5\% of the scalar peak performance on average on the platform.  
 \begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_small.pdf}
-	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} using the small dataset.
-			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
+	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_both.pdf}
+	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} on the small and big dataset combined.
+			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in \cref{par:platform}. Black dots represent the smallest input n. \label{rooflineEndToEndSmall}}
 \end{figure}
 
-\mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEndSmall} displays the relative speedup over the baseline \opt{1} on the small dataset.
-The overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
-Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEndSmall}.
+\mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
+On the small dataset, the overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
+The big dataset appears after the first peak\sr{Maybe explain that peak?} in \cref{speedupEndToEnd}, after which the relative speedup scales with input size.\sr{*}
+Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEnd}.
 \begin{figure}\centering
-	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_small.pdf}
-	\caption{Relative end-to-end speedup over baseline \opt{1} on the small dataset} \label{speedupEndToEndSmall}
+	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_both.pdf}
+	\caption{Relative end-to-end speedup over baseline \opt{1} on the small and big dataset combined} \label{speedupEndToEnd}
 \end{figure}
-
-\srinline{Maybe use abbreviations in the plot e.g. prec, vec2, mem? Replot curves s.t.~across plots the same color is used?}
-\HTinline{good idea}
-\srinline{Maybe a measurement of the baseline \opt{1} on the big dataset would be beneficial for the roofline and end-to-end speedup?}
-\HTinline{I think we should do it on big and small dataset for roofline + end-to=end speedup}
-\srinline{What do you think?}
 
 %Here you evaluate your work using experiments. You start again with a
 %very short summary of the section. The typical structure follows.
@@ -576,8 +570,9 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
 Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms nowadays. 
-We achieved a 100 to 500$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.25\% vectorized peak performance on a small dataset which fits into cache.
-On a bigger dataset not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
+We achieved a 100$\times$ speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz and up to 16.13\% vectorized peak performance on dataset which does not fit entirely into cache.
+The speedup scales with input size such that for the input with 221,588 vertices it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}
+For inputs not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
 Also, for bigger inputs advantages in efficient computation get drowned out by slow memory access.
 Out off all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}
 There might be ways to further improve the performance our implementation since it is compute-bound and did not hit peak performance.\sr{*}
@@ -627,11 +622,8 @@ There might be ways to further improve the performance our implementation since 
 
 \rhinline{after new measurements arrive (should be 2022-06-22 morning), there is lot to do:}
 \todo[inline]{change the concrete speedup numbers in the text (should not affect small dataset, but let's see first)}
-\todo[inline]{update all plots}
 
 \subsection{Plots}
-
-\rhinline{roofline: I would add an L3 memory bound (and maybe L1 and L2?) as some of our inputs fit into L1/L2/L3}
 
 \rhinline{roofline: mention that we assume each random access has to load a cache line from main memory}
 
