@@ -71,7 +71,7 @@ In the age of digitalization a majority of the people spend their time on differ
 Many papers about BP focus on the algorithmic site for optimisation. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorisation.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The optimisations applied range from algorithmic changes, standard C optimisation techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-n recommendation. 
+We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The optimisations applied range from algorithmic changes, standard C optimisation techniques that include unrolling loops and scalar replacement, decreasing memory usage and utilizing SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-N recommendation. 
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30 iterations, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
@@ -119,7 +119,7 @@ $\nodepot_i$ and $\edgepot_{ij}$. In our case, where $p$ itself is inherently mo
 fuzzy, we make no such claim, and content ourselves with saying that $\nodepot_i$
 and $\edgepot_{ij}$ allow us to approximately model $p$.
 
-\mypar{Message passing} The belief propagation algorithm itself consists of two
+\mypar{Message passing} The BP algorithm itself consists of two
 procedures: \emph{propagation} and \emph{belief calculation}.
 
 \myparcont{Propagation} happens for a predefined number of iterations. For each vertex $i$, and each its neighbour $j$, we compute a \emph{message} $m_{ij} : X \to \Rpos$ as follows:
@@ -189,7 +189,7 @@ integers in $\{1, \ldots, 5\}$.
 \citet{top-n-recommendation}. As our work focuses solely on optimising the
 belief propagation part of the algorithm, we describe the rest of the algorithm
 in minimum detail and refer the reader to the original article.
-\srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-n recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
+\srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-N recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
 \rhinline{The thing is that I want to give a heads up ``hey reader, it's ok that you find this vague, it actually is because it wasn't our main focus''. it doesn't have to be here, but I would put it \emph{somewhere}}
 
 The algorithm\sr{I would not use the word 'algorithm' in this whole subsection 'top-n-recommendation' as I find it a bit confusing (with the propagate part which is also called algorithm). I would say that we describe the type of inputs to propagate.}\rh{if I changed it to ``we'' (we set $\nodepot_i$), would it be better, or worse?} represents the ratings as a bipartite graph, with users and
@@ -210,14 +210,8 @@ iterations. Then we compute the beliefs $b_i$, sort the movie
 vertices according to $b_i(\text{LIKE})$ and output the $r$ vertices with the
 largest $b_i(\text{LIKE})$.
 
-In the rest of this article, we only focus on the BP part of the algorithm (as
-described in \cref{algo:propagate}), as it is by far the largest bottleneck.\sr{Maybe move this to METHOD or RESULTS and mention that 'As we see in Section ... the propagate part turns out to be the bottleneck thus for simplicity we only do the cost analysis for this part.' Or something similar ...}\rh{agreed! will do it later today} To
-simplify, we assume that we already have a bipartite graph $G$ with $n$
-vertices and $m$ edges, along with $\nodepot_i$ and $\edgepot_{ij}$. We perform
-all our analysis and optimisation with respect to $G$, $n$ and $m$.
-
-\mypar{Cost analysis} We have chosen the number of flops as the cost measure.
-Analyzing \cref{algo:propagate} gives us $$4 \cdot (\deg(i) (\deg(i) - 2) +
+\mypar{Cost analysis} As mentioned in \cref{place:we-optimised-just-bp}, our work deals solely with optimising \cref{algo:propagate}, thus, we only focus on it in our cost analysis. We have chosen the number of flops as the cost measure.
+Analyzing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
 3\deg(i)) = 4\deg(i)^2 + 4\deg(i)$$ flops for each $i\in V$ on lines
 \ref{line:for-j}--\ref{line:endfor-xc}, plus $3\deg(i)$ flops for each $i \in V$ on line \ref{line:norm-msg}. In total, we get
 %
@@ -255,7 +249,12 @@ This drastically decreases the flop count to $C(G) = 26m + 8n$.
 \end{figure*}
 
 This section presents all optimisation steps seen in \cref{OptDiagram}.
-
+%
+Initial measurements have quickly shown that BP is by far the largest
+bottleneck of the top-N recommendation algorithm. Hence, our work focuses
+solely on optimizing the propagate procedure described in
+\cref{algo:propagate}.
+\label{place:we-optimised-just-bp}
 
 \mypar{Baseline \opt{1}}
 This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor graph.
@@ -290,15 +289,13 @@ The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
 Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimisation \opt{2} and once on basis of optimisation \opt{3}. In both implementations, the loop was unrolled by a factor of~4. This allowed for more scalar replacement. Since the for-loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. \sr{Henry, would you say we need a plot here too?} \st{since we are tight on space anyway, I could also leave out the last sentence}
-\HT{If we would plot \opt{4}, it must be on one of those existing figures but I don't see it fitting anywhere} \st{Removed the sentence calling for a comparison between thees two}
-
+The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact.
 
 \mypar{Unroll outer loop \opt{9}}
 In a different implementation, based on optimisation \opt{3}, we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimisation \opt{3} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
-\rh{do we need ``as seen''?} \st{no, removed it}SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
+SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
 In a second step, the vector instructions were optimised with shuffling in-messages after loading them into vector registers to have more sequential access. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}\sr{pherhaps it would be interesting}
  
@@ -447,7 +444,7 @@ The big dataset represents graphs of $\approx$40k--200k vertices with $\approx$2
 
 \mypar{Measurement} For measuring the number of cycles, the \verb@RDTSC@ instruction has been used.
 In addition, the number of flops has been calculated directly in the measurement code.
-\sr{I think this fits into the methods section.} As mentioned in \cref{subsec:topn}\sr{Is this what you wanted RH?}, we solely optimised and measured the belief propagation procedure of \cref{algo:propagate}.
+As mentioned in \cref{place:we-optimised-just-bp}, we solely optimised and measured the belief propagation procedure of \cref{algo:propagate}.
 The number of iterations was set to 10 with the exception of optimisations \opt{1, 2} measured on the big dataset.
 In those cases, only a single iteration was run due to the runtime growing prohibitively large otherwise.
 
@@ -587,8 +584,8 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 \section{Conclusion}
 
-In this paper, we focused on optimising the sequential performance belief propagation for top-n recommendation in C.
-Top-n recommendation plays important role in online shopping, video and streaming platforms. 
+In this paper, we focused on optimising the sequential performance belief propagation for top-N recommendation in C.
+Top-N recommendation plays important role in online shopping, video and streaming platforms. 
 We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs}\rh{then maybe say 100-1000$\times$?} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
 The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{I think the scaling up is relatively legit. After rerunning the experiments, 1 and 10 iterations behaved the same. So this is a ``real'' achievement IMO.}
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
@@ -632,8 +629,6 @@ Despite the divisions being introduced by our algorithmic optimisation and the f
 Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
 \mypar{Stephanie} Did the base implementation using the libDAI library. Vectorised loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
-
-\srinline{Just wrote down what came into my mind so far. Most likely the description is incomplete and some points are wrong. Fix it.}
 
 \ifdraft{
 \section{Global TODOs}
