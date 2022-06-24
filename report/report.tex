@@ -321,8 +321,8 @@ The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
 Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimisation \opt{2} and once on basis of optimisation \opt{3}. In both implementations, the loop was unrolled by a factor of~4. This allowed for more scalar replacement. Since the for-loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version \opt{4} with more flops.\sr{Henry, would you say we need a plot here too?} \st{since we are tight on space anyway, I could also leave out the last sentence}
-\HT{If we would plot \opt{4}, it must be on one of those existing figures but I don't see it fitting anywhere}
+The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. \sr{Henry, would you say we need a plot here too?} \st{since we are tight on space anyway, I could also leave out the last sentence}
+\HT{If we would plot \opt{4}, it must be on one of those existing figures but I don't see it fitting anywhere} \st{Removed the sentence calling for a comparison between thees two}
 
 
 \mypar{Unroll outer loop \opt{9}}
