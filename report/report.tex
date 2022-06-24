@@ -175,8 +175,8 @@ marginal probability distribution $p_i$.
 
 \subsection{Top-N recommendation} \label{subsec:topn}
 
-Now we describe the end-to-end goal of the algorithm we implement and what role
-BP plays there.
+Now we describe the full algorithm of
+\citet{top-n-recommendation} and what role BP plays there.
 
 \mypar{Top-N recommendation} The task of top-N recommendation is as follows: we
 are given a list of triplets of the form $(\text{userID}, \text{itemID},
@@ -187,28 +187,27 @@ user $t$ such that $t$ is as likely as possible to like those items.
 In our concrete instantiation, items are actually movies and ratings are
 integers in $\{1, \ldots, 5\}$.
 
-\mypar{Algorithm} As already mentioned, we implement the algorithm described by
-\citet{top-n-recommendation}. As our work focuses solely on optimising the
-belief propagation part of the algorithm, we describe the rest of the algorithm
-only briefly and refer the reader to the original article.
-\srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-N recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
-\rhinline{The thing is that I want to give a heads up ``hey reader, it's OK that you find this vague, it actually is because it wasn't our main focus''. It doesn't have to be here, but I would put it \emph{somewhere}}
+\mypar{Application of BP} \citet{top-n-recommendation} solve top-N
+recommendation by converting the input ratings into a suitable graph that can
+be then passed on to BP. They describe in detail how this construction can be
+tuned. Our focus is on optimizing the BP part of the process, but we
+implemented and now describe the rest of it for completeness.
 
-We represent the ratings as a bipartite graph, with users and
+The ratings are represented as a bipartite graph, with users and
 movies as vertices and ratings as edges. Only edges whose rating satisfies a
 certain threshold are kept (different thresholding methods are described in the
-paper; we use the threshold that keeps edges above user's average rating). We use BP to model the probability that user $t$ likes a vertex. Thus,
+paper; we use the threshold that keeps edges above user's average rating). BP is used to model the probability that user $t$ likes a vertex. Thus,
 the possible states of each vertex are $X = \{$LIKE, DISLIKE$\} =
-\{L, D\}$. (Note that we also model user vertices although in the end we are
+\{L, D\}$. (Note that user vertices are also modelled, although in the end we are
 only interested in movie vertices.)
 
-We set $\nodepot_i$ depending on target user's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
+Potentials $\nodepot_i$ are set depending on target user's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
 $\edgepot_{ij}(L, L) = \edgepot_{ij}(D, D) = 0.5 + \alpha; \edgepot_{ij}(L,
 D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
 $\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
 
-After constructing the graph in this fashion, we run BP for a fixed number of
-iterations. Then we compute the beliefs $b_i$, sort the movie
+After constructing the graph in this fashion, BP is run for a fixed number of
+iterations. Finally, we compute the beliefs $b_i$, sort the movie
 vertices according to $b_i(\text{LIKE})$ and output the $r$ vertices with the
 largest $b_i(\text{LIKE})$.
 
