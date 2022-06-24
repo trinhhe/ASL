@@ -3,17 +3,20 @@
 %   IEEEbib.bst - IEEE bibliography style file.
 % --------------------------------------------------------------------------
 
-\documentclass[draft,letterpaper]{article}
-\usepackage{spconf,amsmath,amssymb,graphicx,xspace,tabularx,hyperref}
-\usepackage{cleveref}
-\let\cref=\Cref % Capitalise `Section 3` etc. when referencing
-\crefname{figure}{fig.}{figs.}
-\crefname{algocf}{algorithm}{algorithms}
+\documentclass[final,letterpaper]{article}
 \usepackage[sort&compress,numbers,sectionbib]{natbib}
+\usepackage{spconf,amsmath,amssymb,graphicx,xspace,tabularx}
+\usepackage[spaces,hyphens]{xurl}
+\usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[ruled,noalgohanging,noend]{algorithm2e}
 \usepackage{comment}
 \usepackage{ifdraft}
 \setkeys{Gin}{draft=false} % make graphicx non-lazy even with draft = on
+\usepackage{cleveref}
+\let\cref=\Cref % Capitalise `Section 3` etc. when referencing
+\crefname{figure}{fig.}{figs.}
+\crefname{algocf}{algorithm}{algorithms}
+
 \input macros/todo
 \input macros/macros
 
@@ -57,7 +60,6 @@
 \maketitle
 %
 
-
 \begin{abstract}
 Recommender systems are omnipresent in today's online shopping and streaming services. A scalable alternative to matrix factorization is belief propagation as it supports incremental updates of the model. This paper presents an efficient and fast belief propagation implementation in C for single-core, applying various optimisation ideas and techniques. We evaluate the performance on the MovieLens dataset and achieve a speedup of at least 100$\times$. Moreover, the effects of the optimisations on speedup grow with the input size.
 \end{abstract}
@@ -71,14 +73,14 @@ In the age of digitalization a majority of people spend their time on different 
 Many papers about BP focus on the algorithmic site for optimisation. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorisation.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The optimisations applied range from algorithmic changes over standard C optimisation techniques that include unrolling loops and scalar replacement to decreasing memory usage and utilising SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-N recommendation. 
+We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The applied optimisations range from algorithmic changes over standard C optimisation techniques that include unrolling loops and scalar replacement to decreasing memory usage and utilising SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-N recommendation. 
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30 iterations, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
 
-There are also works that focus on parallelisation. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} describe novel approaches to parallel message computation in BP using GPU parallelization.
+There are also works that focus on parallelisation. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} propose novel approaches to parallel message computation in BP using GPU parallelization.
 
-In this paper, we focus on single-core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations.
+Our focus in this paper is on single-core performance where we do not concern ourselves with the convergence properties of BP and only consider running the algorithm for a fixed number of iterations.
 
 \section{Belief Propagation \& Top-N Recommendation}\label{sec:background}
 
@@ -221,7 +223,8 @@ Analysing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
 	&= 14m + 4\sum_{i\in V} \deg(i)^2\\
 	&\ge 14m + 16m^2 / n \\
 	&= 14m + 8m \cdot \avgdeg,
-\end{align*}\sr{Include normalisation line 12?}\rh{how do you mean? It's included because it's $7\deg(i)$ and not $4\deg(i)$.}
+\end{align*}
+%\sr{Include normalisation line 12?}\rh{how do you mean? It's included because it's $7\deg(i)$ and not $4\deg(i)$.}
 %
 where $\avgdeg$ is the average degree and we used respectively 1) the fact that $\sum_{i\in V}\deg(i) = 2|E|$, 2) the Cauchy-Schwarz inequality for $x_i = \deg(i)$ and $y_i = 1$, and 3) the fact that $2m = n\cdot\avgdeg$.
 
@@ -360,7 +363,7 @@ In the second part, we show the results of our experiments evaluating the optimi
 
 \subsection{Experimental setup}\label{sec:setup} This \namecref{sec:setup} provides details about the experimental setup by describing the platform and compiler used, the test inputs and how measurements were performed. 
 
-\mypar{Platform} All the experiments were conducted on an Intel(R) Core(TM) i5-7200U @2.50GHz machine which is described in \cref{platform}.
+\mypar{Platform} All the experiments were conducted on an Intel\circledR{} Core™ i5-7200U @2.50GHz machine which is described in \cref{platform}.
 \begin{table}
 	\begin{tabularx}{\linewidth}{ 
 			@{} % <-- to get rid of the space on the left
@@ -368,7 +371,7 @@ In the second part, we show the results of our experiments evaluating the optimi
 			>{\raggedright\arraybackslash}X 
 			@{} % <-- the same for the right space
 		}
-		\textbf{Processor}	&	Intel(R) Core(TM) i5-7200U														\\
+		\textbf{Processor}	&	Intel\circledR{} Core™ i5-7200U														\\
 		\textbf{Code name}	&	Kaby Lake \cite{intelSpec}														\\
 		\textbf{Cores}		&	2 \cite{intelSpec}																\\
 		\textbf{Threads}	&	4 \cite{intelSpec}																\\
@@ -381,9 +384,9 @@ In the second part, we show the results of our experiments evaluating the optimi
 	\end{tabularx}
 	\caption{Experimental platform \label{platform}}
 \end{table} 
-The processor specification states a maximum overall memory bandwidth of 34.1 GB/s for two channels \cite{intelSpec}.
+The processor specification states a maximum memory bandwidth of 34.1 GB/s for two channels \cite{intelSpec}.
 Halving this number gives 17.05 GB/s per channel in theory.
-For comparison, \cref{streamBenchmarkResults} shows best memory throughput rates actually measured on this platform for a single core using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2}.
+For comparison, \cref{streamBenchmarkResults} shows the best memory throughput rates actually measured on this platform for a single core using John D. McCalpin's STREAM memory benchmark \cite{streamBenchmark1,streamBenchmark2}.
 \begin{table}
 	\begin{tabularx}{\linewidth-5mm}{ 
 		    @{}
@@ -447,7 +450,7 @@ As mentioned in \cref{place:we-optimised-just-bp}, we solely optimised and measu
 The number of iterations was set to 10 with the exception of optimisations \opt{1, 2} measured on the big dataset.
 In those cases, only a single iteration was run due to the runtime growing prohibitively large otherwise.
 
-\subsection{Experimental results}  The subsequent paragraphs demonstrate the incremental performance and runtime improvements achieved by successively applying the optimisations described in \cref{sec:yourmethod}.
+\subsection{Experimental results}  The following paragraphs demonstrate the incremental performance and runtime improvements achieved by successively applying the optimisations described in \cref{sec:yourmethod}.
 Additionally, interesting failed attempts are discussed.  
 Finally, a roofline plot with the final optimisation step and the relative end-to-end speedup over the baseline \opt{1} are shown.
 
@@ -469,7 +472,7 @@ Finally, a roofline plot with the final optimisation step and the relative end-t
 \hspace{7.2mm}
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[3][8][9][10][13]_small.pdf}
-	\caption{Relative speedup of further unrolling added on top of optimisation step \opt{3} by optimisations \opt{9,10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
+	\caption{Relative speedup of further unrolling added on top of optimisation step \opt{3} by optimisations \opt{9, 10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
 \end{minipage}%
 \end{figure*}
 
@@ -483,7 +486,7 @@ Applying optimisation \opt{2} to the baseline \opt{1} gives a 4$\times$ speedup.
 One reason for this is that the product calculation at line~\ref{line:calc-prod-slow} of the algorithm can be reused by the outer loop iterating over states. 
 Another important reason is scalar replacement, which eliminates many pointer dereferences.
 
-\mypar{Reducing computation} Optimisation step \opt{3} reduced floating point operations,
+\mypar{Reducing computation} Optimisation step \opt{3} reduced the number of flops,
 but also introduced divisions, which is bad because division has worse latency and throughput than addition/multiplication on the target machine.
 \cref{precomputeSpeedupSmall} shows that on the small dataset, optimisation step \opt{3} achieves a relative speedup of at least $20\times$ over optimisation \opt{2}.
 This is because the average degree is large enough that the cost of the introduced division is offset by improved time complexity.
@@ -503,7 +506,7 @@ This is because the average degree is large enough that the cost of the introduc
 	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_both.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} on the small and big dataset combined.
 	Black dots represent the smallest input n.
-	The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in \cref{sec:setup} \emph{Platform}.
+	The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1, L2, L3 and memory mentioned in \cref{sec:setup} \emph{Platform}.
 	We assumed each random access has to load a cache line from main memory. \label{rooflineEndToEnd}}
 \end{figure}
 
@@ -524,7 +527,7 @@ To this end, \cref{speedupGraphPaddingBipartite} displays the relative speedup o
 The gap in relative speedup on bipartite graphs is not significantly decreased compared to \cref{speedupGraphPaddingSmall}.
 %\srinline{It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.}\rh{how did you arrive at those numbers? My calculations say something different}
 
-\mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase ILP of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
+\mypar{Other unsuccessful optimisations} Optimisations \opt{9, 10} tried to increase ILP of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
 Optimisation \opt{13} tried to achieve the same thing by unrolling the inner loop sixteen times but based on \opt{8}.
 \Cref{speedupUnsuccessful} shows that these optimisation steps could not increase the speedup relative to the optimisation steps they emerged from.
 Presumably, unrolling the outer loop resulted in worse locality whereas for the inner loop, the leftover loops have more iterations and possibly register spilling occurred.\sr{*}
@@ -532,13 +535,13 @@ Presumably, unrolling the outer loop resulted in worse locality whereas for the 
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
 This suggests the code already runs as fast as if no pointer aliasing was assumed without using the keyword.
 
-\mypar{Performance \& Big inputs} The optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken.
+\mypar{Performance \& Big inputs} The optimisations shown in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken.
 Therefore, it is interesting to finally see the actual performance achieved.
 In addition, we only discussed what happens on the small dataset so far.
 To get a more complete view, \cref{cpctVectPerformanceBoth} shows the performances of these optimisations on the small and big dataset combined.
 With the big dataset, the working set that doesn't fit into cache anymore.
 We see that for the bigger inputs the combined version is still the best but the memory saving has a much bigger impact on speedup.
-The vectorised versions drop faster than the non-vectorised versions as their advantages in efficient computation get drowned out by slow memory accesses.
+The vectorised versions drop faster than the non-vectorised versions as their advantages in more efficient computation get drowned out by slow memory accesses.
 All the optimisations displayed surpass the performances of the base implementations (mentioned in \cref{libSpeedupSmall}), whose performances were all below 0.05 flops/cycle (below 0.005 flops/cycle on the big dataset).
 For all versions, starting from the datapoint close to 50,000 vertices, the data structures didn't fit into L3 cache anymore.
 
@@ -581,9 +584,9 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 \section{Conclusion}
 
-In this paper, we focused on optimising the sequential performance belief propagation for top-N recommendation in C.
+In this paper, we focused on optimising the sequential performance of belief propagation for top-N recommendation.
 Top-N recommendation plays important role in online shopping, video and streaming platforms. 
-We achieved a 100--1000$\times$\rh{changed from 100$\times$, revert if you don't like it} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
+We achieved a 100--1000$\times$\rh{changed from 100$\times$, revert if you don't like it} speedup on an Intel\circledR{} Core™ i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
 The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
@@ -624,7 +627,7 @@ Despite the divisions being introduced by our algorithmic optimisation and the f
 % in a favourable way maximising sequential array access and using a CSR inspired format for storing incoming messages. % It's too long
 Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
-\mypar{Stephanie} Did the base implementation using the libDAI library. Vectorised loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
+\mypar{Stephanie} Did the base implementation using the libDAI library. Vectorised loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out the \verb@__restrict__@ keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
 
 \ifdraft{
 \section{Global TODOs}
@@ -640,7 +643,7 @@ Performed unrolling optimisation of innermost $2\times2$ loops over states and s
 
 \todo[inline]{save the PDF as \texttt{41\_report.pdf}}
 %\todo[inline]{change [draft] to [final]}
-\todo[inline]{BrE vs AmE (RH has a script somewhere)}
+%\todo[inline]{BrE vs AmE (RH has a script somewhere)}
 %\todo[inline]{spellcheck}
 \todo[inline]{check there are no more TODOs hiding}
 %\todo[inline]{generally check the title, abstract, section titles, that we have no more template text somewhere}
