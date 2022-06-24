@@ -317,7 +317,7 @@ This compaction allowed for more values being read when loading 1 cache block, m
 
 
 \mypar{Combine vectorisation and saving memory\opt{8}}
-In the next step, optimisation \opt{6} and \opt{7} were combined. This optimisation was expected to work well together, since it combines greater computational efficiency with greater memory efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
+In the next step, optimisation \opt{6} and \opt{7} were combined. This optimisation was expected to work well, since it combines greater computational efficiency with greater memory efficiency. Additionally, the number of messages processed per iteration was increased to 8, to account for the increased data efficiency.
 
 
 \mypar{Unroll \opt{13}}
@@ -325,7 +325,7 @@ On basis of optimisation \opt{8} another unrolling was tested. Now, the number o
 
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
-In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimisations.
+In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to ensure that the compiler was not making any assumptions about memory aliasing and therefore hindering some optimisations.
 
 %Now comes the ``beef'' of the paper, where you explain what you
 %did. Again, organise it in paragraphs with titles. As in every section
