@@ -227,9 +227,8 @@ where $\avgdeg$ is the average degree and we used respectively 1) the fact that 
 
 \subsection{Faster belief propagation}\label{subsec:faster}
 
-\rhinline{TODO: In one sentence mention that this is our contribution (and does not come from the paper)}
-\srinline{Because the context is convenient, we already anticipate our idea behind an algorithmic optimisation in the following.}
-
+Because the context is convenient, we now describe the theory behind our algorithmic optimisation that is later discussed in \cref{sec:yourmethod}.
+%
 Looking closer at \cref{algo:propagate}, we can see that for a given $i$, the
 calculation of $M^d_j$ is very similar for different $j$. We can exploit that
 to insert $$M^d \leftarrow \prod_{k \in N(i)} m_{ki}(x_d)$$ before line
@@ -506,7 +505,7 @@ This is because the average degree is large enough that the cost of the introduc
 	Black dots represent the smallest input n.
 	The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in \cref{sec:setup} \emph{Platform}.
 	We assumed each random access has to load a cache line from main memory. \label{rooflineEndToEnd}}
-\end{figure}\sr{Does mentioning the assumption fit here, Richard?}\rh{yes, nice}
+\end{figure}
 
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, optimisation \opt{7} tried to reduce the memory footprint and optimisation \opt{6} added vectorisation.
@@ -519,7 +518,7 @@ The latency and throughput on the platform do not differ between unaligned and a
 Therefore, using aligned loads did not benefit the relative speedup.
 Apart from that, graph padding increases the memory footprint and introduces excess computation.
 If padding is needed for most of the vertices, the memory overhead becomes significant.
-Since our test input data is sparse, we wanted test whether the negative effects on speedup are decreased on graphs of large average degrees.\sr{What do you think about the paragraph now?}\rh{much better, thanks!}
+Since our test input data is sparse, we wanted test whether the negative effects on speedup are decreased on graphs of large average degrees.
 To this end, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on graphs of large average degree: 
 The gap in relative speedup on bipartite graphs is not significantly decreased compared to \cref{speedupGraphPaddingSmall}.
@@ -586,8 +585,8 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on optimising the sequential performance belief propagation for top-N recommendation in C.
 Top-N recommendation plays important role in online shopping, video and streaming platforms. 
-We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs}\rh{then maybe say 100-1000$\times$?} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
-The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{I think the scaling up is relatively legit. After rerunning the experiments, 1 and 10 iterations behaved the same. So this is a ``real'' achievement IMO.}
+We achieved a 100--1000$\times$\rh{changed from 100$\times$, revert if you don't like it} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
+The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
 Despite the divisions being introduced by our algorithmic optimisation and the fact that they limit the amount of instruction level parallelism beneficial significantly, this tradeoff suited the type of our input data very well and achieved the greatest relative speedup out of all optimisation steps.\sr{*}
