@@ -266,6 +266,7 @@ where $\avgdeg$ is the average degree and we used respectively 1) the fact that 
 \subsection{Faster belief propagation}\label{subsec:faster}
 
 \rhinline{TODO: In one sentence mention that this is our contribution (and does not come from the paper)}
+\srinline{Because the context is convenient, we already anticipate our idea behind an algorithmic optimisation in the following.}
 
 Looking closer at \cref{algo:propagate}, we can see that for a given $i$, the
 calculation of $M^d_j$ is very similar for different $j$. We can exploit that
@@ -309,7 +310,7 @@ Writing out the inner two by two loop saves on control flow instructions in addi
 \mypar{Precompute message products \opt{3}} In the next step, we switched to
 the asymptotically faster algorithm introduced in \cref{subsec:faster}. This
 improved the time complexity from $\O(m\cdot \avgdeg)$ to $O(m + n)$, while
-decreasing the flop count to $C(G) = 26m + 9n$. On the other hand, it
+decreasing the flop count to $C(G) = 26m + 9n$\sr{This is not consistent with what you find in the end of sectio 2.3}. On the other hand, it
 introduced additional division operations which have worse latency and
 throughput.
 
