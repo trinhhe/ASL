@@ -207,7 +207,7 @@ D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
 $\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
 
 After constructing the graph in this fashion, BP is run for a fixed number of
-iterations. Finally, we compute the beliefs $b_i$, sort the movie
+iterations, or until the change of the message values between iterations is less than some predefined threshold. Finally, we compute the beliefs $b_i$, sort the movie
 vertices according to $b_i(\text{LIKE})$ and output the $r$ vertices with the
 largest $b_i(\text{LIKE})$.
 
@@ -585,7 +585,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on optimising the sequential performance of belief propagation for top-N recommendation.
 Top-N recommendation plays important role in online shopping, video and streaming platforms. 
-We achieved a 100--1000$\times$\rh{changed from 100$\times$, revert if you don't like it} speedup on an Intel\circledR{} Core™ i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
+We achieved a 100--1000$\times$\rh{changed from 100$\times$, revert if you don't like it} speedup on an Intel\circledR{} Core™ i5-7200U @2.50GHz machine and on average 16.13\% of the vectorised peak performance on dataset which does not fit entirely into cache.
 The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
