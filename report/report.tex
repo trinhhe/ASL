@@ -315,8 +315,8 @@ throughput.
 
 \mypar{Graph padding}
 In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3}. The idea behind it was to add $\O(n)$ dummy edges to the graph that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively.
-As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no small sequential left-over loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
-To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, the graph padding could be activated using a compiler flag (by default deactivated).
+As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no small sequential leftover loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
+To see for every unrolling and vectorisation step whether the additional nodes or the leftover loop are the bigger overhead, the graph padding could be activated using a compiler flag (by default deactivated).
 The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
@@ -560,7 +560,7 @@ In \cref{speedupGraphPaddingSmall}, we see graph padding is slower compared to o
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
 Therefore, using aligned loads did not benefit the relative speedup.
 Apart from that, graph padding increases the memory footprint and introduces excess computation.
-If padding is needed for most of the vertices, the memory overhead becomes significant.\rh{if I understand it this sentence correctly, that's not necessarily true, the padding is done so that the size will be exactly a multiple of SIMD size, so no left-over loop is needed (in the last iteration, we just maybe deal with some dummy edges which is fine, the SIMD algo doesn't mind).}\sr{Sorry, this was the moment when I forgot I was writing a paragraph about graph padding and only thought of vectorsation. Removed the whole sentence.}
+If padding is needed for most of the vertices, the memory overhead becomes significant.\rh{if I understand it this sentence correctly, that's not necessarily true, the padding is done so that the size will be exactly a multiple of SIMD size, so no leftover loop is needed (in the last iteration, we just maybe deal with some dummy edges which is fine, the SIMD algo doesn't mind).}\sr{Sorry, this was the moment when I forgot I was writing a paragraph about graph padding and only thought of vectorsation. Removed the whole sentence.}
 Since our test input data is sparse, we wanted test whether the negative effects on speedup are decreased on graphs of large average degrees.\rh{This sounds weird, for what reason? AFAIK the reason is only described later (we want to (dis)prove that bigger avg degree might work) and that's why it's weird. But I can't think of how to reformulate}\sr{What do you think about the paragraph now?}
 To this end, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on graphs of large average degree: 
@@ -624,14 +624,14 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 \section{Conclusion}
 
-In this paper, we focused on implementing and optimising belief propagation for top-N-recommendation in C in a fast and efficient way.
-Recommendation of products which a specific user might be interested in plays an important role on online shopping, video and streaming platforms.\rh{drop}\sr{I just dropped the 'nowadays' did you mean the whole sentence?} 
-We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and up to 16.13\% vectorised peak performance on a dataset which does not fit entirely into cache.
+In this paper, we focused on optimising the sequential performance belief propagation for top-n recommendation in C.
+Top-n recommendation plays important role in online shopping, video and streaming platforms.\rh{drop}\sr{I just dropped the 'nowadays' did you mean the whole sentence?} 
+We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance using dataset which does not fit entirely into cache.
 The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{I think the scaling up is relatively legit. After rerunning the experiments, 1 and 10 iterations behaved the same. So this is a ``real'' achievement IMO.}
-For inputs not fitting into the cache anymore, reducing the memory usage of data structures at the exchange of more computation had a bigger positive impact on speedup.
-Also, for bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
-Out of all optimisation steps, replacing a product calculation with a division operation and moving the product to the outermost loop as an optimisation step achieved the greatest speedup.\sr{*}\rh{Maybe focus less on details and more on the takeaway message? hmm, but what is it? probably sth along the lines of ``the best optimisation was to improve the algorithm/time complexity'', but idk how to phrase it nicely}
-There might be ways to further improve the performance our implementation since it is compute-bound and did not hit peak performance.\sr{*}\rh{would omit in this form because it's kind of negative :) but if we can formulate in some insightful manner, idk, ``we suspect we could improve it if we did this / if we had a machine with better this''}
+For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
+Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
+Despite the divisions being introduced by our algorithmic optimisation and the fact that they limit the amount of instruction level parallelism beneficial significantly, this tradeoff suited the type of our input data very well and achieved the greatest relative speedup out of all optimisation steps.\sr{*}\rh{Maybe focus less on details and more on the takeaway message? hmm, but what is it? probably sth along the lines of ``the best optimisation was to improve the algorithm/time complexity'', but idk how to phrase it nicely}
+\sr{*}\rh{would omit in this form because it's kind of negative :) but if we can formulate in some insightful manner, idk, ``we suspect we could improve it if we did this / if we had a machine with better this''}
 %Here you need to briefly summarize what you did and why this is
 %important. {\em Do not take the abstract} and put it in the past
 %tense. Remember, now the reader has (hopefully) read the paper, so it
