@@ -59,7 +59,7 @@
 
 
 \begin{abstract}
-Recommender systems are omnipresent in today's online shopping and streaming services. A scalable alternative to matrix factorization is belief propagation as it supports icremental updates of the model. This paper presents an efficient and fast belief propagation implementation in C for single-core applying various optimisation ideas and techniques. We evaluate the performance on the MovieLens dataset and achieve a speedup of at least 100$\times$. Moreover, the effects of the optimisations on speedup grow with the input size.
+Recommender systems are omnipresent in today's online shopping and streaming services. A scalable alternative to matrix factorization is belief propagation as it supports incremental updates of the model. This paper presents an efficient and fast belief propagation implementation in C for single-core, applying various optimisation ideas and techniques. We evaluate the performance on the MovieLens dataset and achieve a speedup of at least 100$\times$. Moreover, the effects of the optimisations on speedup grow with the input size.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -192,15 +192,15 @@ only briefly and refer the reader to the original article.
 \srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-N recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
 \rhinline{The thing is that I want to give a heads up ``hey reader, it's ok that you find this vague, it actually is because it wasn't our main focus''. it doesn't have to be here, but I would put it \emph{somewhere}}
 
-The algorithm\sr{I would not use the word 'algorithm' in this whole subsection 'top-n-recommendation' as I find it a bit confusing (with the propagate part which is also called algorithm). I would say that we describe the type of inputs to propagate.}\rh{if I changed it to ``we'' (we set $\nodepot_i$), would it be better, or worse?} represents the ratings as a bipartite graph, with users and
-movies as vertices and ratings as edges. Only edges whose ratings satisfy a
+We represent the ratings as a bipartite graph, with users and
+movies as vertices and ratings as edges. Only edges whose rating satisfies a
 certain threshold are kept (different thresholding methods are described in the
 paper; we use the threshold that keeps edges above user's average rating). We use BP to model the probability that user $t$ likes a vertex. Thus,
 the possible states of each vertex are $X = \{$LIKE, DISLIKE$\} =
 \{L, D\}$. (Note that we also model user vertices although in the end we are
 only interested in movie vertices.)
 
-The algorithm sets $\nodepot_i$ depending on target users's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
+We set $\nodepot_i$ depending on target users's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
 $\edgepot_{ij}(L, L) = \edgepot_{ij}(D, D) = 0.5 + \alpha; \edgepot_{ij}(L,
 D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
 $\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
