@@ -225,7 +225,7 @@ Analysing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
 \end{align*}
 %\sr{Include normalisation line 12?}\rh{how do you mean? It's included because it's $7\deg(i)$ and not $4\deg(i)$.}
 %
-where $\avgdeg$ is the average degree and we used respectively 1) the fact that $\sum_{i\in V}\deg(i) = 2|E|$, 2) the Cauchy-Schwarz inequality for $x_i = \deg(i)$ and $y_i = 1$, and 3) the fact that $2m = n\cdot\avgdeg$.
+where $\avgdeg$ is the average degree and we used respectively 1) the fact that $\sum_{i\in V}\deg(i) = 2|E|$, 2) the Cauchy-Schwarz inequality $\langle \vex, \vey\rangle \le \|\vex\|\cdot\|\vey\|$ for $x_i = \deg(i)$ and $y_i = 1$, and 3) the fact that $2m = n\cdot\avgdeg$.
 
 \subsection{Faster belief propagation}\label{subsec:faster}
 
@@ -456,7 +456,7 @@ Finally, a roofline plot with the final optimisation step and the relative end-t
 \begin{figure*}[!t]
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[3][6][7][8]_small.pdf}
-	\caption{Relative speedup of vectorisation and saving memory optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
+	\caption{Relative speedup of vectorisation and memory reduction optimisation steps over optimisation \opt{3} on the small dataset. \label{cpctVectSpeedupSmall}}
 \end{minipage}%
 \hspace{7.2mm}
 \begin{minipage}[t]{\oldlinewidth}\centering
@@ -471,7 +471,7 @@ Finally, a roofline plot with the final optimisation step and the relative end-t
 \hspace{7.2mm}
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/speedup[3][8][9][10][13]_small.pdf}
-	\caption{Relative speedup of further unrolling added on top of optimisation step \opt{3} by optimisations \opt{9, 10} respectively optimisation \opt{13} on top of optimisation step \opt{8} on the small dataset. \label{speedupUnsuccessful}}
+	\caption{Relative speedup of further unrolling added on top of optimisation step \opt{3} by optimisations \opt{9, 10}, and optimisation \opt{13} on top of optimisation step \opt{8}, all on the small dataset. \label{speedupUnsuccessful}}
 \end{minipage}%
 \end{figure*}
 
