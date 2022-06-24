@@ -190,7 +190,7 @@ integers in $\{1, \ldots, 5\}$.
 belief propagation part of the algorithm, we describe the rest of the algorithm
 only briefly and refer the reader to the original article.
 \srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-N recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
-\rhinline{The thing is that I want to give a heads up ``hey reader, it's ok that you find this vague, it actually is because it wasn't our main focus''. it doesn't have to be here, but I would put it \emph{somewhere}}
+\rhinline{The thing is that I want to give a heads up ``hey reader, it's OK that you find this vague, it actually is because it wasn't our main focus''. It doesn't have to be here, but I would put it \emph{somewhere}}
 
 We represent the ratings as a bipartite graph, with users and
 movies as vertices and ratings as edges. Only edges whose rating satisfies a
@@ -200,7 +200,7 @@ the possible states of each vertex are $X = \{$LIKE, DISLIKE$\} =
 \{L, D\}$. (Note that we also model user vertices although in the end we are
 only interested in movie vertices.)
 
-We set $\nodepot_i$ depending on target users's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
+We set $\nodepot_i$ depending on target user's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
 $\edgepot_{ij}(L, L) = \edgepot_{ij}(D, D) = 0.5 + \alpha; \edgepot_{ij}(L,
 D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
 $\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
@@ -221,7 +221,7 @@ Analyzing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
 	&= 14m + 4\sum_{i\in V} \deg(i)^2\\
 	&\ge 14m + 16m^2 / n \\
 	&= 14m + 8m \cdot \avgdeg,
-\end{align*}\sr{Include normalisation line 12?}\rh{how do you mean? it's included because it's $7\deg(i)$ and not $4\deg(i)$.}
+\end{align*}\sr{Include normalisation line 12?}\rh{how do you mean? It's included because it's $7\deg(i)$ and not $4\deg(i)$.}
 %
 where $\avgdeg$ is the average degree and we used respectively 1) the fact that $\sum_{i\in V}\deg(i) = 2|E|$, 2) the Cauchy-Schwarz inequality for $x_i = \deg(i)$ and $y_i = 1$, and 3) the fact that $2m = n\cdot\avgdeg$.
 
@@ -275,7 +275,7 @@ Writing out the inner two by two loop saves on control flow instructions in addi
 
 \mypar{Precompute message products \opt{3}} In the next step, we switched to
 the asymptotically faster algorithm introduced in \cref{subsec:faster}. This
-improved the time complexity from $\O(m\cdot \avgdeg)$ to $O(m + n)$, while
+improved the time complexity from $\O(m\cdot \avgdeg)$ to $\O(m + n)$, while
 decreasing the flop count to $C(G) = 26m + 8n$. On the other hand, it
 introduced additional division operations which have worse latency and
 throughput.
@@ -296,10 +296,10 @@ In a different implementation, based on optimisation \opt{3}, we examined what h
 \mypar{Vectorise \opt{6}}
 SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
-In a second step, the vector instructions were optimised with shuffling in-messages after loading them into vector registers to have more sequential access. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}\sr{pherhaps it would be interesting}
+In a second step, the vector instructions were optimised with shuffling in-messages after loading them into vector registers to have more sequential access. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}\sr{perhaps it would be interesting}
  
 Even though, looking at the assembly compiled from optimisation \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD. 
-\HTinline{I think we should mention that even though only 4 msgs are processed, sequential in-msg access gives us a slight performance increase. (maybe in section 4 with plot?)}
+\HTinline{I think we should mention that even though only 4 messages are processed, sequential in-messages access gives us a slight performance increase. (maybe in section 4 with plot?)}
 
 
 
@@ -588,7 +588,6 @@ The speedup scales with input size such that for our greatest input containing m
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
 Despite the divisions being introduced by our algorithmic optimisation and the fact that they limit the amount of instruction level parallelism beneficial significantly, this tradeoff suited the type of our input data very well and achieved the greatest relative speedup out of all optimisation steps.\sr{*}
-\sr{*}\rh{would omit in this form because it's kind of negative :) but if we can formulate in some insightful manner, idk, ``we suspect we could improve it if we did this / if we had a machine with better this''}
 %Here you need to briefly summarize what you did and why this is
 %important. {\em Do not take the abstract} and put it in the past
 %tense. Remember, now the reader has (hopefully) read the paper, so it
@@ -640,14 +639,14 @@ Performed unrolling optimisation of innermost $2\times2$ loops over states and s
 \subsection{Typography/language/details to check before submitting}
 
 \todo[inline]{save the PDF as \texttt{41\_report.pdf}}
-\todo[inline]{change [draft] to [final]}
+%\todo[inline]{change [draft] to [final]}
 \todo[inline]{BrE vs AmE (RH has a script somewhere)}
-\todo[inline]{spellcheck}
+%\todo[inline]{spellcheck}
 \todo[inline]{check there are no more TODOs hiding}
-\todo[inline]{generally check the title, abstract, section titles, that we have no more template text somewhere}
-\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [], 5$\times$ instead of 5x}
-\todo[inline]{citations: don't use just plain URL when possible (usually everyone has a ``how to cite us'' section}
-\todo[inline]{pdfgrep ``??'' (unresolved references)}
+%\todo[inline]{generally check the title, abstract, section titles, that we have no more template text somewhere}
+%\todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [], 5$\times$ instead of 5x}
+%\todo[inline]{citations: don't use just plain URL when possible (usually everyone has a ``how to cite us'' section}
+%\todo[inline]{pdfgrep ``??'' (unresolved references)}
 \todo[inline]{\textbf{Delete this section :)}}
 }{}
 
