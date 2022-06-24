@@ -290,7 +290,7 @@ This drastically decreases the flop count to $C(G) = 26m + 8n$.
 \section{Optimisation Steps}\label{sec:yourmethod}
 \begin{figure*}[t]
 	\centering
-	\includegraphics[width=0.7\textwidth]{img/OptimizationDiagram.png}
+	\includegraphics[trim=40 40 40 40, clip, width=0.72\textwidth]{img/OptimizationDiagram.pdf}
 	\caption{Diagram of optimisation steps \label{OptDiagram}}
 \end{figure*}
 
@@ -330,14 +330,14 @@ The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
 Unrolling the inner loop, the $j$-loop in \cref{algo:propagate}, was done once on basis of optimisation \opt{2} and once on basis of optimisation \opt{3}. In both implementations, the loop was unrolled by a factor of~4. This allowed for more scalar replacement. Since the for-loop iterations are independent, computing all of them at once allows for more instruction level parallelism (ILP).
-The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version \opt{4} with more flops.\sr{Henry, would you say we need a plot here too?}
+The difference in the two unrolling implementations is that thanks to optimisation \opt{3}, the second version unrolls a loop with much fewer computations, which means that ILP can be expected to have less impact. But it should still clearly outperform the version \opt{4} with more flops.\sr{Henry, would you say we need a plot here too?} \st{since we are tight on space anyway, I could also leave out the last sentence}
 
 
 \mypar{Unroll outer loop \opt{9}}
 In a different implementation, based on optimisation \opt{3}, we examined what happens if the outer loop is unrolled. Specially, the $i$-loop from \cref{algo:propagate} was unrolled by a factor of 4. Since with optimisation \opt{3} the computation of messages product was pushed to the outer loop, it was of interest to see if unrolling this loop would allow for increased ILP. Or if, with 4 inner loops run during one unrolled iteration of the outer loop, the loss of locality would result in decreased performance.
 
 \mypar{Vectorise \opt{6}}
-As seen in \cref{OptDiagram}\rh{do we need ``as seen''?}, SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
+\rh{do we need ``as seen''?} \st{no, removed it}SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.\\
 In a second step, the vector instructions were optimised with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4.\\ \st{maybe I should go into more detail here}\sr{pherhaps it would be interesting}
 Even though, looking at the assembly compiled from optimisation \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD.
 \HTinline{I think we should mention that even though only 4 msgs are processed, sequential in-msg access gives us a slight performance increase. (maybe in section 4 with plot?)}
@@ -351,10 +351,12 @@ As important as the final results is to show that you took a structured, organiz
 \end{comment}
 
 \mypar{Save memory \opt{7}}
-Since it was reasonable to assume that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.\\
-The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.\\
+Since it was reasonable to assume that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.
+
+The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.
+
 In a second step, the type of indices was changed from \verb@size_t@ to \verb@uint32_t@. This is sufficient for any input that needs less than 48 GB of memory. 
-\rh{these line breaks (\\) are kind of weird, are they needed?}
+\rh{these line breaks (\\) are kind of weird, are they needed?} \st{I had some strange issues with paragraph spacing, but seems to work without them now}
 
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
@@ -364,11 +366,11 @@ In the next step, optimisation \opt{6} and \opt{7} were combined. This optimisat
 
 
 \mypar{Unroll \opt{13}}
-On basis of optimisation \opt{8} another unrolling was tested. Now, the number of messages processed per iteration was increased from 8 to 16. The idea was to see if even more use could be made of optimisation \opt{7} to increase ILP even more\rh{suggestion: ``if we/one could make (even) more use of optimisation \opt{7} and increase ILP even more'', the passive voice is cumbersome here}  or if this would lead to a loss of locality and slow down computation.
+On basis of optimisation \opt{8} another unrolling was tested. Now, the number of messages processed per iteration was increased from 8 to 16. The idea was to see if we could make more use of optimisation \opt{7} to increase ILP \rh{suggestion: ``if we/one could make (even) more use of optimisation \opt{7} and increase ILP even more'', the passive voice is cumbersome here} \st{thanks}  or if this would lead to a loss of locality and slow down computation.
 
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
-In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to see if the compiler could make use of it and introduce additional optimisations. \HT{instead of ``was used to see if the compiler could make use of it..`` maybe ``was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimisations.``? }\sr{I would apply this suggestion}
+In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimisations. \HT{instead of ``was used to see if the compiler could make use of it..`` maybe ``was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimisations.``? }\sr{I would apply this suggestion} \st{applied, thanks}
 
 %Now comes the ``beef'' of the paper, where you explain what you
 %did. Again, organize it in paragraphs with titles. As in every section
