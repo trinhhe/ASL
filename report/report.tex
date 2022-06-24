@@ -76,7 +76,7 @@ Many papers about BP focus on the algorithmic site for optimisation. Our focus i
 We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The applied optimisations range from algorithmic changes over standard C optimisation techniques that include unrolling loops and scalar replacement to decreasing memory usage and utilising SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-N recommendation. 
 
 \mypar{Related Work}
-BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30 iterations, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
+BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
 
 There are also works that focus on parallelisation. \citet{related2} show one of the first parallel designs for BP with the Message Passing Interface paradigm, while \citet{related3} propose novel approaches to parallel message computation in BP using GPU parallelization.
 
@@ -124,7 +124,7 @@ and $\edgepot_{ij}$ allow us to approximately model $p$.
 \mypar{Message passing} The BP algorithm itself consists of two
 procedures: \emph{propagation} and \emph{belief calculation}.
 
-\myparcont{Propagation} happens for a predefined number of iterations. For each vertex $i$, and each its neighbour $j$, we compute a \emph{message} $m_{ij} : X \to \Rpos$ as follows:
+\myparcont{Propagation} happens for a predefined number of iterations. For each vertex $i$ and each its neighbour $j$, we compute a \emph{message} $m_{ij} : X \to \Rpos$ as follows:
 %
 $$m_{ij}(x_c) = \sum_{x_d \in X} \nodepot_i(x_d)\edgepot_{ij}(x_d, x_c) \cdot \prod_{k \in N(i) \setminus j} m_{ki}(x_d).$$
 %
@@ -201,15 +201,15 @@ the possible states of each vertex are $X = \{$LIKE, DISLIKE$\} =
 \{L, D\}$. (Note that user vertices are also modelled, although in the end we are
 only interested in movie vertices.)
 
-Potentials $\nodepot_i$ are set depending on target user's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set, independent of $i, j$:
+Potentials $\nodepot_i$ are set depending on target user's rating of $i$ (if applicable, otherwise $\nodepot_i(L) = \nodepot_i(D) = 0.5$). For $\edgepot_{ij}$, we set independent of $i, j$:
 $\edgepot_{ij}(L, L) = \edgepot_{ij}(D, D) = 0.5 + \alpha; \edgepot_{ij}(L,
 D) = \edgepot_{ij}(D, L) = 0.5 - \alpha$, where
 $\alpha$ is a small positive constant. In our actual implementation however, we had to use $\alpha = 0.3$, as setting $\alpha = 0.0001$ as suggested in the paper produced beliefs very close to $0.5$.
 
 After constructing the graph in this fashion, BP is run for a fixed number of
-iterations, or until the change of the message values between iterations is less than some predefined threshold. Finally, we compute the beliefs $b_i$, sort the movie
-vertices according to $b_i(\text{LIKE})$ and output the $r$ vertices with the
-largest $b_i(\text{LIKE})$.
+iterations, or until the change of the message values between iterations is less than some predefined threshold. Finally, the beliefs $b_i$ are computed, the movie
+vertices sorted according to $b_i(\text{LIKE})$ and the $r$ vertices with the
+largest $b_i(\text{LIKE})$ are output.
 
 \mypar{Cost analysis} As mentioned in \cref{place:we-optimised-just-bp}, our work deals solely with optimising \cref{algo:propagate}, thus, we only focus on it in our cost analysis. We have chosen the number of flops as the cost measure.
 Analysing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
