@@ -3,7 +3,7 @@
 %   IEEEbib.bst - IEEE bibliography style file.
 % --------------------------------------------------------------------------
 
-\documentclass[letterpaper]{article}
+\documentclass[draft,letterpaper]{article}
 \usepackage{spconf,amsmath,amssymb,graphicx,xspace,tabularx,hyperref}
 \usepackage{cleveref}
 \let\cref=\Cref % Capitalise `Section 3` etc. when referencing
@@ -12,9 +12,10 @@
 \usepackage[sort&compress,numbers,sectionbib]{natbib}
 \usepackage[ruled,noalgohanging,noend]{algorithm2e}
 \usepackage{comment}
+\usepackage{ifdraft}
+\setkeys{Gin}{draft=false} % make graphicx non-lazy even with draft = on
 \input macros/todo
 \input macros/macros
-\overfullrule=2mm % black slugs on overfull lines, disable when submitting
 
 % bold paragraph titles
 \newcommand{\mypar}[1]{{\bf #1.}}
@@ -58,42 +59,10 @@
 
 
 \begin{abstract}
-	\begin{comment}Describe in concise words what you do, why you do it (not necessarily
-in this order), and the main result. The abstract has to be
-self-contained and readable for a person in the general area. You
-	should write the abstract last.
-	\end{comment}
 Recommender systems are omnipresent in today's online shopping and streaming services. A scalable alternative to matrix factorization is belief propagation as it supports icremental updates of the model. This paper presents an efficient and fast belief propagation implementation in C for single-core applying various optimisation ideas and techniques. We evaluate the performance on the MovieLens dataset and achieve a speedup of at least 100$\times$. Moreover, the effects of the optimisations on speedup grow with the input size.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
-\begin{comment}
-Do not start the introduction with the abstract or a slightly modified
-version. What follows is a possible structure of the introduction.
-This structure can be modified, but the content should be the same. The introduction should definitely end on the first page.
-
-\mypar{Motivation} The first task is to motivate what you do.  You can
-start general and zoom in one the specific problem you consider.  In
-the process you should have explained to the reader: what you are doing,
-why you are doing, why it is important (order is usually reversed).
-
-For example, if my result is the fastest DFT implementation ever, one
-could roughly go as follows. First explain why the DFT is important
-(used everywhere with a few examples) and why performance matters (large datasets,
-realtime). Then explain that fast implementations are very hard and
-expensive to get (memory hierarchy, vector, parallel).
-
-\mypar{Contribution}
-Now you state what you do in this paper. In our example:
-presenting a DFT implementation that is
-faster for some sizes than all the other ones.
-
-\mypar{Related work} Next, you have to give a brief overview of
-related work. For a paper like this, anywhere between 2 and 8
-references. Briefly explain what they do. In the end contrast to what
-you do to make now precisely clear what your contribution is.
-\end{comment}
-
 \mypar{Motivation}
 In the age of digitalization a majority of the people spend their time on different platforms for entertainment, online-shopping and other fields. With the number of items increasing tremendously, the consumer is challenged to choose a small set of items that meets his interests and preferences. To tackle this problem, recommender systems were invented. Since recommender systems play a big role in e-commerce profitwise, many companies have an incentive creating recommender systems that are accurate, robust, scalable and fast. However, these characteristics are hard to fulfil with incomplete, uncertain, inconsistent and/or intentionally contaminated data. Further, since new data keeps coming in frequent intervals, collaborative filtering techniques like matrix factorization require solving the entire problem again and impose computational limitations for large-scale deployment.
 
@@ -149,7 +118,6 @@ In classical BP, it is assumed that $p$ can be explicitly expressed in terms of
 $\nodepot_i$ and $\edgepot_{ij}$. In our case, where $p$ itself is inherently more
 fuzzy, we make no such claim, and content ourselves with saying that $\nodepot_i$
 and $\edgepot_{ij}$ allow us to approximately model $p$.
-\srinline{For me this is fine. The paper is about optimisation.}
 
 \mypar{Message passing} The belief propagation algorithm itself consists of two
 procedures: \emph{propagation} and \emph{belief calculation}.
@@ -310,7 +278,7 @@ Writing out the inner two by two loop saves on control flow instructions in addi
 \mypar{Precompute message products \opt{3}} In the next step, we switched to
 the asymptotically faster algorithm introduced in \cref{subsec:faster}. This
 improved the time complexity from $\O(m\cdot \avgdeg)$ to $O(m + n)$, while
-decreasing the flop count to $C(G) = 26m + 9n$\sr{This is not consistent with what you find in the end of sectio 2.3}. On the other hand, it
+decreasing the flop count to $C(G) = 26m + 8n$. On the other hand, it
 introduced additional division operations which have worse latency and
 throughput.
 
@@ -339,20 +307,13 @@ Even though, looking at the assembly compiled from optimisation \opt{3}, it is v
 
 
 
-\begin{comment}
-For this course, explain all the optimisations you performed. This mean, you first very briefly
-explain the baseline implementation, then go through locality and other optimisations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimise one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
-
-As important as the final results is to show that you took a structured, organized approach to the optimisation and that you explain why you did what you did.
-\end{comment}
-
 \mypar{Save memory \opt{7}}
 Since it was reasonable to assume that memory accesses would also be a limiting factor in performance, the number of unnecessarily loaded bytes were reduced. This was done in two places.
 
 The LIKE and DISLIKE states have to add up to 1 according to the algorithm definition. This means, instead of storing two states, we could store only 1 and compute the other with a simple subtraction, saving a memory access.
 
 In a second step, the type of indices was changed from \verb@size_t@ to \verb@uint32_t@. This is sufficient for any input that needs less than 48 GB of memory. 
-\rh{these line breaks (\\) are kind of weird, are they needed?} \st{I had some strange issues with paragraph spacing, but seems to work without them now}
+
 
 This compaction allowed for more values being read when loading 1 cache block, making memory access more efficient.
 
@@ -362,7 +323,7 @@ In the next step, optimisation \opt{6} and \opt{7} were combined. This optimisat
 
 
 \mypar{Unroll \opt{13}}
-On basis of optimisation \opt{8} another unrolling was tested. Now, the number of messages processed per iteration was increased from 8 to 16. The idea was to see if we could make more use of optimisation \opt{7} to increase ILP \rh{suggestion: ``if we/one could make (even) more use of optimisation \opt{7} and increase ILP even more'', the passive voice is cumbersome here} \st{thanks}  or if this would lead to a loss of locality and slow down computation.
+On basis of optimisation \opt{8} another unrolling was tested. Now, the number of messages processed per iteration was increased from 8 to 16. The idea was to see if we could make more use of optimisation \opt{7} to increase ILP or if this would lead to a loss of locality and slow down computation.
 
 
 \mypar{Use \_\_restrict\_\_ \opt{14}}
@@ -382,8 +343,7 @@ In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword 
 %Good visuals or even brief code snippets to illustrate what you did are good. Pasting large amounts of code to fill the space is not good.
 
 
-\section{Evaluation}\label{sec:exp}
-\rhinline{Maybe Experimental evaluation?}\sr{If you like that much better, just change it}
+\section{Experimental Evaluation}\label{sec:exp}
 
 \oldlinewidth=\linewidth
 \begin{figure*}[!t] % Don't know how to get rid of the !, but it works somehow
@@ -479,16 +439,15 @@ Furthermore, the bandwidths for L1, L2 and L3 caches are 81, 29 and 18 bytes/cyc
 % 221588 41436056
 \mypar{Input data} Test inputs were based on the MovieLens dataset \cite{movieLens}.
 Various sizes were generated by taking the ratings of users with identifier smaller than some number for different numbers
-and then normalising / desparsifying the user and movie identifiers separately, mapping them to $\{1, \ldots, \#\text{users}\}$ and $\{1, \ldots, \#\text{movies}\}$ respectively.\rh{added this here to clarify, but not sure if clear enough}\HT{I think it is sufficient}
+and then normalising / desparsifying the user and movie identifiers separately, mapping them to $\{1, \ldots, \#\text{users}\}$ and $\{1, \ldots, \#\text{movies}\}$ respectively.
 This section's plots display the results of either a small or a big dataset composed from inputs generated this way.
-The small dataset represents graphs with $\approx$1--10k vertices and $\approx$1--80k edges based on the MovieLens Latest Small dataset \cite{movieLensSmall}. %and consists of inputs 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334 
+The small dataset represents graphs with $\approx$1k--10k vertices and $\approx$1k--80k edges based on the MovieLens Latest Small dataset \cite{movieLensSmall}. %and consists of inputs 981, 1'879, 2'442, 3'128, 4'142, 4'847, 5'167, 5'879, 6'452, 7'272, 7'766, 8'522, 9'278, 10'334 
 %considering the first 10, 20, 30, 60, 90, 120, 150, 210, 270, 330, 390, 450, 540 and 610 users  
 The big dataset represents graphs of $\approx$40k--200k vertices with $\approx$2--20 million edges based on the MovieLens 25M dataset \cite{movieLensBig}. %and considers the first 16,200, 32,400, \dots, 162,000 users (taking steps of 16,200)
-\HT{Maybe just saying ``981 to 10,334 vertices and 1,038 to 83,488 edges`` is enough and leave out the user counting (ditto for big data). The Input data subsection seems too much for my taste. What do you think?}\sr{Yes, I feel similarly}
 
 \mypar{Measurement} For measuring the number of cycles, the \verb@RDTSC@ instruction has been used.
 In addition, the number of flops has been calculated directly in the measurement code.
-\rh{This is sloppy, but I think we should mention it. If you can improve on it, please do.}\sr{I think this fits into the methods section.} As mentioned in \cref{subsec:topn}\sr{Is this what you wanted RH?}, we solely optimised and measured the belief propagation procedure of \cref{algo:propagate}.
+\sr{I think this fits into the methods section.} As mentioned in \cref{subsec:topn}\sr{Is this what you wanted RH?}, we solely optimised and measured the belief propagation procedure of \cref{algo:propagate}.
 The number of iterations was set to 10 with the exception of optimisations \opt{1, 2} measured on the big dataset.
 In those cases, only a single iteration was run due to the runtime growing prohibitively large otherwise.
 
@@ -517,7 +476,6 @@ Finally, a roofline plot with the final optimisation step and the relative end-t
 	\caption{Performance of optimisations \opt{3}, \opt{6}, \opt{7} and \opt{8} on the small and big dataset combined. \label{cpctVectPerformanceBoth}}
 \end{minipage}%
 \end{figure*}
-\rh{Fig 4: saving memory $\to$ memory reduction?}\sr{Where do you see 'saving memory'? I think I just used 'mem'.}
 
 \mypar{Base implementation / optimisation} Since there are two base implementations, one implemented from scratch and the other using the libDAI library, it is interesting to see which one is faster.
 For this purpose, the relative speedup in runtime of the different base implementations over the from scratch implementation on the small dataset is displayed in \cref{libSpeedupSmall}.
@@ -551,7 +509,7 @@ This is because the average degree is large enough that the cost of the introduc
 \begin{figure}[!bt]\centering
 	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_both.pdf}
 	\caption{Relative end-to-end speedup over baseline \opt{1} on the small and big dataset combined} \label{speedupEndToEnd}
-\end{figure}\sr{Does mentioning the assumption fit here, Richard?}
+\end{figure}\sr{Does mentioning the assumption fit here, Richard?}\rh{yes, nice}
 
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, optimisation \opt{7} tried to reduce the memory footprint and optimisation \opt{6} added vectorisation.
@@ -563,17 +521,19 @@ In \cref{speedupGraphPaddingSmall}, we see graph padding is slower compared to o
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
 Therefore, using aligned loads did not benefit the relative speedup.
 Apart from that, graph padding increases the memory footprint and introduces excess computation.
-If padding is needed for most of the vertices, the memory overhead becomes significant.\rh{if I understand it this sentence correctly, that's not necessarily true, the padding is done so that the size will be exactly a multiple of SIMD size, so no leftover loop is needed (in the last iteration, we just maybe deal with some dummy edges which is fine, the SIMD algo doesn't mind).}\sr{Sorry, this was the moment when I forgot I was writing a paragraph about graph padding and only thought of vectorsation. Removed the whole sentence.}
-Since our test input data is sparse, we wanted test whether the negative effects on speedup are decreased on graphs of large average degrees.\rh{This sounds weird, for what reason? AFAIK the reason is only described later (we want to (dis)prove that bigger avg degree might work) and that's why it's weird. But I can't think of how to reformulate}\sr{What do you think about the paragraph now?}
+If padding is needed for most of the vertices, the memory overhead becomes significant.
+Since our test input data is sparse, we wanted test whether the negative effects on speedup are decreased on graphs of large average degrees.\sr{What do you think about the paragraph now?}\rh{much better, thanks!}
 To this end, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on graphs of large average degree: 
 The gap in relative speedup on bipartite graphs is not significantly decreased compared to \cref{speedupGraphPaddingSmall}.
-\srinline{It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.}\rh{how did you arrive at those numbers? My calculations say something different}\sr{Maybe this sentence has become superflous now.}
+%\srinline{It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.}\rh{how did you arrive at those numbers? My calculations say something different}
+\sr{Maybe this sentence has become superflous now.}
+\rh{yes, maybe it has, commented it out.}
 
 \mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase ILP of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
 Optimisation \opt{13} tried to achieve the same thing by unrolling the inner loop sixteen times but based on \opt{8}.
 \Cref{speedupUnsuccessful} shows that these optimisation steps could not increase the speedup relative to the optimisation steps they emerged from.
-Presumably, unrolling the outer loop resulted in worse locality whereas for the inner loop, the leftover loops have more iterations and possibly register spilling occurred.\sr{*}\rhinline{is that the case though? for unroll-i I think bad locality definitely plays a bigger role. For unroll-j, tbh, I don't know. the division may be a factor, but I don't think that's the full story. Maybe we spill out of registers? or, in case of vectorisation, spend more time in leftover loop because it's larger on average?}
+Presumably, unrolling the outer loop resulted in worse locality whereas for the inner loop, the leftover loops have more iterations and possibly register spilling occurred.\sr{*}
 %Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
 This suggests the code already runs as fast as if no pointer aliasing was assumed without using the keyword.
@@ -628,12 +588,12 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 \section{Conclusion}
 
 In this paper, we focused on optimising the sequential performance belief propagation for top-n recommendation in C.
-Top-n recommendation plays important role in online shopping, video and streaming platforms.\rh{drop}\sr{I just dropped the 'nowadays' did you mean the whole sentence?} 
-We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
+Top-n recommendation plays important role in online shopping, video and streaming platforms. 
+We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs}\rh{then maybe say 100-1000$\times$?} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
 The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{I think the scaling up is relatively legit. After rerunning the experiments, 1 and 10 iterations behaved the same. So this is a ``real'' achievement IMO.}
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
-Despite the divisions being introduced by our algorithmic optimisation and the fact that they limit the amount of instruction level parallelism beneficial significantly, this tradeoff suited the type of our input data very well and achieved the greatest relative speedup out of all optimisation steps.\sr{*}\rh{Maybe focus less on details and more on the takeaway message? hmm, but what is it? probably sth along the lines of ``the best optimisation was to improve the algorithm/time complexity'', but idk how to phrase it nicely}
+Despite the divisions being introduced by our algorithmic optimisation and the fact that they limit the amount of instruction level parallelism beneficial significantly, this tradeoff suited the type of our input data very well and achieved the greatest relative speedup out of all optimisation steps.\sr{*}
 \sr{*}\rh{would omit in this form because it's kind of negative :) but if we can formulate in some insightful manner, idk, ``we suspect we could improve it if we did this / if we had a machine with better this''}
 %Here you need to briefly summarize what you did and why this is
 %important. {\em Do not take the abstract} and put it in the past
@@ -675,18 +635,20 @@ Performed unrolling optimisation of innermost $2\times2$ loops over states and s
 
 \srinline{Just wrote down what came into my mind so far. Most likely the description is incomplete and some points are wrong. Fix it.}
 
+\ifdraft{
 \section{Global TODOs}
 
 \rhinline{just a list of TODOs we should tackle before submitting, feel free to add/disagree}
 
 \subsection{Plots}
 
-\rhinline{the supervisor seemed like he wanted to see more of big dataset plots? It kind of makes sense given that the small plots don't even overflow to RAM.}
+% \rhinline{the supervisor seemed like he wanted to see more of big dataset plots? It kind of makes sense given that the small plots don't even overflow to RAM.}
+%% RH: ^ well yeah, but now I think it's not an issue (and we wouldn't have time anyway)
 
 \subsection{Typography/language/details to check before submitting}
 
 \todo[inline]{save the PDF as \texttt{41\_report.pdf}}
-\todo[inline]{disable slugs}
+\todo[inline]{change [draft] to [final]}
 \todo[inline]{BrE vs AmE (RH has a script somewhere)}
 \todo[inline]{spellcheck}
 \todo[inline]{check there are no more TODOs hiding}
@@ -694,6 +656,8 @@ Performed unrolling optimisation of innermost $2\times2$ loops over states and s
 \todo[inline]{minor details: use cref where appropriate, $\O$ instead of $O$, \texttt{hello} instead of `hello`, \opt{x} instead of [], 5$\times$ instead of 5x}
 \todo[inline]{citations: don't use just plain URL when possible (usually everyone has a ``how to cite us'' section}
 \todo[inline]{pdfgrep ``??'' (unresolved references)}
+\todo[inline]{\textbf{Delete this section :)}}
+}{}
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
