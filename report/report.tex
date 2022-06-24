@@ -626,7 +626,7 @@ Since optimisation step \opt{3} was the last to have performed a major algorithm
 
 In this paper, we focused on optimising the sequential performance belief propagation for top-n recommendation in C.
 Top-n recommendation plays important role in online shopping, video and streaming platforms.\rh{drop}\sr{I just dropped the 'nowadays' did you mean the whole sentence?} 
-We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance using dataset which does not fit entirely into cache.
+We achieved a 100$\times$\rh{1000?}\sr{no, this is not true for all of our inputs} speedup on an Intel(R) Core(TM) i5-7200U @2.50GHz machine and on average 16.13\% vectorised peak performance on dataset which does not fit entirely into cache.
 The speedup scales with input size such that for our greatest input containing more than 200,000 vertices, it exceeds 1000$\times$.\sr{should we mention this, since we scaled the measurements for the baseline?}\rh{I think the scaling up is relatively legit. After rerunning the experiments, 1 and 10 iterations behaved the same. So this is a ``real'' achievement IMO.}
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
