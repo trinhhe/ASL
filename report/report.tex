@@ -266,7 +266,6 @@ where $\avgdeg$ is the average degree and we used respectively 1) the fact that 
 \subsection{Faster belief propagation}\label{subsec:faster}
 
 \rhinline{TODO: In one sentence mention that this is our contribution (and does not come from the paper)}
-\srinline{Because the context is convenient, we already anticipate our idea behind an algorithmic optimisation in the following.}
 
 Looking closer at \cref{algo:propagate}, we can see that for a given $i$, the
 calculation of $M^d_j$ is very similar for different $j$. We can exploit that
@@ -310,14 +309,14 @@ Writing out the inner two by two loop saves on control flow instructions in addi
 \mypar{Precompute message products \opt{3}} In the next step, we switched to
 the asymptotically faster algorithm introduced in \cref{subsec:faster}. This
 improved the time complexity from $\O(m\cdot \avgdeg)$ to $O(m + n)$, while
-decreasing the flop count to $C(G) = 26m + 9n$\sr{This is not consistent with what you find in the end of sectio 2.3}. On the other hand, it
+decreasing the flop count to $C(G) = 26m + 9n$. On the other hand, it
 introduced additional division operations which have worse latency and
 throughput.
 
 \mypar{Graph padding}
 In anticipation of unrolling and SIMD, optional graph padding was added to optimisation \opt{3}. The idea behind it was to add $\O(n)$ dummy edges to the graph that would not have any influence on the result, but would make the number of neighbours of a node divisible by 4 or 8 respectively.
-As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no small sequential leftover loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
-To see for every unrolling and vectorisation step whether the additional nodes or the leftover loop are the bigger overhead, the graph padding could be activated using a compiler flag (by default deactivated).
+As a consequence, vectorised code could use aligned instead of unaligned loads. Besides that, no small sequential left-over loop would be needed when the $j$-loop from \cref{algo:propagate} is unrolled and vectorised.
+To see for every unrolling and vectorisation step whether the additional nodes or the left-over loop are the bigger overhead, the graph padding could be activated using a compiler flag (by default deactivated).
 The graph padding was included in all successive optimisation steps.
 
 \mypar{Unroll inner loop \opt{4 \& 10}}
@@ -332,7 +331,7 @@ In a different implementation, based on optimisation \opt{3}, we examined what h
 \mypar{Vectorise \opt{6}}
 \rh{do we need ``as seen''?} \st{no, removed it}SIMD was introduced on top of \opt{3}. First, Intel AVX2 intrinsics for vector instructions were introduced that very closely followed the instruction sequence of scalar computation. This way, 8 messages were processed together per loop iteration.
 
-In a second step, the vector instructions were optimised with shuffling to have more sequential access of the in-messages. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}\sr{pherhaps it would be interesting}
+In a second step, the vector instructions were optimised with shuffling in-messages after loading them into vector registers to have more sequential access. Additionally, the number of messages handled during one iteration was reduced to 4. \st{maybe I should go into more detail here}\sr{pherhaps it would be interesting}
  
 Even though, looking at the assembly compiled from optimisation \opt{3}, it is visible that the compiler already introduced some vector instructions, writing them explicitly should allow for a greater use of SIMD. 
 \HTinline{I think we should mention that even though only 4 msgs are processed, sequential in-msg access gives us a slight performance increase. (maybe in section 4 with plot?)}
@@ -543,20 +542,17 @@ This is because the average degree is large enough that the cost of the introduc
 \begin{minipage}[t]{\oldlinewidth}\centering
 	\includegraphics[width=\linewidth]{img/roofline[1][3][8]_both.pdf}
 	\caption{Roofline plot of optimisation steps \opt{8}, \opt{3} and the baseline \opt{1} on the small and big dataset combined.
-			Black dots represent the smallest input n.
-			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in \cref{sec:setup} \emph{Platform}.
-			We assumed each random access has to load a cache line from main memory. \label{rooflineEndToEnd}}
+			The rooflines are with respect to scalar / vectorized peak processor performance (2 resp. 8 flops/cycle) and the bandwidths of L1,L2,L3 and memory mentioned in \cref{sec:setup} \emph{Platform}. Black dots represent the smallest input n. \label{rooflineEndToEnd}}
 \end{minipage}%
 \end{figure*}
 \begin{figure}[!bt]\centering
 	\includegraphics[width=\linewidth]{img/speedup[1][3][8]_both.pdf}
 	\caption{Relative end-to-end speedup over baseline \opt{1} on the small and big dataset combined} \label{speedupEndToEnd}
-\end{figure}\sr{Does mentioning the assumption fit here, Richard?}
+\end{figure}
 
 \mypar{Saving memory and vectorisation} 
 For further improvement on top of optimisation \opt{3}, optimisation \opt{7} tried to reduce the memory footprint and optimisation \opt{6} added vectorisation.
 We see in \cref{cpctVectSpeedupSmall} a relative speedup of around 1.1$\times$ for reducing the memory footprint while vectorisation yields a relative speedup of 1.1--1.6$\times$ with respect to optimisation \opt{3} on the small dataset.
-Division limits the amount of ILP beneficial significantly, but also the leftover loops frequently run are diminishing the benefit of unrolling followed by vectorisation.
 The relative speedup of the combined version of both optimisations (optimisation \opt{8} in \cref{cpctVectSpeedupSmall}) is 1.3--2$\times$ which is greater than each of them separately.
 
 \mypar{Graph padding} To examine the effect of SIMD alignment we tried to pad the graph so that the list of neighbours / incoming messages for each vertex starts on an address divisible by SIMD size.
@@ -564,20 +560,20 @@ In \cref{speedupGraphPaddingSmall}, we see graph padding is slower compared to o
 The latency and throughput on the platform do not differ between unaligned and aligned vectorised load.
 Therefore, using aligned loads did not benefit the relative speedup.
 Apart from that, graph padding increases the memory footprint and introduces excess computation.
-If padding is needed for most of the vertices, the memory overhead becomes significant.\rh{if I understand it this sentence correctly, that's not necessarily true, the padding is done so that the size will be exactly a multiple of SIMD size, so no leftover loop is needed (in the last iteration, we just maybe deal with some dummy edges which is fine, the SIMD algo doesn't mind).}\sr{Sorry, this was the moment when I forgot I was writing a paragraph about graph padding and only thought of vectorsation. Removed the whole sentence.}
+If padding is needed for most of the vertices, the memory overhead becomes significant.\rh{if I understand it this sentence correctly, that's not necessarily true, the padding is done so that the size will be exactly a multiple of SIMD size, so no left-over loop is needed (in the last iteration, we just maybe deal with some dummy edges which is fine, the SIMD algo doesn't mind).}\sr{Sorry, this was the moment when I forgot I was writing a paragraph about graph padding and only thought of vectorsation. Removed the whole sentence.}
 Since our test input data is sparse, we wanted test whether the negative effects on speedup are decreased on graphs of large average degrees.\rh{This sounds weird, for what reason? AFAIK the reason is only described later (we want to (dis)prove that bigger avg degree might work) and that's why it's weird. But I can't think of how to reformulate}\sr{What do you think about the paragraph now?}
 To this end, \cref{speedupGraphPaddingBipartite} displays the relative speedup over optimisation step \opt{8} measured on complete bipartite graphs.
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on graphs of large average degree: 
 The gap in relative speedup on bipartite graphs is not significantly decreased compared to \cref{speedupGraphPaddingSmall}.
 \srinline{It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.}\rh{how did you arrive at those numbers? My calculations say something different}\sr{Maybe this sentence has become superflous now.}
 
-\mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase ILP of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
-Optimisation \opt{13} tried to achieve the same thing by unrolling the inner loop sixteen times but based on \opt{8}.
+\mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase instruction level parallelism of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
+Optimisation \opt{13} tried to achieve the same thing by doubling the unrolling factor of the inner loop but on top of optimisation step \opt{8}.
 \Cref{speedupUnsuccessful} shows that these optimisation steps could not increase the speedup relative to the optimisation steps they emerged from.
-Presumably, unrolling the outer loop resulted in worse locality whereas for the inner loop, the leftover loops have more iterations and possibly register spilling occurred.\sr{*}\rhinline{is that the case though? for unroll-i I think bad locality definitely plays a bigger role. For unroll-j, tbh, I don't know. the division may be a factor, but I don't think that's the full story. Maybe we spill out of registers? or, in case of vectorisation, spend more time in leftover loop because it's larger on average?}
+The runtime is bounded by the divisions since they have the lowest throughput and latency.\sr{*}\rhinline{is that the case though? for unroll-i I think bad locality definitely plays a bigger role. For unroll-j, tbh, I don't know. the division may be a factor, but I don't think that's the full story. Maybe we spill out of registers? or, in case of vectorisation, spend more time in leftover loop because it's larger on average?}
 %Therefore, unrolling by factors of more than 8\sr{ (?)*} does not improve the relative speedup.
 Optimisation step \opt{14} using the restrict keyword is not shown in this plot as it almost coincides with the line representing optimisation step \opt{10} which it was based on.
-This suggests the code already runs as fast as if no pointer aliasing was assumed without using the keyword.
+Hence, compiler did not take further advantage of this additional information and the code already runs as fast as if the compiler assumed no pointer aliasing.
 
 \mypar{Performance \& Big inputs} The optimisations displayed in \cref{cpctVectSpeedupSmall} constitute the final successful steps taken.
 Therefore, it is interesting to finally see the actual performance achieved.
@@ -598,7 +594,7 @@ The last optimisation step achieves around 16.13\% of the vectorised peak perfor
 \mypar{End-to-end speedup} To see the runtime gain achieved overall, \cref{speedupEndToEnd} displays the relative speedup over the baseline \opt{1} on the small and big dataset merged.
 On the small dataset, the overall relative speedup lies between 100 to 500$\times$ for optimisation step \opt{8}.
 The big dataset appears after the first peak in \cref{speedupEndToEnd}, after which the relative speedup scales with input size.\sr{*}
-The peak is there because the different datasets have different average degree when starting from small inputs.
+The peak is there because the different dataset has different average degree when starting from small inputs, so the baseline is suddenly faster before dropping again.
 Since optimisation step \opt{3} was the last to have performed a major algorithmic optimisation, it is displayed for reference as well in \cref{speedupEndToEnd}.
 
 %Here you evaluate your work using experiments. You start again with a
@@ -681,6 +677,8 @@ Performed unrolling optimisation of innermost $2\times2$ loops over states and s
 \rhinline{just a list of TODOs we should tackle before submitting, feel free to add/disagree}
 
 \subsection{Plots}
+
+\rhinline{roofline: mention that we assume each random access has to load a cache line from main memory}
 
 \rhinline{the supervisor seemed like he wanted to see more of big dataset plots? It kind of makes sense given that the small plots don't even overflow to RAM.}
 
