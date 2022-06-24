@@ -188,7 +188,7 @@ integers in $\{1, \ldots, 5\}$.
 \mypar{Algorithm} As already mentioned, we implement the algorithm described by
 \citet{top-n-recommendation}. As our work focuses solely on optimising the
 belief propagation part of the algorithm, we describe the rest of the algorithm
-in minimum detail and refer the reader to the original article.
+only briefly and refer the reader to the original article.
 \srinline{I would remove this paragraph and add a sentence before the next section that the paper describes how to use BP for the purpose of top-N recommendation and that it is briefly discussed here to give an idea (on what inputs that propagate will be evaluated later in the results section).}
 \rhinline{The thing is that I want to give a heads up ``hey reader, it's ok that you find this vague, it actually is because it wasn't our main focus''. it doesn't have to be here, but I would put it \emph{somewhere}}
 
@@ -523,8 +523,6 @@ To this end, \cref{speedupGraphPaddingBipartite} displays the relative speedup o
 \Cref{speedupGraphPaddingBipartite} disproves the idea that padding could result in greater relative speedup on graphs of large average degree: 
 The gap in relative speedup on bipartite graphs is not significantly decreased compared to \cref{speedupGraphPaddingSmall}.
 %\srinline{It turns out for the small dataset we used, considering all users, the average degree of a vertex is on average 165.3 and after edge thresholding 89.72 on average.}\rh{how did you arrive at those numbers? My calculations say something different}
-\sr{Maybe this sentence has become superflous now.}
-\rh{yes, maybe it has, commented it out.}
 
 \mypar{Other unsuccessful optimisations} Optimisations \opt{9,10} tried to increase ILP of optimisation step \opt{3} by unrolling the outer respectively the inner loop four times.
 Optimisation \opt{13} tried to achieve the same thing by unrolling the inner loop sixteen times but based on \opt{8}.
