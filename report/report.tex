@@ -71,7 +71,7 @@ In the age of digitalization a majority of people spend their time on different 
 Many papers about BP focus on the algorithmic site for optimisation. Our focus is a fast and efficient C implementation of the BP that takes into account the memory hierarchy and vectorisation.
 
 \mypar{Contribution}
-We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The optimisations applied range from algorithmic changes over standard C optimisation techniques that include unrolling loops and scalar replacement to decreasing memory usage and utilizing SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-N recommendation. 
+We provide a BP implementation based on \citet{top-n-recommendation} optimised for sequential performance. The optimisations applied range from algorithmic changes over standard C optimisation techniques that include unrolling loops and scalar replacement to decreasing memory usage and utilising SIMD instructions. Our BP implementation outperforms the libDAI library \cite{libdai} when applied to the specific problem of top-N recommendation. 
 
 \mypar{Related Work}
 BP is also used in decoders for polar codes. For better performance, \citet{related1} propose an efficient early termination scheme based on convergence properties of \emph{log-likelihood ratio} messages of BP polar decoders. They showed that for an iteration limit of 30 iterations, their method reduces the number of iterations to 8--9 on average, with only a negligible reconstruction degradation.
@@ -166,7 +166,7 @@ vertex $i$, we compute its \emph{belief vector} $b_i: X \to [0, 1]$ as follows:
 	b_i &= b'_{i} / \|b'_i\|_1.
 \end{align*}
 %
-Again, we have normalized each $b_i$ so that $\sum_{x_c} b_i(x_c) = 1$.
+Again, we have normalised each $b_i$ so that $\sum_{x_c} b_i(x_c) = 1$.
 
 Finally, the algorithm outputs $b_i$ as the approximation of the sought
 marginal probability distribution $p_i$.
@@ -211,7 +211,7 @@ vertices according to $b_i(\text{LIKE})$ and output the $r$ vertices with the
 largest $b_i(\text{LIKE})$.
 
 \mypar{Cost analysis} As mentioned in \cref{place:we-optimised-just-bp}, our work deals solely with optimising \cref{algo:propagate}, thus, we only focus on it in our cost analysis. We have chosen the number of flops as the cost measure.
-Analyzing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
+Analysing \cref{algo:propagate} yields $$4 \cdot (\deg(i) (\deg(i) - 2) +
 3\deg(i)) = 4\deg(i)^2 + 4\deg(i)$$ flops for each $i\in V$ on lines
 \ref{line:for-j}--\ref{line:endfor-xc}, plus $3\deg(i)$ flops for each $i \in V$ on line \ref{line:norm-msg}. In total, we get
 %
@@ -251,13 +251,13 @@ This section presents all optimisation steps seen in \cref{OptDiagram}.
 %
 Initial measurements have quickly shown that BP is by far the largest
 bottleneck of the top-N recommendation algorithm. Hence, our work focuses
-solely on optimizing the propagate procedure described in
+solely on optimising the propagate procedure described in
 \cref{algo:propagate}.
 \label{place:we-optimised-just-bp}
 
 \mypar{Baseline \opt{1}}
 This project has two baselines. The first makes use of the C++ library libDAI, which implements belief propagation on a factor graph.
-The second baseline, and basis for all optimisation, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximize sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
+The second baseline, and basis for all optimisation, was implemented from scratch and strictly follows the belief propagation algorithm presented in \cref{sec:background}. It was implemented in a way that tries to maximise sequential array access and uses a CSR (compressed sparse row) inspired format for storing incoming messages.
 
 Namely, we store a list $\arroff$ of vertex offsets. The incoming messages $m_{ji}$ of
 vertex $i$ are stored in array $\arrin$ contiguously at indices $\arroff[i],
@@ -326,13 +326,13 @@ On basis of optimisation \opt{8} another unrolling was tested. Now, the number o
 In a next step, based on optimisation \opt{10}, the \verb@__restrict__@ keyword was used to ensure that the compiler did not make any assumptions about memory aliasing and therefore hindering some optimisations.
 
 %Now comes the ``beef'' of the paper, where you explain what you
-%did. Again, organize it in paragraphs with titles. As in every section
+%did. Again, organise it in paragraphs with titles. As in every section
 %you start with a very brief overview of the section.
 %
-%For this course, explain all the optimizations you performed. This mean, you first very briefly
-%explain the baseline implementation, then go through locality and other optimizations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimize one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
+%For this course, explain all the optimisations you performed. This mean, you first very briefly
+%explain the baseline implementation, then go through locality and other optimisations, and finally SSE (every project will be slightly different of course). Show or mention relevant analysis or assumptions. A few examples: 1) Profiling may lead you to optimise one part first; 2) bandwidth plus data transfer analysis may show that it is memory bound; 3) it may be too hard to implement the algorithm in full generality: make assumptions and state them (e.g., we assume $n$ is divisible by 4; or, we consider only one type of input image); 4) explain how certain data accesses have poor locality. Generally, any type of analysis adds value to your work.
 %
-%As important as the final results is to show that you took a structured, organized approach to the optimization and that you explain why you did what you did.
+%As important as the final results is to show that you took a structured, organised approach to the optimisation and that you explain why you did what you did.
 %
 %Mention and cite any external resources including library or other code.
 %
@@ -478,7 +478,7 @@ For this purpose, the relative speedup in runtime of the different base implemen
 We see that libDAI library \opt{0} uses the most cycles compared to the others.
 Already implementing the algorithm from scratch provided slight runtime benefits (baseline \opt{1} in \cref{libSpeedupSmall}).
 Presumably, this came from the benefits of not using a library: less bound checks and function calls, and inlining of functions.
-Another reason is that baseline \opt{1} was implemented in a way to maximize sequential array access and used a CSR inspired format for storing all the incoming messages.
+Another reason is that baseline \opt{1} was implemented in a way to maximise sequential array access and used a CSR inspired format for storing all the incoming messages.
 Applying optimisation \opt{2} to the baseline \opt{1} gives a 4$\times$ speedup.
 One reason for this is that the product calculation at line~\ref{line:calc-prod-slow} of the algorithm can be reused by the outer loop iterating over states. 
 Another important reason is scalar replacement, which eliminates many pointer dereferences.
@@ -588,7 +588,7 @@ The speedup scales with input size such that for our greatest input containing m
 For bigger inputs advantages in efficient computation get gradually drowned out by slow memory access.
 Reducing the memory footprint of data structures at the expense of more computation had shown to have positive impact on speedup in this case.
 Despite the divisions being introduced by our algorithmic optimisation and the fact that they limit the amount of instruction level parallelism beneficial significantly, this tradeoff suited the type of our input data very well and achieved the greatest relative speedup out of all optimisation steps.\sr{*}
-%Here you need to briefly summarize what you did and why this is
+%Here you need to briefly summarise what you did and why this is
 %important. {\em Do not take the abstract} and put it in the past
 %tense. Remember, now the reader has (hopefully) read the paper, so it
 %is a very different situation from the abstract. Try to highlight
@@ -621,7 +621,7 @@ Despite the divisions being introduced by our algorithmic optimisation and the f
 \mypar{Sarah} Implemented flop counting in code of both algorithms together with Henry. Improved library flop counting. Performed unrolling optimisation of inner loop over neighbours of a node. Mostly prepared the slides on optimisations for the presentation.
 
 \mypar{Richard} Did the base implementation from scratch in C.
-% in a favourable way maximizing sequential array access and using a CSR inspired format for storing incoming messages. % It's too long
+% in a favourable way maximising sequential array access and using a CSR inspired format for storing incoming messages. % It's too long
 Performed unrolling optimisation of innermost $2\times2$ loops over states and scalar replacement. Implemented precomputation of product optimisation. Tried graph padding optimisation. Helped Henry implementing/improving the roofline plot. Mostly prepared the slides on cost measure, experimental setup. Performed measurements and prepared plots.
 
 \mypar{Stephanie} Did the base implementation using the libDAI library. Vectorised loop iterating over neighbours of a node. Implemented saving memory optimisation as discussed. Tried out restrict keyword and compiler flags. Mostly prepared slides on algorithm and cost measure for the presentation.
